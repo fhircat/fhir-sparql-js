@@ -15,6 +15,7 @@ import org.junit.Test;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
+import ca.uhn.fhir.rest.gclient.IFetchConformanceUntyped;
 
 public class FhirEgineTest {
 	public static final String observation = "prefix fhir: <http://hl7.org/fhir/> \n"
@@ -67,9 +68,11 @@ public class FhirEgineTest {
 	@Test
 	public void observationQuery() {
 		FhirContext ctx = FhirContext.forR5();
-		String serverBase = "http://fhirtest.uhn.ca/r5";
+		String serverBase = "http://fhirtest.uhn.ca/baseR5";
 
 		IGenericClient client = ctx.newRestfulGenericClient(serverBase);
+		IFetchConformanceUntyped capabilities = client.capabilities();
+		assertNotNull(capabilities);
 		Query q = QueryFactory.create(observation);
 		Model model = null;
 		Plan plan = new FhirQueryEngineFactory().create(q, DatasetGraphFactory.create(), BindingRoot.create(), new FhirQueryContext(client));
