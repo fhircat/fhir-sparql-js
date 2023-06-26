@@ -1,5 +1,7 @@
 package org.example.fhir.cat;
 
+import static org.junit.Assert.assertNotNull;
+
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.rdf.model.Model;
@@ -70,7 +72,7 @@ public class FhirEgineTest {
 		for (; results.hasNext();) {
 			Binding soln = results.next();
 			String r = soln.get("observation").getNameSpace(); // Get a result variable - must be a resource
-
+			assertNotNull(r);
 		}
 
 	}
