@@ -1,0 +1,4 @@
+/Observation
+  ?code=sct|1234567
+  &fhirpath=Observation.id | Observation.subject[Patient].id
+  &_include=Observation.patient
