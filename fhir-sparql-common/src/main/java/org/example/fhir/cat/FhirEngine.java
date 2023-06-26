@@ -44,7 +44,7 @@ public class FhirEngine extends QueryEngineMain {
 		QueryEngineRegistry.removeFactory(factory);
 	}
 
-	static class FhirQueryEngineFactory implements QueryEngineFactory {
+	public static class FhirQueryEngineFactory implements QueryEngineFactory {
 		// Accept any dataset for query execution
 		@Override
 		public boolean accept(Query query, DatasetGraph dataset, Context context) {

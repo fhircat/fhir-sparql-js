@@ -27,5 +27,11 @@
 			<artifactId>hapi-fhir-client</artifactId>
 			<version>6.6.1</version>
 		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.13.2</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>
