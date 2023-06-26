@@ -10,8 +10,11 @@ import org.apache.jena.sparql.engine.Plan;
 import org.apache.jena.sparql.engine.QueryIterator;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.binding.BindingRoot;
-import org.example.fhir.cat.FhirEngine.FhirQueryEngineFactory;
+import org.example.fhir.cat.FhirSparqlEngine.FhirQueryEngineFactory;
 import org.junit.Test;
+
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 public class FhirEgineTest {
 	public static final String observation = "prefix fhir: <http://hl7.org/fhir/> \n"
@@ -63,9 +66,13 @@ public class FhirEgineTest {
 
 	@Test
 	public void observationQuery() {
+		FhirContext ctx = FhirContext.forR5();
+		String serverBase = "http://fhirtest.uhn.ca/r5";
+
+		IGenericClient client = ctx.newRestfulGenericClient(serverBase);
 		Query q = QueryFactory.create(observation);
 		Model model = null;
-		Plan plan = new FhirQueryEngineFactory().create(q, DatasetGraphFactory.create(), BindingRoot.create(), new FhirContext());
+		Plan plan = new FhirQueryEngineFactory().create(q, DatasetGraphFactory.create(), BindingRoot.create(), new FhirQueryContext(client));
 
 		QueryIterator results = plan.iterator();
 

@@ -11,13 +11,13 @@ import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.main.QueryEngineMain;
 import org.apache.jena.sparql.util.Context;
 
-public class FhirEngine extends QueryEngineMain {
+public class FhirSparqlEngine extends QueryEngineMain {
 
-	public FhirEngine(Op op, DatasetGraph dataset, Binding input, Context context) {
+	public FhirSparqlEngine(Op op, DatasetGraph dataset, Binding input, Context context) {
 		super(op, dataset, input, context);
 	}
 
-	public FhirEngine(Query query, DatasetGraph dataset, Binding initial, Context context) {
+	public FhirSparqlEngine(Query query, DatasetGraph dataset, Binding initial, Context context) {
 		super(query, dataset, initial, context);
 	}
 
@@ -54,7 +54,7 @@ public class FhirEngine extends QueryEngineMain {
 		@Override
 		public Plan create(Query query, DatasetGraph dataset, Binding initial, Context context) {
 			// Create a query engine instance.
-			FhirEngine engine = new FhirEngine(query, dataset, initial, context);
+			FhirSparqlEngine engine = new FhirSparqlEngine(query, dataset, initial, context);
 			return engine.getPlan();
 		}
 
