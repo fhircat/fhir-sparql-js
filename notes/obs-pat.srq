@@ -1,4 +1,9 @@
-SELECT ?obsId, ?patId WHERE {
+PREFIX fhir: <http://hl7.org/fhir/>
+PREFIX sct: <http://snomed.info/id/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?obsId ?patId WHERE {
   ?obs a fhir:Observation .
 
   # what
@@ -7,7 +12,7 @@ SELECT ?obsId, ?patId WHERE {
   ?coding fhir:code ?codeCode .
   ?codeCode fhir:v 1234567 .
   ?coding fhir:system ?codingSystem .
-  ?codingSystem fhir:v “http:....ct” .
+  ?codingSystem fhir:v "http://snomed.info/id" .
 
   ?obs fhir:subject ?subjectRef .
 
