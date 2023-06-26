@@ -26,6 +26,17 @@ public class FhirSparqlEngine extends QueryEngineMain {
 		// We are going to modify the algebra here.
 
 		op = super.modifyOp(op);
+	
+		// bgp(triple(?subjectRef fhir:reference ?patient .)
+		//	   triple(?patient a fhir:Patient),
+		//	   triple(?patient fhir:id ?patIdElt))
+		// 
+		// ->
+		// bgp(hapiJoin (triple(?patient a fhir:Patient),
+		//	             triple(?patient fhir:id ?patIdElt )),
+		//      triple(?patient fhir:id ?patIdElt)))
+		// we want to combine parts of the query in one bgp that have the same ?subject into a single
+		// hapi client operation.
 		// op = Algebra.toQuadForm(op) ;
 		return op;
 	}
