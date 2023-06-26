@@ -1,0 +1,365 @@
+PREFIX fhir: <http://hl7.org/fhir/>
+PREFIX fhirvs: <http://hl7.org/fhir/ValueSet/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+/** Resource hierarchy */
+
+<Resource> {
+    fhir:id @<id>?;
+    fhir:meta @<Meta>?;
+    fhir:implicitRules @<uri>?;
+    fhir:language @<code> AND
+    	{fhir:v @fhirvs:all-languages}?;
+}
+
+<DomainResource> EXTENDS @<Resource> CLOSED {
+    a [fhir:DomainResource]?;
+    fhir:nodeRole [fhir:treeRoot]?;
+    fhir:text @<Narrative>?;
+    fhir:contained @<OneOrMore_Resource>?;
+    fhir:extension @<OneOrMore_Extension>?;
+    fhir:modifierExtension @<OneOrMore_Extension>?;
+}
+
+/** Resources */
+
+<Observation> EXTENDS @<DomainResource> CLOSED {
+    a [fhir:Observation]?;
+    fhir:nodeRole [fhir:treeRoot]?;
+    fhir:identifier @<OneOrMore_Identifier>?;
+    fhir:status @<code> AND
+    	{fhir:v @fhirvs:observation-status};
+    fhir:code @<CodeableConcept>;
+    fhir:subject @<Reference> AND {fhir:link @<Patient> ?}?;
+    fhir:effective @<dateTime>  OR 
+    			@<Period>  OR 
+    			@<Timing>  OR 
+    			@<instant>  ?;
+    fhir:value
+    			@<CodeableConcept>  OR 
+    			@<string>  OR 
+    			@<boolean>
+                        ?;
+    fhir:referenceRange @<OneOrMore_Observation.referenceRange>?;
+    fhir:component @<OneOrMore_Observation.component>?;
+}
+
+<Observation.referenceRange> EXTENDS @<BackboneElement> CLOSED {
+    fhir:low @<Quantity>?;
+    fhir:high @<Quantity>?;
+    fhir:normalValue @<CodeableConcept>?;
+    fhir:type @<CodeableConcept>?;
+}
+
+<Observation.component> EXTENDS @<BackboneElement> CLOSED {
+    fhir:code @<CodeableConcept>;
+    fhir:value @<Quantity>  OR 
+    			@<CodeableConcept>  OR 
+    			@<string>  OR 
+    			@<boolean>
+                        ?;
+    fhir:referenceRange @<OneOrMore_Observation.referenceRange>?;
+}
+
+<Patient> EXTENDS @<DomainResource> CLOSED {
+    a [fhir:Patient]?;
+    fhir:nodeRole [fhir:treeRoot]?;
+    fhir:identifier @<OneOrMore_Identifier>?;
+    fhir:active @<boolean>?;
+    fhir:name @<OneOrMore_HumanName>?;
+    fhir:gender @<code> AND
+    	{fhir:v @fhirvs:administrative-gender}?;
+}
+
+<Procedure> EXTENDS @<DomainResource> CLOSED {
+    a [fhir:Procedure]?;
+    fhir:nodeRole [fhir:treeRoot]?;
+    fhir:identifier @<OneOrMore_Identifier>?;
+    fhir:status @<code> AND
+    	{fhir:v @fhirvs:event-status};
+    fhir:code @<CodeableConcept>?;
+    fhir:subject @<Reference> AND {fhir:link @<Patient> ?};
+    fhir:recorded @<dateTime>?;
+}
+
+<Questionnaire> EXTENDS @<DomainResource> CLOSED {
+    a [fhir:Questionnaire]?;
+    fhir:nodeRole [fhir:treeRoot]?;
+    fhir:url @<uri>?;
+    fhir:identifier @<OneOrMore_Identifier>?;
+    fhir:version @<string>?;
+    fhir:name @<string>?;
+    fhir:status @<code> AND
+    	{fhir:v @fhirvs:publication-status};
+    fhir:subjectType @<OneOrMore_code> AND
+    	{fhir:v @fhirvs:resource-types}?;
+    fhir:date @<dateTime>?;
+    fhir:code @<OneOrMore_Coding>?;
+    fhir:item @<OneOrMore_Questionnaire.item>?;
+}
+
+<Questionnaire.item> EXTENDS @<BackboneElement> CLOSED {
+    fhir:linkId @<string>;
+    fhir:code @<OneOrMore_Coding>?;
+    fhir:text @<string>?;
+    fhir:type @<code> AND
+    	{fhir:v @fhirvs:item-type};
+    fhir:required @<boolean>?;
+    fhir:answerValueSet @<canonical>?;
+    fhir:item @<OneOrMore_Questionnaire.item>?;
+}
+
+/** Datatypes hierarchy */
+
+<Base> CLOSED {   
+    a [fhir:Base]?;
+    fhir:nodeRole [fhir:treeRoot]?;
+}  
+
+<Element> EXTENDS @<Base> CLOSED {
+    fhir:nodeRole [fhir:treeRoot]?;
+    fhir:id @<string>?;
+    fhir:extension @<OneOrMore_Extension>?;
+}
+
+<BackboneElement> EXTENDS @<Element> CLOSED {
+    fhir:modifierExtension @<OneOrMore_Extension>?;
+}
+
+<PrimitiveType> EXTENDS @<DataType> CLOSED {
+}
+
+<BackboneType> EXTENDS @<DataType> CLOSED {
+    a [fhir:BackboneType]?;
+    fhir:modifierExtension @<OneOrMore_Extension>?;
+}
+
+<DataType> EXTENDS @<Element> CLOSED {
+}
+
+
+/** Composite Datatypes */
+
+<CodeableConcept> EXTENDS @<DataType> CLOSED {
+    a [fhir:CodeableConcept]?;
+    a NONLITERAL*;
+    fhir:coding @<OneOrMore_Coding>?;
+    fhir:text @<string>?;
+}
+
+<Coding> EXTENDS @<DataType> CLOSED {
+    a [fhir:Coding]?;
+    a NONLITERAL?;
+    fhir:system @<uri>?;
+    fhir:version @<string>?;
+    fhir:code @<code>?;
+    fhir:display @<string>?;
+    fhir:userSelected @<boolean>?;
+}
+
+<Extension> EXTENDS @<DataType> CLOSED {
+    a [fhir:Extension]?;
+    fhir:url @<uri>; 
+    fhir:value @<code> ?; 
+}
+
+<HumanName> EXTENDS @<DataType> CLOSED {
+    a [fhir:HumanName]?;
+    fhir:use @<code> AND
+    	{fhir:v @fhirvs:name-use}?;
+    fhir:text @<string>?;
+    fhir:family @<string>?;
+    fhir:given @<OneOrMore_string>?;
+    fhir:prefix @<OneOrMore_string>?;
+    fhir:suffix @<OneOrMore_string>?;
+    fhir:period @<Period>?;
+}
+
+<Identifier> EXTENDS @<DataType> CLOSED {
+    a [fhir:Identifier]?;
+    fhir:use @<code> AND
+    	{fhir:v @fhirvs:identifier-use}?;
+    fhir:type @<CodeableConcept>?;
+    fhir:system @<uri>?;
+    fhir:value @<string>?;
+    fhir:period @<Period>?;
+}
+
+<Meta> EXTENDS @<DataType> CLOSED {
+    a [fhir:Meta]?;
+    fhir:versionId @<id>?;
+    fhir:lastUpdated @<instant>?;
+    fhir:source @<uri>?;
+    fhir:profile @<OneOrMore_canonical>?;
+    fhir:security @<OneOrMore_Coding>?;
+    fhir:tag @<OneOrMore_Coding>?;
+}
+
+<Narrative> EXTENDS @<DataType> CLOSED {
+    a [fhir:Narrative]?;
+    fhir:status @<code> AND
+    	{fhir:v @fhirvs:narrative-status};
+    fhir:div @<xhtml>?;
+}
+
+<Period> EXTENDS @<DataType> CLOSED {
+    a [fhir:Period]?;
+    fhir:start @<dateTime>?;
+    fhir:end @<dateTime>?;
+}
+
+<Quantity> EXTENDS @<DataType> CLOSED {
+    a [fhir:Quantity]?;
+    fhir:value @<decimal>?;
+    fhir:comparator @<code> AND
+    	{fhir:v @fhirvs:quantity-comparator}?;
+    fhir:unit @<string>?;
+    fhir:system @<uri>?;
+    fhir:code @<code>?;
+}
+
+<Reference> EXTENDS @<DataType> CLOSED {
+    a [fhir:Reference]?;
+    fhir:link IRI?;
+    fhir:reference @<string>?;
+    fhir:type @<uri>?;
+    fhir:identifier @<Identifier>?;
+    fhir:display @<string>?;
+}
+
+<Timing> EXTENDS @<BackboneType> CLOSED {
+    a [fhir:Timing]?;
+    fhir:nodeRole [fhir:treeRoot]?;
+    fhir:event @<OneOrMore_dateTime>?;
+    fhir:repeat @<Element>?;
+    fhir:code @<CodeableConcept>?;
+}
+
+/** Primitive Datatypes */
+
+<boolean> EXTENDS @<PrimitiveType> CLOSED {
+    a [fhir:boolean]?;
+    fhir:v xsd:boolean OR ["true" "false"]?;
+}
+
+<canonical> EXTENDS @<PrimitiveType> CLOSED {
+    a [fhir:canonical]?;
+    fhir:v xsd:anyURI ?;
+}
+
+<code> EXTENDS @<PrimitiveType> CLOSED {
+    a [fhir:code]?;
+    fhir:v xsd:token OR xsd:string ?;
+}
+
+<dateTime> EXTENDS @<PrimitiveType> CLOSED {
+    a [fhir:dateTime]?;
+    fhir:v xsd:gYear OR xsd:gYearMonth OR xsd:date OR xsd:dateTime?;
+}
+
+<decimal> EXTENDS @<PrimitiveType> CLOSED {
+    a [fhir:decimal]?;
+    fhir:v xsd:decimal OR xsd:double?;
+}
+
+<id> EXTENDS @<PrimitiveType> CLOSED {
+    a [fhir:id]?;
+    fhir:v xsd:string ?;
+}
+
+<instant> EXTENDS @<PrimitiveType> CLOSED {
+    a [fhir:instant]?;
+    fhir:v xsd:dateTime OR xsd:string?;
+}
+
+<string> EXTENDS @<PrimitiveType> CLOSED {
+    a [fhir:string]?;
+    fhir:v xsd:string MAXLENGTH 1048576?;
+}
+
+<uri> EXTENDS @<PrimitiveType> CLOSED {
+    a [fhir:uri]?;
+    fhir:v xsd:anyURI OR xsd:string?;
+}
+
+<xhtml> CLOSED {
+    a [fhir:xhtml]?;
+    fhir:v rdf:XMLLiteral OR xsd:string?;
+}
+
+/** Lists */
+
+<OneOrMore_Coding> CLOSED {
+    rdf:first @<Coding>  ;
+    rdf:rest [rdf:nil] OR @<OneOrMore_Coding> 
+}
+
+<OneOrMore_Extension> CLOSED {
+    rdf:first @<Extension>  ;
+    rdf:rest [rdf:nil] OR @<OneOrMore_Extension> 
+}
+
+<OneOrMore_HumanName> CLOSED {
+    rdf:first @<HumanName>  ;
+    rdf:rest [rdf:nil] OR @<OneOrMore_HumanName> 
+}
+
+<OneOrMore_Identifier> CLOSED {
+    rdf:first @<Identifier>  ;
+    rdf:rest [rdf:nil] OR @<OneOrMore_Identifier> 
+}
+
+<OneOrMore_Observation.component> CLOSED {
+    rdf:first @<Observation.component>  ;
+    rdf:rest [rdf:nil] OR @<OneOrMore_Observation.component> 
+}
+
+<OneOrMore_Observation.referenceRange> CLOSED {
+    rdf:first @<Observation.referenceRange>  ;
+    rdf:rest [rdf:nil] OR @<OneOrMore_Observation.referenceRange> 
+}
+
+<OneOrMore_Questionnaire.item> CLOSED {
+    rdf:first @<Questionnaire.item>  ;
+    rdf:rest [rdf:nil] OR @<OneOrMore_Questionnaire.item> 
+}
+
+<OneOrMore_Resource> CLOSED {
+    rdf:first @<Resource>  ;
+    rdf:rest [rdf:nil] OR @<OneOrMore_Resource> 
+}
+
+<OneOrMore_canonical> CLOSED {
+    rdf:first @<canonical>  ;
+    rdf:rest [rdf:nil] OR @<OneOrMore_canonical> 
+}
+
+<OneOrMore_code> CLOSED {
+    rdf:first @<code>  ;
+    rdf:rest [rdf:nil] OR @<OneOrMore_code> 
+}
+
+<OneOrMore_dateTime> CLOSED {
+    rdf:first @<dateTime>  ;
+    rdf:rest [rdf:nil] OR @<OneOrMore_dateTime> 
+}
+
+<OneOrMore_string> CLOSED {
+    rdf:first @<string>  ;
+    rdf:rest [rdf:nil] OR @<OneOrMore_string> 
+}
+
+/** Value sets */
+
+fhirvs:administrative-gender ["male" "female" "other" "unknown"]
+fhirvs:all-languages xsd:string #EXTERNAL
+fhirvs:event-status ["preparation" "in-progress" "not-done" "on-hold" "stopped" "completed" "entered-in-error" "unknown"]
+fhirvs:identifier-use ["usual" "official" "temp" "secondary" "old"]
+fhirvs:item-type ["group" "display" "question" "boolean" "decimal" "integer" "date" "dateTime" "time" "string" "text" "url" "coding" "attachment" "reference" "quantity"]
+fhirvs:name-use ["usual" "official" "temp" "nickname" "anonymous" "old" "maiden"]
+fhirvs:narrative-status ["generated" "extensions" "additional" "empty"]
+fhirvs:observation-status ["registered" "preliminary" "final" "amended" "corrected" "cancelled" "entered-in-error" "unknown"]
+fhirvs:publication-status ["draft" "active" "retired" "unknown"]
+fhirvs:quantity-comparator ["<" "<=" ">=" ">" "ad"]
+fhirvs:resource-types ["Observation" "Patient" "Procedure" "Questionnaire"]

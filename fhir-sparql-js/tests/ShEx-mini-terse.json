@@ -1,0 +1,2449 @@
+{
+  "type": "Schema",
+  "shapes": [
+    {
+      "id": "Resource",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/id",
+              "valueExpr": "id",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/meta",
+              "valueExpr": "Meta",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/implicitRules",
+              "valueExpr": "uri",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/language",
+              "valueExpr": {
+                "type": "ShapeAnd",
+                "shapeExprs": [
+                  "code",
+                  {
+                    "type": "Shape",
+                    "expression": {
+                      "type": "TripleConstraint",
+                      "predicate": "http://hl7.org/fhir/v",
+                      "valueExpr": "http://hl7.org/fhir/ValueSet/all-languages"
+                    }
+                  }
+                ]
+              },
+              "min": 0, "max": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "DomainResource",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/DomainResource"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/nodeRole",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/treeRoot"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/text",
+              "valueExpr": "Narrative",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/contained",
+              "valueExpr": "OneOrMore_Resource",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/extension",
+              "valueExpr": "OneOrMore_Extension",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/modifierExtension",
+              "valueExpr": "OneOrMore_Extension",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "Resource"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Observation",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/Observation"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/nodeRole",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/treeRoot"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/identifier",
+              "valueExpr": "OneOrMore_Identifier",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/status",
+              "valueExpr": {
+                "type": "ShapeAnd",
+                "shapeExprs": [
+                  "code",
+                  {
+                    "type": "Shape",
+                    "expression": {
+                      "type": "TripleConstraint",
+                      "predicate": "http://hl7.org/fhir/v",
+                      "valueExpr": "http://hl7.org/fhir/ValueSet/observation-status"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/code",
+              "valueExpr": "CodeableConcept"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/subject",
+              "valueExpr": {
+                "type": "ShapeAnd",
+                "shapeExprs": [
+                  "Reference",
+                  {
+                    "type": "Shape",
+                    "expression": {
+                      "type": "TripleConstraint",
+                      "predicate": "http://hl7.org/fhir/link",
+                      "valueExpr": "Patient",
+                      "min": 0,
+                      "max": 1
+                    }
+                  }
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/effective",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  "dateTime",
+                  "Period",
+                  "Timing",
+                  "instant"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/value",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  "CodeableConcept",
+                  "string",
+                  "boolean"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/referenceRange",
+              "valueExpr": "OneOrMore_Observation.referenceRange",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/component",
+              "valueExpr": "OneOrMore_Observation.component",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DomainResource"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Observation.referenceRange",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/low",
+              "valueExpr": "Quantity",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/high",
+              "valueExpr": "Quantity",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/normalValue",
+              "valueExpr": "CodeableConcept",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/type",
+              "valueExpr": "CodeableConcept",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "BackboneElement"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Observation.component",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/code",
+              "valueExpr": "CodeableConcept"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/value",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  "Quantity",
+                  "CodeableConcept",
+                  "string",
+                  "boolean"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/referenceRange",
+              "valueExpr": "OneOrMore_Observation.referenceRange",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "BackboneElement"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Patient",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/Patient"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/nodeRole",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/treeRoot"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/identifier",
+              "valueExpr": "OneOrMore_Identifier",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/active",
+              "valueExpr": "boolean",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/name",
+              "valueExpr": "OneOrMore_HumanName",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/gender",
+              "valueExpr": {
+                "type": "ShapeAnd",
+                "shapeExprs": [
+                  "code",
+                  {
+                    "type": "Shape",
+                    "expression": {
+                      "type": "TripleConstraint",
+                      "predicate": "http://hl7.org/fhir/v",
+                      "valueExpr": "http://hl7.org/fhir/ValueSet/administrative-gender"
+                    }
+                  }
+                ]
+              },
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DomainResource"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Procedure",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/Procedure"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/nodeRole",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/treeRoot"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/identifier",
+              "valueExpr": "OneOrMore_Identifier",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/status",
+              "valueExpr": {
+                "type": "ShapeAnd",
+                "shapeExprs": [
+                  "code",
+                  {
+                    "type": "Shape",
+                    "expression": {
+                      "type": "TripleConstraint",
+                      "predicate": "http://hl7.org/fhir/v",
+                      "valueExpr": "http://hl7.org/fhir/ValueSet/event-status"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/code",
+              "valueExpr": "CodeableConcept",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/subject",
+              "valueExpr": {
+                "type": "ShapeAnd",
+                "shapeExprs": [
+                  "Reference",
+                  {
+                    "type": "Shape",
+                    "expression": {
+                      "type": "TripleConstraint",
+                      "predicate": "http://hl7.org/fhir/link",
+                      "valueExpr": "Patient",
+                      "min": 0,
+                      "max": 1
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/recorded",
+              "valueExpr": "dateTime",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DomainResource"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Questionnaire",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/Questionnaire"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/nodeRole",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/treeRoot"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/url",
+              "valueExpr": "uri",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/identifier",
+              "valueExpr": "OneOrMore_Identifier",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/version",
+              "valueExpr": "string",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/name",
+              "valueExpr": "string",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/status",
+              "valueExpr": {
+                "type": "ShapeAnd",
+                "shapeExprs": [
+                  "code",
+                  {
+                    "type": "Shape",
+                    "expression": {
+                      "type": "TripleConstraint",
+                      "predicate": "http://hl7.org/fhir/v",
+                      "valueExpr": "http://hl7.org/fhir/ValueSet/publication-status"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/subjectType",
+              "valueExpr": {
+                "type": "ShapeAnd",
+                "shapeExprs": [
+                  "OneOrMore_code",
+                  {
+                    "type": "Shape",
+                    "expression": {
+                      "type": "TripleConstraint",
+                      "predicate": "http://hl7.org/fhir/v",
+                      "valueExpr": "http://hl7.org/fhir/ValueSet/resource-types"
+                    }
+                  }
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/date",
+              "valueExpr": "dateTime",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/code",
+              "valueExpr": "OneOrMore_Coding",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/item",
+              "valueExpr": "OneOrMore_Questionnaire.item",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DomainResource"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Questionnaire.item",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/linkId",
+              "valueExpr": "string"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/code",
+              "valueExpr": "OneOrMore_Coding",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/text",
+              "valueExpr": "string",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/type",
+              "valueExpr": {
+                "type": "ShapeAnd",
+                "shapeExprs": [
+                  "code",
+                  {
+                    "type": "Shape",
+                    "expression": {
+                      "type": "TripleConstraint",
+                      "predicate": "http://hl7.org/fhir/v",
+                      "valueExpr": "http://hl7.org/fhir/ValueSet/item-type"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/required",
+              "valueExpr": "boolean",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/answerValueSet",
+              "valueExpr": "canonical",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/item",
+              "valueExpr": "OneOrMore_Questionnaire.item",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "BackboneElement"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Base",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/Base"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/nodeRole",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/treeRoot"
+                ]
+              },
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "closed": true
+      }
+    },
+    {
+      "id": "Element",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/nodeRole",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/treeRoot"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/id",
+              "valueExpr": "string",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/extension",
+              "valueExpr": "OneOrMore_Extension",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "Base"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "BackboneElement",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "TripleConstraint",
+          "predicate": "http://hl7.org/fhir/modifierExtension",
+          "valueExpr": "OneOrMore_Extension",
+          "min": 0,
+          "max": 1
+        },
+        "extends": [
+          "Element"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "PrimitiveType",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "extends": [
+          "DataType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "BackboneType",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/BackboneType"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/modifierExtension",
+              "valueExpr": "OneOrMore_Extension",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DataType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "DataType",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "extends": [
+          "Element"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "CodeableConcept",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/CodeableConcept"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "nonliteral"
+              },
+              "min": 0,
+              "max": -1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/coding",
+              "valueExpr": "OneOrMore_Coding",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/text",
+              "valueExpr": "string",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DataType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Coding",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/Coding"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "nonliteral"
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/system",
+              "valueExpr": "uri",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/version",
+              "valueExpr": "string",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/code",
+              "valueExpr": "code",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/display",
+              "valueExpr": "string",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/userSelected",
+              "valueExpr": "boolean",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DataType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Extension",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/Extension"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/url",
+              "valueExpr": "uri"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/value",
+              "valueExpr": "code",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DataType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "HumanName",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/HumanName"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/use",
+              "valueExpr": {
+                "type": "ShapeAnd",
+                "shapeExprs": [
+                  "code",
+                  {
+                    "type": "Shape",
+                    "expression": {
+                      "type": "TripleConstraint",
+                      "predicate": "http://hl7.org/fhir/v",
+                      "valueExpr": "http://hl7.org/fhir/ValueSet/name-use"
+                    }
+                  }
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/text",
+              "valueExpr": "string",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/family",
+              "valueExpr": "string",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/given",
+              "valueExpr": "OneOrMore_string",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/prefix",
+              "valueExpr": "OneOrMore_string",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/suffix",
+              "valueExpr": "OneOrMore_string",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/period",
+              "valueExpr": "Period",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DataType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Identifier",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/Identifier"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/use",
+              "valueExpr": {
+                "type": "ShapeAnd",
+                "shapeExprs": [
+                  "code",
+                  {
+                    "type": "Shape",
+                    "expression": {
+                      "type": "TripleConstraint",
+                      "predicate": "http://hl7.org/fhir/v",
+                      "valueExpr": "http://hl7.org/fhir/ValueSet/identifier-use"
+                    }
+                  }
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/type",
+              "valueExpr": "CodeableConcept",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/system",
+              "valueExpr": "uri",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/value",
+              "valueExpr": "string",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/period",
+              "valueExpr": "Period",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DataType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Meta",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/Meta"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/versionId",
+              "valueExpr": "id",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/lastUpdated",
+              "valueExpr": "instant",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/source",
+              "valueExpr": "uri",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/profile",
+              "valueExpr": "OneOrMore_canonical",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/security",
+              "valueExpr": "OneOrMore_Coding",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/tag",
+              "valueExpr": "OneOrMore_Coding",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DataType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Narrative",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/Narrative"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/status",
+              "valueExpr": {
+                "type": "ShapeAnd",
+                "shapeExprs": [
+                  "code",
+                  {
+                    "type": "Shape",
+                    "expression": {
+                      "type": "TripleConstraint",
+                      "predicate": "http://hl7.org/fhir/v",
+                      "valueExpr": "http://hl7.org/fhir/ValueSet/narrative-status"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/div",
+              "valueExpr": "xhtml",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DataType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Period",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/Period"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/start",
+              "valueExpr": "dateTime",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/end",
+              "valueExpr": "dateTime",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DataType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Quantity",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/Quantity"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/value",
+              "valueExpr": "decimal",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/comparator",
+              "valueExpr": {
+                "type": "ShapeAnd",
+                "shapeExprs": [
+                  "code",
+                  {
+                    "type": "Shape",
+                    "expression": {
+                      "type": "TripleConstraint",
+                      "predicate": "http://hl7.org/fhir/v",
+                      "valueExpr": "http://hl7.org/fhir/ValueSet/quantity-comparator"
+                    }
+                  }
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/unit",
+              "valueExpr": "string",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/system",
+              "valueExpr": "uri",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/code",
+              "valueExpr": "code",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DataType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Reference",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/Reference"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/link",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "nodeKind": "iri"
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/reference",
+              "valueExpr": "string",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/type",
+              "valueExpr": "uri",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/identifier",
+              "valueExpr": "Identifier",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/display",
+              "valueExpr": "string",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "DataType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "Timing",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/Timing"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/nodeRole",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/treeRoot"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/event",
+              "valueExpr": "OneOrMore_dateTime",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/repeat",
+              "valueExpr": "Element",
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/code",
+              "valueExpr": "CodeableConcept",
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "BackboneType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "boolean",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/boolean"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/v",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#boolean"
+                  },
+                  {
+                    "type": "NodeConstraint",
+                    "values": [
+                      { "value": "true" },
+                      { "value": "false" }
+                    ]
+                  }
+                ]
+              },
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "PrimitiveType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "canonical",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/canonical"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/v",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "datatype": "http://www.w3.org/2001/XMLSchema#anyURI"
+              },
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "PrimitiveType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "code",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/code"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/v",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#token"
+                  },
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                  }
+                ]
+              },
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "PrimitiveType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "dateTime",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/dateTime"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/v",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#gYear"
+                  },
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#gYearMonth"
+                  },
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#date"
+                  },
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#dateTime"
+                  }
+                ]
+              },
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "PrimitiveType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "decimal",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/decimal"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/v",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#decimal"
+                  },
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#double"
+                  }
+                ]
+              },
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "PrimitiveType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "id",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/id"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/v",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "datatype": "http://www.w3.org/2001/XMLSchema#string"
+              },
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "PrimitiveType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "instant",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/instant"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/v",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#dateTime"
+                  },
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                  }
+                ]
+              },
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "PrimitiveType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "string",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/string"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/v",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "datatype": "http://www.w3.org/2001/XMLSchema#string",
+                "maxlength": 1048576
+              },
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "PrimitiveType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "uri",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/uri"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/v",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#anyURI"
+                  },
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                  }
+                ]
+              },
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "extends": [
+          "PrimitiveType"
+        ],
+        "closed": true
+      }
+    },
+    {
+      "id": "xhtml",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+              "valueExpr": {
+                "type": "NodeConstraint",
+                "values": [
+                  "http://hl7.org/fhir/xhtml"
+                ]
+              },
+              "min": 0, "max": 1
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://hl7.org/fhir/v",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral"
+                  },
+                  {
+                    "type": "NodeConstraint",
+                    "datatype": "http://www.w3.org/2001/XMLSchema#string"
+                  }
+                ]
+              },
+              "min": 0, "max": 1
+            }
+          ]
+        },
+        "closed": true
+      }
+    },
+    {
+      "id": "OneOrMore_Coding",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+              "valueExpr": "Coding"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "values": [ "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" ]
+                  },
+                  "OneOrMore_Coding"
+                ]
+              }
+            }
+          ]
+        },
+        "closed": true
+      }
+    },
+    {
+      "id": "OneOrMore_Extension",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+              "valueExpr": "Extension"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "values": [ "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" ]
+                  },
+                  "OneOrMore_Extension"
+                ]
+              }
+            }
+          ]
+        },
+        "closed": true
+      }
+    },
+    {
+      "id": "OneOrMore_HumanName",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+              "valueExpr": "HumanName"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "values": [ "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" ]
+                  },
+                  "OneOrMore_HumanName"
+                ]
+              }
+            }
+          ]
+        },
+        "closed": true
+      }
+    },
+    {
+      "id": "OneOrMore_Identifier",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+              "valueExpr": "Identifier"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "values": [ "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" ]
+                  },
+                  "OneOrMore_Identifier"
+                ]
+              }
+            }
+          ]
+        },
+        "closed": true
+      }
+    },
+    {
+      "id": "OneOrMore_Observation.component",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+              "valueExpr": "Observation.component"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "values": [ "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" ]
+                  },
+                  "OneOrMore_Observation.component"
+                ]
+              }
+            }
+          ]
+        },
+        "closed": true
+      }
+    },
+    {
+      "id": "OneOrMore_Observation.referenceRange",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+              "valueExpr": "Observation.referenceRange"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "values": [ "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" ]
+                  },
+                  "OneOrMore_Observation.referenceRange"
+                ]
+              }
+            }
+          ]
+        },
+        "closed": true
+      }
+    },
+    {
+      "id": "OneOrMore_Questionnaire.item",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+              "valueExpr": "Questionnaire.item"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "values": [ "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" ]
+                  },
+                  "OneOrMore_Questionnaire.item"
+                ]
+              }
+            }
+          ]
+        },
+        "closed": true
+      }
+    },
+    {
+      "id": "OneOrMore_Resource",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+              "valueExpr": "Resource"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "values": [ "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" ]
+                  },
+                  "OneOrMore_Resource"
+                ]
+              }
+            }
+          ]
+        },
+        "closed": true
+      }
+    },
+    {
+      "id": "OneOrMore_canonical",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+              "valueExpr": "canonical"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "values": [ "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" ]
+                  },
+                  "OneOrMore_canonical"
+                ]
+              }
+            }
+          ]
+        },
+        "closed": true
+      }
+    },
+    {
+      "id": "OneOrMore_code",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+              "valueExpr": "code"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "values": [ "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" ]
+                  },
+                  "OneOrMore_code"
+                ]
+              }
+            }
+          ]
+        },
+        "closed": true
+      }
+    },
+    {
+      "id": "OneOrMore_dateTime",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+              "valueExpr": "dateTime"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "values": [ "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" ]
+                  },
+                  "OneOrMore_dateTime"
+                ]
+              }
+            }
+          ]
+        },
+        "closed": true
+      }
+    },
+    {
+      "id": "OneOrMore_string",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "Shape",
+        "expression": {
+          "type": "EachOf",
+          "expressions": [
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+              "valueExpr": "string"
+            },
+            {
+              "type": "TripleConstraint",
+              "predicate": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest",
+              "valueExpr": {
+                "type": "ShapeOr",
+                "shapeExprs": [
+                  {
+                    "type": "NodeConstraint",
+                    "values": [ "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" ]
+                  },
+                  "OneOrMore_string"
+                ]
+              }
+            }
+          ]
+        },
+        "closed": true
+      }
+    },
+    {
+      "id": "http://hl7.org/fhir/ValueSet/administrative-gender",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "NodeConstraint",
+        "values": [
+          { "value": "male" },
+          { "value": "female" },
+          { "value": "other" },
+          { "value": "unknown" }
+        ]
+      }
+    },
+    {
+      "id": "http://hl7.org/fhir/ValueSet/all-languages",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "NodeConstraint",
+        "datatype": "http://www.w3.org/2001/XMLSchema#string"
+      }
+    },
+    {
+      "id": "http://hl7.org/fhir/ValueSet/event-status",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "NodeConstraint",
+        "values": [
+          { "value": "preparation" },
+          { "value": "in-progress" },
+          { "value": "not-done" },
+          { "value": "on-hold" },
+          { "value": "stopped" },
+          { "value": "completed" },
+          { "value": "entered-in-error" },
+          { "value": "unknown" }
+        ]
+      }
+    },
+    {
+      "id": "http://hl7.org/fhir/ValueSet/identifier-use",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "NodeConstraint",
+        "values": [
+          { "value": "usual" },
+          { "value": "official" },
+          { "value": "temp" },
+          { "value": "secondary" },
+          { "value": "old" }
+        ]
+      }
+    },
+    {
+      "id": "http://hl7.org/fhir/ValueSet/item-type",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "NodeConstraint",
+        "values": [
+          { "value": "group" },
+          { "value": "display" },
+          { "value": "question" },
+          { "value": "boolean" },
+          { "value": "decimal" },
+          { "value": "integer" },
+          { "value": "date" },
+          { "value": "dateTime" },
+          { "value": "time" },
+          { "value": "string" },
+          { "value": "text" },
+          { "value": "url" },
+          { "value": "coding" },
+          { "value": "attachment" },
+          { "value": "reference" },
+          { "value": "quantity" }
+        ]
+      }
+    },
+    {
+      "id": "http://hl7.org/fhir/ValueSet/name-use",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "NodeConstraint",
+        "values": [
+          { "value": "usual" },
+          { "value": "official" },
+          { "value": "temp" },
+          { "value": "nickname" },
+          { "value": "anonymous" },
+          { "value": "old" },
+          { "value": "maiden" }
+        ]
+      }
+    },
+    {
+      "id": "http://hl7.org/fhir/ValueSet/narrative-status",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "NodeConstraint",
+        "values": [
+          { "value": "generated" },
+          { "value": "extensions" },
+          { "value": "additional" },
+          { "value": "empty" }
+        ]
+      }
+    },
+    {
+      "id": "http://hl7.org/fhir/ValueSet/observation-status",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "NodeConstraint",
+        "values": [
+          { "value": "registered" },
+          { "value": "preliminary" },
+          { "value": "final" },
+          { "value": "amended" },
+          { "value": "corrected" },
+          { "value": "cancelled" },
+          { "value": "entered-in-error" },
+          { "value": "unknown" }
+        ]
+      }
+    },
+    {
+      "id": "http://hl7.org/fhir/ValueSet/publication-status",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "NodeConstraint",
+        "values": [
+          { "value": "draft" },
+          { "value": "active" },
+          { "value": "retired" },
+          { "value": "unknown" }
+        ]
+      }
+    },
+    {
+      "id": "http://hl7.org/fhir/ValueSet/quantity-comparator",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "NodeConstraint",
+        "values": [
+          { "value": "<" },
+          { "value": "<=" },
+          { "value": ">=" },
+          { "value": ">" },
+          { "value": "ad" }
+        ]
+      }
+    },
+    {
+      "id": "http://hl7.org/fhir/ValueSet/resource-types",
+      "type": "ShapeDecl",
+      "shapeExpr": {
+        "type": "NodeConstraint",
+        "values": [
+          { "value": "Observation" },
+          { "value": "Patient" },
+          { "value": "Procedure" },
+          { "value": "Questionnaire" }
+        ]
+      }
+    }
+  ]
+}
