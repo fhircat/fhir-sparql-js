@@ -54,7 +54,8 @@ public class FhirSparqlEngine extends QueryEngineMain {
 		// into a single
 		// hapi client operation.
 		// op = Algebra.toQuadForm(op) ;
-		Transform someTransform = new OpBGPToHapiJoinsTransform(((FhirQueryContext) context).client());
+		FhirQueryContext fqc = (FhirQueryContext) context;
+		Transform someTransform = new OpBGPToHapiJoinsTransform(fqc.client(), fqc.fhirContext());
 		op = Transformer.transform(someTransform, op);
 
 		return op;

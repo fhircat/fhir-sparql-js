@@ -45,7 +45,7 @@ where {
 		Query q = QueryFactory.create(observation);
 
 		Plan plan = new FhirQueryEngineFactory().create(q, DatasetGraphFactory.create(), BindingRoot.create(),
-				new FhirQueryContext(client));
+				new FhirQueryContext(client, ctx));
 
 		QueryIterator results = plan.iterator();
 

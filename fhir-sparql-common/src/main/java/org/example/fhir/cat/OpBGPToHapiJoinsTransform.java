@@ -14,14 +14,17 @@ import org.apache.jena.sparql.algebra.op.OpBGP;
 import org.apache.jena.sparql.algebra.op.OpJoin;
 import org.apache.jena.sparql.core.BasicPattern;
 
+import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 
 public class OpBGPToHapiJoinsTransform extends TransformCopy {
 	private final IGenericClient client;
+	private final FhirContext ctx;
 
-	public OpBGPToHapiJoinsTransform(IGenericClient client) {
+	public OpBGPToHapiJoinsTransform(IGenericClient client, FhirContext ctx) {
 		super();
 		this.client = client;
+		this.ctx = ctx;
 	}
 
 	@Override
@@ -30,13 +33,13 @@ public class OpBGPToHapiJoinsTransform extends TransformCopy {
 		Op join = null;
 		Map<Node, List<Triple>> collect = bgp.getList().stream().collect(Collectors.groupingBy(Triple::getSubject));
 		if (collect.size() > 0) {
-			return new HapiBgpOp(opBGP, client);
+			return new HapiBgpOp(opBGP, client, ctx);
 		} else {
 			Iterator<Entry<Node, List<Triple>>> iterator = collect.entrySet().iterator();
 
-			join = newHapiBgpOpFrom(iterator.next(), client);
+			join = newHapiBgpOpFrom(iterator.next(), client, ctx);
 			while (iterator.hasNext()) {
-				join = OpJoin.create(join, newHapiBgpOpFrom(iterator.next(), client));
+				join = OpJoin.create(join, newHapiBgpOpFrom(iterator.next(), client, ctx));
 			}
 		}
 		if (join == null) {
@@ -46,8 +49,8 @@ public class OpBGPToHapiJoinsTransform extends TransformCopy {
 		}
 	}
 
-	private HapiBgpOp newHapiBgpOpFrom(Entry<Node, List<Triple>> next, IGenericClient client2) {
+	private HapiBgpOp newHapiBgpOpFrom(Entry<Node, List<Triple>> next, IGenericClient client2, FhirContext ctx) {
 
-		return new HapiBgpOp(new OpBGP(BasicPattern.wrap(next.getValue())), client2);
+		return new HapiBgpOp(new OpBGP(BasicPattern.wrap(next.getValue())), client2, ctx);
 	}
 }
