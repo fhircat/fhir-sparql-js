@@ -1,29 +1,31 @@
 package org.example.fhir.cat;
 
-import java.util.Iterator;
-
 import org.apache.jena.atlas.io.IndentedWriter;
 import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.riot.RDFParser;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.op.OpBGP;
 import org.apache.jena.sparql.algebra.op.OpExt;
 import org.apache.jena.sparql.core.BasicPattern;
+import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.engine.ExecutionContext;
 import org.apache.jena.sparql.engine.QueryIterator;
 import org.apache.jena.sparql.engine.binding.Binding;
+import org.apache.jena.sparql.engine.binding.BindingRoot;
 import org.apache.jena.sparql.engine.iterator.QueryIter;
+import org.apache.jena.sparql.engine.main.QueryEngineMain;
 import org.apache.jena.sparql.serializer.SerializationContext;
+import org.apache.jena.sparql.util.Context;
 import org.apache.jena.sparql.util.NodeIsomorphismMap;
-import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.instance.model.api.IBaseBundle;
 import org.hl7.fhir.r5.model.Bundle;
 import org.hl7.fhir.r5.model.Observation;
-import org.hl7.fhir.r5.model.Patient;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
 import ca.uhn.fhir.rest.gclient.IQuery;
-import ca.uhn.fhir.util.BundleUtil;
 
 //TODO a HapiOp will be a collection of a number of BGPs that will be resolved 
 // to a single HapiClient call.
@@ -31,14 +33,14 @@ import ca.uhn.fhir.util.BundleUtil;
 public class HapiBgpOp extends OpExt {
 
 	private final class QueryIterExtension extends QueryIter {
-		private QueryIterator input;
 		private IQuery<Bundle> fhirSearch;
 		private Bundle bundle;
-		private Iterator<IBaseResource> iterator;
-		
-		private QueryIterExtension(ExecutionContext execCxt, QueryIterator input) {
+		private QueryIterator results;
+		private IGenericClient client;
+
+		private QueryIterExtension(ExecutionContext execCxt, QueryIterator input, IGenericClient client) {
 			super(execCxt);
-			this.input = input;
+			this.client = client;
 			fhirSearch = buildFhirSearch(input);
 		}
 
@@ -46,21 +48,39 @@ public class HapiBgpOp extends OpExt {
 		protected boolean hasNextBinding() {
 			if (bundle == null) {
 				bundle = fhirSearch.execute();
-				iterator = BundleUtil.toListOfResources(ctx, bundle).iterator();
-				iterator.hasNext();
+			} 
+			if (results == null) {
+				return bundleToResultSet();
+			} else if (results.hasNext()) {
+				return true;
+			} else {
+				if (bundle.getLink(IBaseBundle.LINK_NEXT) == null) {
+					return false;
+				} else {
+					bundle = client.loadPage().next(bundle).execute();
+					return bundleToResultSet();
+				}
 			}
-			return false;
+		}
+
+		private boolean bundleToResultSet() {
+			String encodeResourceToString = ctx.newRDFParser().encodeResourceToString(bundle);
+			DatasetGraph dataset = RDFParser.create().fromString(encodeResourceToString).lang(RDFLanguages.TTL).build()
+					.toDatasetGraph();
+
+			results = new QueryEngineMain(original, dataset, BindingRoot.create(), new Context()).getPlan().iterator();
+			return results.hasNext();
 		}
 
 		@Override
 		protected Binding moveToNextBinding() {
-			
-			return null;
+
+			return results.nextBinding();
 		}
 
 		@Override
 		protected void closeIterator() {
-			
+			results.close();
 		}
 
 		@Override
@@ -88,21 +108,20 @@ public class HapiBgpOp extends OpExt {
 
 	@Override
 	public QueryIterator eval(QueryIterator input, ExecutionContext execCxt) {
-		
-		return new QueryIterExtension(execCxt, input);
+
+		return new QueryIterExtension(execCxt, input, fhirClient);
 	}
 
 	private IQuery<Bundle> buildFhirSearch(QueryIterator input) {
-		return fhirClient
-		   .search()
-		   .forResource(findResource(original.getPattern()))
+		Class<Observation> findResource = findResource(original.getPattern());
+		return fhirClient.search().forResource(findResource)
 //		   .where(Patient.NAME.matches().value("smith"))
-		   .returnBundle(Bundle.class);
-		
+				.returnBundle(Bundle.class);
+
 	}
 
 	private Class<Observation> findResource(BasicPattern pattern) {
-		for (Triple t:pattern) {
+		for (Triple t : pattern) {
 			if (t.getPredicate().isURI()) {
 				if (match(t.getPredicate().getURI(), FhirRdf.code)) {
 					return Observation.class;
@@ -113,7 +132,7 @@ public class HapiBgpOp extends OpExt {
 	}
 
 	private boolean match(String uri, Resource code) {
-		
+
 		return uri.equals(code.getURI());
 	}
 
