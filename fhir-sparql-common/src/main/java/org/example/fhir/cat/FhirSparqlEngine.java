@@ -1,12 +1,19 @@
 package org.example.fhir.cat;
 
+import org.apache.jena.graph.Node;
+import org.apache.jena.graph.Node_URI;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Query;
 import org.apache.jena.sparql.ARQInternalErrorException;
 import org.apache.jena.sparql.algebra.Op;
+import org.apache.jena.sparql.algebra.op.OpBGP;
+import org.apache.jena.sparql.core.BasicPattern;
 import org.apache.jena.sparql.core.DatasetGraph;
+import org.apache.jena.sparql.core.Substitute;
 import org.apache.jena.sparql.engine.Plan;
 import org.apache.jena.sparql.engine.QueryEngineFactory;
 import org.apache.jena.sparql.engine.QueryEngineRegistry;
+import org.apache.jena.sparql.engine.QueryIterator;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.main.QueryEngineMain;
 import org.apache.jena.sparql.util.Context;
@@ -22,23 +29,48 @@ public class FhirSparqlEngine extends QueryEngineMain {
 	}
 
 	@Override
+	public QueryIterator eval(Op op, DatasetGraph dsg, Binding input, Context context) {
+//		if (Op )
+		return super.eval(op, dsg, input, context);
+	}
+
+	@Override
 	protected Op modifyOp(Op op) {
 		// We are going to modify the algebra here.
 
 		op = super.modifyOp(op);
-	
+
 		// bgp(triple(?subjectRef fhir:reference ?patient .)
-		//	   triple(?patient a fhir:Patient),
-		//	   triple(?patient fhir:id ?patIdElt))
-		// 
+		// triple(?patient a fhir:Patient),
+		// triple(?patient fhir:id ?patIdElt))
+		//
 		// ->
 		// bgp(hapiJoin (triple(?patient a fhir:Patient),
-		//	             triple(?patient fhir:id ?patIdElt )),
-		//      triple(?patient fhir:id ?patIdElt)))
-		// we want to combine parts of the query in one bgp that have the same ?subject into a single
+		// triple(?patient fhir:id ?patIdElt )),
+		// triple(?patient fhir:id ?patIdElt)))
+		// we want to combine parts of the query in one bgp that have the same ?subject
+		// into a single
 		// hapi client operation.
 		// op = Algebra.toQuadForm(op) ;
+
+		if (op instanceof OpBGP bgpop) {
+			BasicPattern bgp = bgpop.getPattern();
+			for (Triple triple : bgp.getList()) {
+				if (isKnownFhir(triple.getSubject()) || isKnownFhir(triple.getPredicate())
+						|| isKnownFhir(triple.getObject())) {
+
+				}
+			}
+		}
+
 		return op;
+	}
+
+	private boolean isKnownFhir(Node predicate) {
+		if (predicate instanceof Node_URI p && FhirRdf.allFhirResourceStrings.contains(p.getURI()))
+			return true;
+		else
+			return false;
 	}
 
 	static QueryEngineFactory factory = new FhirQueryEngineFactory();
