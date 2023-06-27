@@ -66,83 +66,122 @@ describe('parsers', () => {
   });
 });
 
+const ObsAObservation = {
+  subject: { termType: 'Variable', value: 'obs' },
+  predicate: Rdf.type,
+  object: { termType: 'NamedNode', value: 'http://hl7.org/fhir/Observation' }
+};
+const ObsCodeCodeList = {
+  subject: { termType: 'Variable', value: 'obs' },
+  predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/code' },
+  object: { termType: 'Variable', value: 'codeList' }
+};
+
 describe('FhirSparql', () => {
   it('should index predicates', () => {
     const rewriter = new FhirSparql(FhirShEx);
     expect(rewriter.predicateToShapeDecl['http://hl7.org/fhir/item'].map(d => d.id)).toEqual([ 'Questionnaire', 'Questionnaire.item' ]);
   });
+  const CodeListFirstRestCoding = {
+    subject: { termType: 'Variable', value: 'codeList' },
+    predicate: FirstRest,
+    object: { termType: 'Variable', value: 'coding' }
+  };
+  const CodingCodeCodeCode = {
+    subject: { termType: 'Variable', value: 'coding' },
+    predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/code' },
+    object: { termType: 'Variable', value: 'codeCode' }
+  };
+  const CodeCodeV1234567 = {
+    subject: { termType: 'Variable', value: 'codeCode' },
+    predicate: Fhir.v,
+    object: { termType: 'Literal', value: '1234567', language: '', datatype: Xsd.integer }
+  };
+  const CodingSytemCodingSystem = {
+    subject: { termType: 'Variable', value: 'coding' },
+    predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/system' },
+    object: { termType: 'Variable', value: 'codingSystem' }
+  };
+  const CodingSystemVSnomed = {
+    subject: { termType: 'Variable', value: 'codingSystem' },
+    predicate: Fhir.v,
+    object: { termType: 'Literal', value: 'http://snomed.info/id', language: '', datatype: Xsd.string }
+  };
+  const ObsSubjectSubjectRef = {
+    subject: { termType: 'Variable', value: 'obs' },
+    predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/subject' },
+    object: { termType: 'Variable', value: 'subjectRef' }
+  };
+  const SubjectRefReferenceSubject = {
+    subject: { termType: 'Variable', value: 'subjectRef' },
+    predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/reference' },
+    object: { termType: 'Variable', value: 'subject' }
+  };
+  const SubjectAPatient = {
+    subject: { termType: 'Variable', value: 'subject' },
+    predicate: Rdf.type,
+    object: { termType: 'NamedNode', value: 'http://hl7.org/fhir/Patient' }
+  };
+  const SubjectIdPatIdElt = {
+    subject: { termType: 'Variable', value: 'subject' },
+    predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/id' },
+    object: { termType: 'Variable', value: 'patIdElt' }
+  };
+  const PatIdEltVPatId = {
+    subject: { termType: 'Variable', value: 'patIdElt' },
+    predicate: Fhir.v,
+    object: { termType: 'Variable', value: 'patId' }
+  };
+  const ObsTreeBgp = [
+    ObsAObservation,
+    ObsCodeCodeList,
+    CodeListFirstRestCoding,
+    CodingCodeCodeCode,
+    CodeCodeV1234567,
+    CodingSytemCodingSystem,
+    CodingSystemVSnomed,
+    ObsSubjectSubjectRef,
+    SubjectRefReferenceSubject,
+  ];
+  const SubjectTreeBgp = [
+    SubjectAPatient,
+    SubjectIdPatIdElt,
+    PatIdEltVPatId,
+  ];
+  const ObsArcTree = {tp: null, out: [
+    {tp: ObsAObservation, out: []},
+    {tp: ObsCodeCodeList, out: [
+      {tp: CodeListFirstRestCoding, out: [
+        {tp: CodingCodeCodeCode, out: [
+          {tp: CodeCodeV1234567, out: []}
+        ]},
+        {tp: CodingSytemCodingSystem, out: [
+          {tp: CodingSystemVSnomed, out: []}
+        ]}
+      ]}
+    ]},
+    {tp: ObsSubjectSubjectRef, out: [
+      {tp: SubjectRefReferenceSubject, out: []}
+    ]}          
+  ]};
+  const SubjectArcTree = {tp: null, out: [
+    {tp: SubjectAPatient, out: []},
+    {tp: SubjectIdPatIdElt, out: [
+      {tp: PatIdEltVPatId, out: []}
+    ]}
+  ]};
+  const SubjectConnectingVariable = {
+    variable: SubjectRefReferenceSubject.object.value, // or just the object?
+    arcTrees: [ObsArcTree.out[2].out[0], SubjectArcTree]
+  };
 
   it('should translate obs-path', () => {
     const rewriter = new FhirSparql(FhirShEx);
-    const iQuery = SparqlParser.parse(File.readFileSync(Path.join(Tests, '../../notes/obs-pat.srq'), 'utf-8'));
+    const iQuery = SparqlParser.parse(File.readFileSync(Path.join(Tests, '../../notes/obs-pat-mid.srq'), 'utf-8'));debugger
     const queryPlan = rewriter.opBgpToFhirPathExecutions(iQuery);
-    expect(JSON.parse(JSON.stringify(queryPlan))).toEqual([
-      {
-        outgoingArcTree: null,
-        connectingVariables: [],
-        triplePatterns: [
-          {
-            subject: { termType: 'Variable', value: 'obs' },
-            predicate: Rdf.type,
-            object: { termType: 'NamedNode', value: 'http://hl7.org/fhir/Observation' }
-          },
-          {
-            subject: { termType: 'Variable', value: 'obs' },
-            predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/code' },
-            object: { termType: 'Variable', value: 'codeList' }
-          },
-          {
-            subject: { termType: 'Variable', value: 'codeList' },
-            predicate: FirstRest,
-            object: { termType: 'Variable', value: 'coding' }
-          },
-          {
-            subject: { termType: 'Variable', value: 'coding' },
-            predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/code' },
-            object: { termType: 'Variable', value: 'codeCode' }
-          },
-          {
-            subject: { termType: 'Variable', value: 'codeCode' },
-            predicate: Fhir.v,
-            object: { termType: 'Literal', value: '1234567', language: '', datatype: Xsd.integer }
-          },
-          {
-            subject: { termType: 'Variable', value: 'coding' },
-            predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/system' },
-            object: { termType: 'Variable', value: 'codingSystem' }
-          },
-          {
-            subject: { termType: 'Variable', value: 'codingSystem' },
-            predicate: Fhir.v,
-            object: { termType: 'Literal', value: 'http://snomed.info/id', language: '', datatype: Xsd.string }
-          },
-          {
-            subject: { termType: 'Variable', value: 'obs' },
-            predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/subject' },
-            object: { termType: 'Variable', value: 'subjectRef' }
-          },
-          {
-            subject: { termType: 'Variable', value: 'subjectRef' },
-            predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/reference' },
-            object: { termType: 'Variable', value: 'subject' }
-          },
-          {
-            subject: { termType: 'Variable', value: 'subject' },
-            predicate: Rdf.type,
-            object: { termType: 'NamedNode', value: 'http://hl7.org/fhir/Patient' }
-          },
-          {
-            subject: { termType: 'Variable', value: 'subject' },
-            predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/id' },
-            object: { termType: 'Variable', value: 'patIdElt' }
-          },
-          {
-            subject: { termType: 'Variable', value: 'patIdElt' },
-            predicate: Fhir.v,
-            object: { termType: 'Variable', value: 'patId' }
-          }
-        ]
-      }
-    ]);
+    expect(queryPlan.arcTrees).toEqual([ObsArcTree, SubjectArcTree]);
+    // expect(queryPlan.connectingVariables).toEqual([SubjectConnectingVariable]);
+    expect(queryPlan.arcTrees[0].getBgp()).toEqual(ObsTreeBgp);
+    expect(queryPlan.arcTrees[1].getBgp()).toEqual(SubjectTreeBgp);
   });
 });

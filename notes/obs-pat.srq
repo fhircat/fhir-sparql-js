@@ -4,21 +4,25 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT ?obsId ?patId WHERE {
-  ?obs a fhir:Observation .
-
-  # what
-  ?obs fhir:code ?codeList .
-  ?codeList rdf:first*/rdf:rest ?coding .
-  ?coding fhir:code ?codeCode .
-  ?codeCode fhir:v 1234567 .
-  ?coding fhir:system ?codingSystem .
-  ?codingSystem fhir:v "http://snomed.info/id" .
-
-  ?obs fhir:subject ?subjectRef .
-
-  # who
-  ?subjectRef fhir:reference ?subject .
-  ?subject a fhir:Patient .
-  ?subject fhir:id ?patIdElt .
-  ?patIdElt fhir:v ?patId .
+  # Obs
+  ?obs a fhir:Observation .				#  0
+                                                	
+  #   code                                      	
+  ?obs fhir:code ?codeList .				#  1
+    ?codeList rdf:first*/rdf:rest ?coding .		#  2
+      ?coding fhir:code ?codeCode .			#  3
+        ?codeCode fhir:v 1234567 .			#  4
+      ?coding fhir:system ?codingSystem .		#  5
+        ?codingSystem fhir:v "http://snomed.info/id" .	#  6
+                                                	
+  #   subject                                   	
+  ?obs fhir:subject ?subjectRef .			#  7
+    ?subjectRef fhir:reference ?subject .		#  8
+                                                	
+  # Patient                                     	
+  ?subject a fhir:Patient .				#  9
+                                                	
+  #   id                                        	
+  ?subject fhir:id ?patIdElt .				# 10
+    ?patIdElt fhir:v ?patId .				# 11
 }

@@ -1,0 +1,19 @@
+PREFIX fhir: <http://hl7.org/fhir/>
+PREFIX sct: <http://snomed.info/id/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?obsId ?patId WHERE {			#    | goal |
+  ?subject fhir:id ?patIdElt .			#  0 |   10 | 
+  ?coding fhir:code ?codeCode .			#  1 |    3 |
+  ?codeCode fhir:v 1234567 .			#  2 |    4 |
+  ?codeList rdf:first*/rdf:rest ?coding .	#  3 |    2 |
+  ?coding fhir:system ?codingSystem .		#  4 |    5 |
+  ?codingSystem fhir:v "http://snomed.info/id" .#  5 |    6 |
+  ?subject a fhir:Patient .			#  6 |    9 |
+  ?obs a fhir:Observation .			#  7 |    0 |
+  ?patIdElt fhir:v ?patId .			#  8 |   11 |
+  ?obs fhir:code ?codeList .			#  9 |    1 |
+  ?subjectRef fhir:reference ?subject .		# 10 |    8 |
+  ?obs fhir:subject ?subjectRef .		# 11 |    7 |
+}
