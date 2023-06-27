@@ -37,7 +37,7 @@ where {
 	@Test
 	public void observationQuery() {
 		FhirContext ctx = FhirContext.forR5();
-		String serverBase = "http://fhirtest.uhn.ca/baseR5";
+		String serverBase = "http://hapi.fhir.org/baseR5";
 
 		IGenericClient client = ctx.newRestfulGenericClient(serverBase);
 		IFetchConformanceUntyped capabilities = client.capabilities();
