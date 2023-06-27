@@ -2,29 +2,21 @@ package org.example.fhirsparql.web.controller;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import ca.uhn.fhir.rest.gclient.IFetchConformanceUntyped;
 import org.apache.jena.query.*;
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.sparql.core.DatasetGraphFactory;
 import org.apache.jena.sparql.engine.Plan;
 import org.apache.jena.sparql.engine.QueryIterator;
-import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.binding.BindingRoot;
-import org.apache.jena.sparql.resultset.SPARQLResult;
 import org.example.fhir.cat.FhirQueryContext;
 import org.example.fhir.cat.FhirSparqlEngine;
-import org.example.fhirsparql.web.model.SparqlQuery;
 import org.hl7.fhir.r5.model.Bundle;
 import org.hl7.fhir.r5.model.Patient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
 
 
 @RestController
@@ -59,7 +51,7 @@ public class SparqlController {
     protected String executeSparqlQuery(String sparqlQuery) {
         IGenericClient client = ctx.newRestfulGenericClient(fhirBase);
         Query query = QueryFactory.create(sparqlQuery);
-        Plan plan = new FhirSparqlEngine.FhirQueryEngineFactory().create(query, DatasetGraphFactory.create(), BindingRoot.create(), new FhirQueryContext(client));
+        Plan plan = new FhirSparqlEngine.FhirQueryEngineFactory().create(query, DatasetGraphFactory.create(), BindingRoot.create(), new FhirQueryContext(client, ctx));
         QueryIterator results = plan.iterator();
         ResultSet resultSet = ResultSetFactory.create(results, query.getResultVars());
         //return new SPARQLResult(resultSet);
