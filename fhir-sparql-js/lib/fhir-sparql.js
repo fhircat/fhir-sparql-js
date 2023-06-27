@@ -41,6 +41,14 @@ class PredicateToShapeDecl extends ShExVisitor {
   }
 }
 
+class FhirPathExecution {
+  constructor () {
+    this.triplePatterns = [];
+    this.outgoingArcTree = null;
+    this.connectingVariables = [];
+  }
+}
+
 class FhirSparql {
   constructor (shex) {
     this.shex = shex;
@@ -49,8 +57,11 @@ class FhirSparql {
     this.predicateToShapeDecl = visitor.map;
   }
 
-  getEvaluator (query) {
-    return null;
+  opBgpToFhirPathExecutions (query) {
+    const ret = [];
+    ret.push(new FhirPathExecution());
+    ret[0].triplePatterns = query.where[0].triples;
+    return ret;
   }
 }
 

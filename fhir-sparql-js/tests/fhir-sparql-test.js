@@ -8,6 +8,34 @@ const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/main/resour
 const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'org/uu3/ShEx-mini-terse.shex'), 'utf-8'));
 const {FhirSparql, PredicateToShapeDecl} = require('../lib/fhir-sparql');
 
+const Xsd = {
+  integer: { termType: 'NamedNode', value: 'http://www.w3.org/2001/XMLSchema#integer' },
+  string: { termType: 'NamedNode', value: 'http://www.w3.org/2001/XMLSchema#string' },
+};
+const Rdf = {
+  type: { termType: 'NamedNode', value: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' },
+};
+const Fhir = {
+  v: { termType: 'NamedNode', value: 'http://hl7.org/fhir/v' },
+}
+
+const FirstRest = { type: 'path', pathType: '/', items: [
+  {
+    "type": "path",
+    "items": [
+      {
+        "termType": "NamedNode",
+        "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
+      }
+    ],
+    "pathType": "*"
+  },
+  {
+    "termType": "NamedNode",
+    "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest"
+  },
+] };
+
 describe('PredicateToShapeDecl', () => {
   it('should work from ShapeDecl', () => {
     const visitor = new PredicateToShapeDecl();
@@ -47,6 +75,74 @@ describe('FhirSparql', () => {
   it('should translate obs-path', () => {
     const rewriter = new FhirSparql(FhirShEx);
     const iQuery = SparqlParser.parse(File.readFileSync(Path.join(Tests, '../../notes/obs-pat.srq'), 'utf-8'));
-    expect(rewriter.getEvaluator(iQuery)).not.toEqual(null);
+    const queryPlan = rewriter.opBgpToFhirPathExecutions(iQuery);
+    expect(JSON.parse(JSON.stringify(queryPlan))).toEqual([
+      {
+        outgoingArcTree: null,
+        connectingVariables: [],
+        triplePatterns: [
+          {
+            subject: { termType: 'Variable', value: 'obs' },
+            predicate: Rdf.type,
+            object: { termType: 'NamedNode', value: 'http://hl7.org/fhir/Observation' }
+          },
+          {
+            subject: { termType: 'Variable', value: 'obs' },
+            predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/code' },
+            object: { termType: 'Variable', value: 'codeList' }
+          },
+          {
+            subject: { termType: 'Variable', value: 'codeList' },
+            predicate: FirstRest,
+            object: { termType: 'Variable', value: 'coding' }
+          },
+          {
+            subject: { termType: 'Variable', value: 'coding' },
+            predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/code' },
+            object: { termType: 'Variable', value: 'codeCode' }
+          },
+          {
+            subject: { termType: 'Variable', value: 'codeCode' },
+            predicate: Fhir.v,
+            object: { termType: 'Literal', value: '1234567', language: '', datatype: Xsd.integer }
+          },
+          {
+            subject: { termType: 'Variable', value: 'coding' },
+            predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/system' },
+            object: { termType: 'Variable', value: 'codingSystem' }
+          },
+          {
+            subject: { termType: 'Variable', value: 'codingSystem' },
+            predicate: Fhir.v,
+            object: { termType: 'Literal', value: 'http://snomed.info/id', language: '', datatype: Xsd.string }
+          },
+          {
+            subject: { termType: 'Variable', value: 'obs' },
+            predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/subject' },
+            object: { termType: 'Variable', value: 'subjectRef' }
+          },
+          {
+            subject: { termType: 'Variable', value: 'subjectRef' },
+            predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/reference' },
+            object: { termType: 'Variable', value: 'subject' }
+          },
+          {
+            subject: { termType: 'Variable', value: 'subject' },
+            predicate: Rdf.type,
+            object: { termType: 'NamedNode', value: 'http://hl7.org/fhir/Patient' }
+          },
+          {
+            subject: { termType: 'Variable', value: 'subject' },
+            predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/id' },
+            object: { termType: 'Variable', value: 'patIdElt' }
+          },
+          {
+            subject: { termType: 'Variable', value: 'patIdElt' },
+            predicate: Fhir.v,
+            object: { termType: 'Variable', value: 'patId' }
+          }
+        ]
+      }
+    ]);
   });
 });

@@ -346,7 +346,7 @@ function index (schema) {
     shapeExprs: {},
     tripleExprs: {}
   };
-  let v = ShExVisitor();
+  let v = new ShExVisitor();
 
   let oldVisitExpression = v.visitTripleExpr;
   v.visitTripleExpr = function (expression, ...args) {
