@@ -11,12 +11,20 @@ class PredicateToShapeDecl extends ShExVisitor {
     this.map = {};
     this.curDecl = null;
   }
+
+  visitSchema(schema, ...args) {
+    if (!schema || !(typeof schema === 'object') || schema.type !== 'Schema')
+      throw Error(`visitSchema argument must be a schema, got ${JSON.stringify(schema)}`);
+    return super.visitSchema(schema, ...args);
+  }
+
   visitShapeDecl(decl, ...args) {
     this.curDecl = decl;
     const ret = super.visitShapeDecl(decl, ...args);
     this.curDecl = null;
     return ret;
   }
+
   visitTripleConstraint(expr, ...args) {
     if (this.curDecl === null)
       throw new Error(`visiting ${JSON.stringify(expr)} while not in a ShapeDecl`);
@@ -27,6 +35,7 @@ class PredicateToShapeDecl extends ShExVisitor {
     }
     return null;
   }
+
   visitNodeConstraint(shape, ...args) { // don't bother visiting NodeConstraints
     return null;
   }
@@ -39,6 +48,10 @@ class FhirSparql {
     visitor.visitSchema(shex);
     this.predicateToShapeDecl = visitor.map;
   }
+
+  getEvaluator (query) {
+    return null;
+  }
 }
 
-module.exports = {FhirSparql}
+module.exports = {FhirSparql, PredicateToShapeDecl}
