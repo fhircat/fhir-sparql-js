@@ -113,8 +113,8 @@ public class HapiBgpOp extends OpExt {
 	}
 
 	private boolean match(String uri, Resource code) {
-		// TODO Auto-generated method stub
-		return false;
+		
+		return uri.equals(code.getURI());
 	}
 
 	@Override
