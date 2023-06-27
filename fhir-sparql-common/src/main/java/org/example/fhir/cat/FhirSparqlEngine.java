@@ -6,6 +6,8 @@ import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Query;
 import org.apache.jena.sparql.ARQInternalErrorException;
 import org.apache.jena.sparql.algebra.Op;
+import org.apache.jena.sparql.algebra.Transform;
+import org.apache.jena.sparql.algebra.Transformer;
 import org.apache.jena.sparql.algebra.op.OpBGP;
 import org.apache.jena.sparql.core.BasicPattern;
 import org.apache.jena.sparql.core.DatasetGraph;
@@ -52,25 +54,10 @@ public class FhirSparqlEngine extends QueryEngineMain {
 		// into a single
 		// hapi client operation.
 		// op = Algebra.toQuadForm(op) ;
-
-		if (op instanceof OpBGP bgpop) {
-			BasicPattern bgp = bgpop.getPattern();
-			for (Triple triple : bgp.getList()) {
-				if (isKnownFhir(triple.getSubject()) || isKnownFhir(triple.getPredicate())
-						|| isKnownFhir(triple.getObject())) {
-
-				}
-			}
-		}
+		Transform someTransform = new OpBGPToHapiJoinsTransform(((FhirQueryContext) context).client());
+		op = Transformer.transform(someTransform, op);
 
 		return op;
-	}
-
-	private boolean isKnownFhir(Node predicate) {
-		if (predicate instanceof Node_URI p && FhirRdf.allFhirResourceStrings.contains(p.getURI()))
-			return true;
-		else
-			return false;
 	}
 
 	static QueryEngineFactory factory = new FhirQueryEngineFactory();

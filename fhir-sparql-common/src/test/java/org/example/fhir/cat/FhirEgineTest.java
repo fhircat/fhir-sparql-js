@@ -30,7 +30,7 @@ prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 select ?observation
 where {
 	?observation fhir:code ?codeList .
-	?observation rdf:first/rdf:rest* ?coding .
+	# ?observation rdf:first/rdf:rest* ?coding .
 }
 """;
 
