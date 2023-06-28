@@ -23,30 +23,15 @@
     <build>
         <pluginManagement>
             <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-dependency-plugin</artifactId>
-                    <version>3.2.0</version>
-                </plugin>
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-dependency-plugin</artifactId>-->
+<!--                    <version>3.2.0</version>-->
+<!--                </plugin>-->
             </plugins>
         </pluginManagement>
 
         <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                        <configuration>
-                            <mainClass>ca.uhn.fhir.jpa.starter.Application</mainClass>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
             <!-- Tell Maven which Java source version you want to use -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
