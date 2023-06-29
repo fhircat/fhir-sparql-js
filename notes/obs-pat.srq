@@ -5,24 +5,25 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT ?obsId ?patId WHERE {
   # Obs
-  ?obs a fhir:Observation .				#  0
+  ?obs a fhir:Observation .					#  0
                                                 	
   #   code                                      	
-  ?obs fhir:code ?codeList .				#  1
-    ?codeList rdf:first*/rdf:rest ?coding .		#  2
-      ?coding fhir:code ?codeCode .			#  3
-        ?codeCode fhir:v 1234567 .			#  4
-      ?coding fhir:system ?codingSystem .		#  5
-        ?codingSystem fhir:v "http://snomed.info/id" .	#  6
+  ?obs fhir:code ?code .					#  1
+    ?code fhir:coding ?codeList .				#  2
+      ?codeList (rdf:first/rdf:rest)*/rdf:first ?codeElt .	#  3
+        ?codeElt fhir:code ?codeCode .				#  4
+          ?codeCode fhir:v "789-8" .				#  5
+        ?codeElt fhir:system ?codingSystem .			#  6
+          ?codingSystem fhir:v "http://loinc.org"^^xsd:anyURI .	#  7
                                                 	
   #   subject                                   	
-  ?obs fhir:subject ?subjectRef .			#  7
-    ?subjectRef fhir:reference ?subject .		#  8
+  ?obs fhir:subject ?subjectRef .				#  8
+    ?subjectRef fhir:reference ?subject .			#  9
                                                 	
   # Patient                                     	
-  ?subject a fhir:Patient .				#  9
+  ?subject a fhir:Patient .					# 10
                                                 	
   #   id                                        	
-  ?subject fhir:id ?patIdElt .				# 10
-    ?patIdElt fhir:v ?patId .				# 11
+  ?subject fhir:id ?patIdElt .					# 11
+    ?patIdElt fhir:v ?patId .					# 12
 }

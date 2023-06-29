@@ -16,18 +16,23 @@ const Rdf = {
 const Xsd = {
   integer: { termType: 'NamedNode', value: Ns.xsd + 'integer' },
   string: { termType: 'NamedNode', value: Ns.xsd + 'string' },
+  anyURI: { termType: 'NamedNode', value: Ns.xsd + 'anyURI' },
 };
 
 const Fhir = {
   v: { termType: 'NamedNode', value: Ns.fhir + 'v' },
 }
 
-const FirstRest = { type: 'path', pathType: '/', items: [
-  { "type": "path",
-    "pathType": "*",
-    "items": [ { "termType": "NamedNode", "value": Rdf.first.value } ] },
-  { "termType": "NamedNode",
-    "value": Rdf.rest.value },
-] };
+const FirstRest = { type: "path", pathType: "/", items: [
+  { type: "path",
+    pathType: "*",
+    items: [
+      { type: "path", pathType: "/", items: [
+        { termType: "NamedNode", value: Rdf.first.value },
+        { termType: "NamedNode", value: Rdf.rest.value }
+      ]}
+    ]},
+  { termType: "NamedNode", value: Rdf.first.value }
+]};
 
 module.exports = {Ns, Rdf, Xsd, Fhir, FirstRest};

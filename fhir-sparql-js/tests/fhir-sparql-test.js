@@ -6,7 +6,7 @@ const ShExParser = require("@shexjs/parser").construct();
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/main/resources/');
 const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'org/uu3/ShEx-mini-terse.shex'), 'utf-8'));
-const {FhirSparql, ConnectingVariables, PredicateToShapeDecl, ArcTree} = require('../lib/fhir-sparql');
+const {FhirSparql, ConnectingVariables, PredicateToShapeDecl, ArcTree, ToTurtle} = require('../lib/fhir-sparql');
 // const X = require('../lib/Namespaces');
 const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../lib/Namespaces');
 
@@ -65,9 +65,11 @@ describe('FhirSparql', () => {
     const {arcTrees, connectingVariables} = rewriter.getArcTrees(iQuery);
 
     // test arcTrees
-    expect(arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
+    expect(arcTrees[0].getBgp().map(ToTurtle)).toEqual(BGP_obs.map(ToTurtle)); // ToTurtle helps with debugging
     expect(arcTrees[0].getBgp()).toEqual(BGP_obs);
+    expect(arcTrees[1].getBgp().map(ToTurtle)).toEqual(BGP_subject.map(ToTurtle));
     expect(arcTrees[1].getBgp()).toEqual(BGP_subject);
+    expect(arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
 
     // test connectingVariables
     console.log(ConnectingVariables.toString(connectingVariables));
@@ -96,35 +98,40 @@ const T_obs_A_Observation = {
   predicate: Rdf.type,
   object: { termType: 'NamedNode', value: 'http://hl7.org/fhir/Observation' }
 };
-const T_obs_code_codeList = {
+const T_obs_code_code = {
   subject: { termType: 'Variable', value: 'obs' },
   predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/code' },
+  object: { termType: 'Variable', value: 'code' }
+};
+const T_code_coding_codeList = {
+  subject: { termType: 'Variable', value: 'code' },
+  predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/coding' },
   object: { termType: 'Variable', value: 'codeList' }
 };
-const T_codeList_FirstRest_coding = {
+const T_codeList_FirstRest_codeElt = {
   subject: { termType: 'Variable', value: 'codeList' },
   predicate: FirstRest,
-  object: { termType: 'Variable', value: 'coding' }
+  object: { termType: 'Variable', value: 'codeElt' }
 };
-const T_coding_code_codeCode = {
-  subject: { termType: 'Variable', value: 'coding' },
+const T_codeElt_code_codeCode = {
+  subject: { termType: 'Variable', value: 'codeElt' },
   predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/code' },
   object: { termType: 'Variable', value: 'codeCode' }
 };
-const T_codeCode_v_1234567 = {
+const T_codeCode_v_789_8 = {
   subject: { termType: 'Variable', value: 'codeCode' },
   predicate: Fhir.v,
-  object: { termType: 'Literal', value: '1234567', language: '', datatype: Xsd.integer }
+  object: { termType: 'Literal', value: '789-8', language: '', datatype: Xsd.string }
 };
-const T_coding_sytem_codingSystem = {
-  subject: { termType: 'Variable', value: 'coding' },
+const T_codeElt_sytem_codingSystem = {
+  subject: { termType: 'Variable', value: 'codeElt' },
   predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/system' },
   object: { termType: 'Variable', value: 'codingSystem' }
 };
 const T_codingSystem_v_snomed = {
   subject: { termType: 'Variable', value: 'codingSystem' },
   predicate: Fhir.v,
-  object: { termType: 'Literal', value: 'http://snomed.info/id', language: '', datatype: Xsd.string }
+  object: { termType: 'Literal', value: 'http://loinc.org', language: '', datatype: Xsd.anyURI }
 };
 const T_obs_subject_subjectRef = {
   subject: { termType: 'Variable', value: 'obs' },
@@ -155,13 +162,15 @@ const T_patIdElt_v_patId = {
 // ArcTrees
 const ArcTree_obs = {tp: null, out: [
   {tp: T_obs_A_Observation, out: []},
-  {tp: T_obs_code_codeList, out: [
-    {tp: T_codeList_FirstRest_coding, out: [
-      {tp: T_coding_code_codeCode, out: [
-        {tp: T_codeCode_v_1234567, out: []}
-      ]},
-      {tp: T_coding_sytem_codingSystem, out: [
-        {tp: T_codingSystem_v_snomed, out: []}
+  {tp: T_obs_code_code, out: [
+    {tp: T_code_coding_codeList, out: [
+      {tp: T_codeList_FirstRest_codeElt, out: [
+        {tp: T_codeElt_code_codeCode, out: [
+          {tp: T_codeCode_v_789_8, out: []}
+        ]},
+        {tp: T_codeElt_sytem_codingSystem, out: [
+          {tp: T_codingSystem_v_snomed, out: []}
+        ]}
       ]}
     ]}
   ]},
@@ -188,11 +197,12 @@ const ConnectingVariables_obs_pat_mid = {
 // BGPs
 const BGP_obs = [
   T_obs_A_Observation,
-  T_obs_code_codeList,
-  T_codeList_FirstRest_coding,
-  T_coding_code_codeCode,
-  T_codeCode_v_1234567,
-  T_coding_sytem_codingSystem,
+  T_obs_code_code,
+  T_code_coding_codeList,
+  T_codeList_FirstRest_codeElt,
+  T_codeElt_code_codeCode,
+  T_codeCode_v_789_8,
+  T_codeElt_sytem_codingSystem,
   T_codingSystem_v_snomed,
   T_obs_subject_subjectRef,
   T_subjectRef_reference_subject,

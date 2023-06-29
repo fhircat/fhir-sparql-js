@@ -64,6 +64,11 @@ function ToTurtle (x) {
     return 'null';
   if ('subject' in x)
     return `${ToTurtle(x.subject)} ${ToTurtle(x.predicate)} ${ToTurtle(x.object)} .`
+  if (x.type === 'path')
+    return x.value
+      ? '<' + x.value + '>'
+      : '(' + x.items.map(item => FhirSparql.pStr(item) + (item.pathType || '')).join('/') + ')'
+
   switch (x.termType) {
   case 'NamedNode': return '<' + x.value + '>';
   case 'BlankNode': return '_:' + x.value;
@@ -75,7 +80,7 @@ function ToTurtle (x) {
        ? ToTurtle(x.datatype)
        : '');
   // istanbul ignore next
-  default: throw Exception(`ToTurtle - unrecognized argument ${JSON.stringify(x)}`);
+  default: throw Error(`ToTurtle - unrecognized argument ${JSON.stringify(x)}`);
   }
 }
 
@@ -94,13 +99,15 @@ class ConnectingVariables {
 
 const Rule_CodeWithSystem = {
   arcTree: {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
-    {tp: {subject: null, predicate: FirstRest, object: null}, out: [
-      {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
-        {tp: {subject: null, predicate: { termType: Ns.fhir + 'v'}, object: null}, out: []}
-      ]},
-      {tp: {subject: null, predicate: { termType: Ns.fhir + 'system'}, object: null}, out: [
-        {tp: {subject: null, predicate: { termType: Ns.fhir + 'v'}, object: null}, out: []}
-      ]},
+    {tp: {subject: null, predicate: { termType: Ns.fhir + 'coding'}, object: null}, out: [
+      {tp: {subject: null, predicate: FirstRest, object: null}, out: [
+        {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
+          {tp: {subject: null, predicate: { termType: Ns.fhir + 'v'}, object: null}, out: []}
+        ]},
+        {tp: {subject: null, predicate: { termType: Ns.fhir + 'system'}, object: null}, out: [
+          {tp: {subject: null, predicate: { termType: Ns.fhir + 'v'}, object: null}, out: []}
+        ]},
+      ]}
     ]}
   ]},
   fhirQuery: 'code',
@@ -267,7 +274,7 @@ class FhirSparql {
     return {arcTrees, connectingVariables};
   }
 
-  opBgpToFhirPathExecutions ({arcTree, connectingVariables, SparqlSolution}) {
+  opBgpToFhirPathExecutions (arcTree, connectingVariables, SparqlSolution) {
     return 1;
   }
 
@@ -362,4 +369,4 @@ class FhirSparql {
   }
 }
 
-module.exports = {FhirSparql, ConnectingVariables, PredicateToShapeDecl, ArcTree};
+module.exports = {FhirSparql, ConnectingVariables, PredicateToShapeDecl, ArcTree, ToTurtle};
