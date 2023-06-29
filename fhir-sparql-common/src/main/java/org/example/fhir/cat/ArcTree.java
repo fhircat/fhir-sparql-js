@@ -13,8 +13,8 @@ public class ArcTree {
         this.currentNode = currentNode;
     }
 
-    public ArcTree(TriplePattern treeNode, List<ArcTree> children) {
-        this.currentNode = treeNode;
+    public ArcTree(TriplePattern currentNode, List<ArcTree> children) {
+        this.currentNode = currentNode;
         this.children = children;
     }
 
