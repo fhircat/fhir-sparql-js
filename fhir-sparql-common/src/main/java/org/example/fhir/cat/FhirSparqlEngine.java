@@ -5,6 +5,9 @@ import org.apache.jena.sparql.ARQInternalErrorException;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.Transform;
 import org.apache.jena.sparql.algebra.Transformer;
+import org.apache.jena.sparql.algebra.op.OpBGP;
+import org.apache.jena.sparql.algebra.op.OpProject;
+import org.apache.jena.sparql.algebra.op.OpSequence;
 import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.engine.Plan;
 import org.apache.jena.sparql.engine.QueryEngineFactory;
@@ -13,6 +16,9 @@ import org.apache.jena.sparql.engine.QueryIterator;
 import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.main.QueryEngineMain;
 import org.apache.jena.sparql.util.Context;
+
+import java.util.List;
+import java.util.Stack;
 
 public class FhirSparqlEngine extends QueryEngineMain {
 
@@ -35,6 +41,13 @@ public class FhirSparqlEngine extends QueryEngineMain {
 		// We are going to modify the algebra here.
 
 		op = super.modifyOp(op);
+
+		OpProject x = (OpProject) op;
+		Op op = x.getSubOp();
+		if(op instanceof OpSequence) {
+			OpSequence seq = (OpSequence) op;
+			ArcTree tree = createArcTree(seq);
+		}
 
 		// bgp(triple(?subjectRef fhir:reference ?patient .)
 		// triple(?patient a fhir:Patient),

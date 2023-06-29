@@ -20,18 +20,19 @@ import ca.uhn.fhir.rest.gclient.IFetchConformanceUntyped;
 
 public class FhirEgineTest {
 	public static final String observation = """
-prefix fhir: <http://hl7.org/fhir/>
-prefix loinc: <https://loinc.org/rdf/>
-prefix owl: <http://www.w3.org/2002/07/owl#>
-prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-prefix sct: <http://snomed.info/id/>
-prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX fhir: <http://hl7.org/fhir/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX loinc: <http://loinc.org>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-select ?observation
-where {
-	?observation fhir:code ?codeList .
-#    ?observation rdf:first/rdf:rest* ?coding .
+SELECT ?obsId WHERE {
+  ?obs a fhir:Observation .
+  ?obs fhir:code ?codeList .
+  ?codeList rdf:first*/rdf:rest ?coding .
+  ?coding fhir:code ?codeCode .
+  ?codeCode fhir:v "20570-8" .
+  ?coding fhir:system ?codingSystem .
+  ?codingSystem fhir:v "http://loinc.org" .
 }
 """;
 

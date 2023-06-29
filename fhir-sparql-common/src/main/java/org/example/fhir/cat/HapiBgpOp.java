@@ -120,22 +120,6 @@ public class HapiBgpOp extends OpExt {
 
 	}
 
-	private Class<Observation> findResource(BasicPattern pattern) {
-		for (Triple t : pattern) {
-			if (t.getPredicate().isURI()) {
-				if (match(t.getPredicate().getURI(), FhirRdf.code)) {
-					return Observation.class;
-				}
-			}
-		}
-		return null;
-	}
-
-	private boolean match(String uri, Resource code) {
-
-		return uri.equals(code.getURI());
-	}
-
 	@Override
 	public void outputArgs(IndentedWriter out, SerializationContext sCxt) {
 		original.output(out);
@@ -154,6 +138,22 @@ public class HapiBgpOp extends OpExt {
 		} else {
 			return false;
 		}
+	}
+
+	private Class<Observation> findResource(BasicPattern pattern) {
+		for (Triple t : pattern) {
+			if (t.getPredicate().isURI()) {
+				if (match(t.getPredicate().getURI(), FhirRdf.code)) {
+					return Observation.class;
+				}
+			}
+		}
+		return null;
+	}
+
+	private boolean match(String uri, Resource code) {
+
+		return uri.equals(code.getURI());
 	}
 
 }
