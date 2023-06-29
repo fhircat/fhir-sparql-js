@@ -1,5 +1,5 @@
 const {Visitor: ShExVisitor} = require('./ShExVisitor');
-const {Ns, Rdf, FirstRest} = require('./Namespaces');
+const {Ns, Rdf, Fhir, FirstRest} = require('./Namespaces');
 
 class PredicateToShapeDecl extends ShExVisitor {
   constructor (ctor_args) {
@@ -89,7 +89,7 @@ class ConnectingVariables {
   }
 }
 
-const CodeWithSystem = {
+const Rule_CodeWithSystem = {
   arcTree: {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
     {tp: {subject: null, predicate: FirstRest, object: null}, out: [
       {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
@@ -101,10 +101,10 @@ const CodeWithSystem = {
     ]}
   ]},
   fhirQuery: 'code',
-  arg: (arcTree) => arcTree.out.out[0].out[0].out[0].out[0] + arcTree.out.out[0].out[1].out[0].out[0]
+  arg: (arcTree) => evalObject([0,0,0]) + '|' + evalObject([0,1,0])
 };
 
-const CodeWithOutSystem = {
+const Rule_CodeWithOutSystem = {
   arcTree: {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
     {tp: {subject: null, predicate: FirstRest, object: null}, out: [
       {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
@@ -113,9 +113,60 @@ const CodeWithOutSystem = {
     ]}
   ]},
   fhirQuery: 'code',
-  arg: (arcTree) => arcTree.out.out[0].out[0].out[0].out[0]
+  arg: (arcTree) => evalObject([0,0,0])
 };
 
+const Rule_Id = {
+  arcTree: {tp: {subject: null, predicate: Ns.fhir + 'id', object: null}, out: [
+    {tp: {subject: null, predicate: Fhir.v, object: null }, out: []}
+  ]},
+  fhirQuery: 'id',
+  arg: (arcTree) => evalObject([0])
+}
+
+/* e.g.
+  name looks for: family, given, prefix, suffix, text
+  fhir:name ( [] [
+     fhir:use [ fhir:v "official" ] ;
+     fhir:family [ fhir:v "Chalmers" ] ;
+     fhir:given ( [ fhir:v "Peter" ] [ fhir:v "James" ] )
+  ] [] )
+*/
+const Rule_NameFamily = {
+  arcTree: {tp: {subject: null, predicate: Ns.fhir + 'name', object: null}, out: [
+    {tp: {subject: null, predicate: Ns.fhir + 'family', object: null}, out: [
+      {tp: {subject: null, predicate: Fhir.v, object: null }, out: []}
+    ]}
+  ]},
+  fhirQuery: 'name',
+  arg: (arcTree) => evalObject([0])
+}
+
+const Rule_NameGiven = {
+  arcTree: {tp: {subject: null, predicate: Ns.fhir + 'name', object: null}, out: [
+    {tp: {subject: null, predicate: Ns.fhir + 'family', object: null}, out: [
+      {tp: {subject: null, predicate: Fhir.v, object: null }, out: []}
+    ]}
+  ]},
+  fhirQuery: 'given',
+  arg: (arcTree) => evalObject([0])
+}
+
+const Rule_Given = {
+  arcTree: {tp: {subject: null, predicate: Ns.fhir + 'name', object: null}, out: [
+    {tp: {subject: null, predicate: Ns.fhir + 'family', object: null}, out: [
+      {tp: {subject: null, predicate: Fhir.v, object: null }, out: []}
+    ]}
+  ]},
+  fhirQuery: 'given',
+  arg: (arcTree) => evalObject([0])
+}
+
+const ResourceToPaths = {
+  "": [Rule_Id],
+  "Observation": [[Rule_CodeWithSystem, Rule_CodeWithOutSystem]],
+  "Patient": [Rule_NameFamily, Rule_NameGiven, Rule_Given],
+}
 
 class FhirSparql {
   constructor (shex) {
@@ -214,7 +265,7 @@ class FhirSparql {
     return {arcTrees, connectingVariables};
   }
 
-  opBgpToFhirPathExecutions ({arcTrees, connectingVariables}) {
+  opBgpToFhirPathExecutions ({arcTrees, connectingVariables, SparqlSolution}) {
     return 1;
   }
 

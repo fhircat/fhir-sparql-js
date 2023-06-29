@@ -59,7 +59,7 @@ describe('FhirSparql', () => {
     // test connectingVariables
     console.log(ConnectingVariables.toString(connectingVariables));
     expect(connectingVariables).toEqual(ConnectingVariables_obs_pat_mid);
-    const paths = rewriter.opBgpToFhirPathExecutions(arcTrees, connectingVariables);
+    const paths = rewriter.opBgpToFhirPathExecutions(arcTrees, connectingVariables, {});
     expect(paths).toBe(1);
   });
 });
