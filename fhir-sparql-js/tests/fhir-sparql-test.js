@@ -6,7 +6,7 @@ const ShExParser = require("@shexjs/parser").construct();
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/main/resources/');
 const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'org/uu3/ShEx-mini-terse.shex'), 'utf-8'));
-const {FhirSparql, PredicateToShapeDecl} = require('../lib/fhir-sparql');
+const {FhirSparql, ConnectingVariables, PredicateToShapeDecl} = require('../lib/fhir-sparql');
 
 // Namepaced terms
 const Xsd_ = 'http://www.w3.org/2001/XMLSchema#';
@@ -78,12 +78,19 @@ describe('FhirSparql', () => {
 
   it('should translate obs-path', () => {
     const rewriter = new FhirSparql(FhirShEx);
-    const iQuery = SparqlParser.parse(File.readFileSync(Path.join(Tests, '../../notes/obs-pat-mid.srq'), 'utf-8'));debugger
-    const queryPlan = rewriter.opBgpToFhirPathExecutions(iQuery);
-    expect(queryPlan.arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
-    expect(queryPlan.connectingVariables).toEqual(SubjectConnectingVariable);
-    expect(queryPlan.arcTrees[0].getBgp()).toEqual(BGP_obs);
-    expect(queryPlan.arcTrees[1].getBgp()).toEqual(BGP_subject);
+    const iQuery = SparqlParser.parse(File.readFileSync(Path.join(Tests, '../../notes/obs-pat-mid.srq'), 'utf-8'));
+    const {arcTrees, connectingVariables} = rewriter.getArcTrees(iQuery);
+
+    // test arcTrees
+    expect(arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
+    expect(arcTrees[0].getBgp()).toEqual(BGP_obs);
+    expect(arcTrees[1].getBgp()).toEqual(BGP_subject);
+
+    // test connectingVariables
+    console.log(ConnectingVariables.toString(connectingVariables, 1, 2, 3));
+    expect(connectingVariables).toEqual(ConnectingVariables_obs_pat_mid);
+    const paths = rewriter.opBgpToFhirPathExecutions(arcTrees, connectingVariables);
+    expect(paths).toBe(1);
   });
 });
 
@@ -178,8 +185,12 @@ const ArcTree_subject = {tp: null, out: [
 ]};
 
 // ConnectingVariables
-const SubjectConnectingVariable = {
-  subject: [ArcTree_obs.out[2], ArcTree_subject, ArcTree_subject]
+const ConnectingVariables_obs_pat_mid = {
+  subject: [
+    {pos: 'object', arcTree: ArcTree_obs.out[2].out[0]}, // ArcTree_obs ArcTree with tp=T_subjectRef_reference_subject
+    {pos: 'subject', arcTree: ArcTree_subject.out[0]}, // ArcTree_subject ArcTree with tp=T_subject_a_Patient
+    {pos: 'subject', arcTree: ArcTree_subject.out[1]}, // ArcTree_subject ArcTree with tp=T_subject_id_patIdElt
+  ]
 };
 
 // BGPs

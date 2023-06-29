@@ -1,8 +1,16 @@
 const {Visitor: ShExVisitor} = require('./ShExVisitor');
 
+// Namespaces
 const Ns = {
   fhir: 'http://hl7.org/fhir/',
   rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
+};
+
+// Re-used RDF nodes
+const Rdf = {
+  type: { termType: 'NamedNode', value: Ns.rdf + 'type' },
+  first: { termType: 'NamedNode', value: Ns.rdf + 'first' },
+  rest: { termType: 'NamedNode', value: Ns.rdf + 'rest' },
 };
 
 class PredicateToShapeDecl extends ShExVisitor {
@@ -46,6 +54,7 @@ class ArcTree {
     this.tp = tp;
     this.out = out;
   }
+
   getBgp () {
     const ret = [];
     if (this.tp !== null)
@@ -55,7 +64,78 @@ class ArcTree {
     );
     return ret;
   }
+
+  toString () {
+    return this.tp === null ? 'null' : ToTurtle(this.tp);
+  }
 }
+
+// debugging printer
+function ToTurtle (x) {
+  if ('subject' in x)
+    return `${ToTurtle(x.subject)} ${ToTurtle(x.predicate)} ${ToTurtle(x.object)}`
+  switch (x.termType) {
+  case 'NamedNode': return '<' + x.value + '>';
+  case 'BlankNode': return '_:' + x.value;
+  case 'Variable': return '?' + x.value;
+  case 'Literal': return '"' + x.value + '"' +
+      x.language
+      ? '@' + x.language
+      : x.datatype
+      ? ToTurtle(x.datatype)
+      : '';
+  default: throw Exception(`ToTurtle - unrecognized argument ${JSON.stringify(x)}`);
+  }
+}
+
+class ConnectingVariables {
+  static toString (cvs, a, b, c) {
+    const lines = [];
+    for (const variable in cvs) {
+      lines.push(variable);
+      cvs[variable].forEach((tree, i) =>
+        lines.push(` ${i} ${tree.pos} ${tree.arcTree.toString()}`)
+      );
+    }
+    return lines.join('\n');
+  }
+}
+
+const FirstRest = { type: 'path', pathType: '/', items: [
+  { "type": "path",
+    "pathType": "*",
+    "items": [ { "termType": "NamedNode", "value": Rdf.first } ] },
+  { "termType": "NamedNode",
+    "value": Rdf.rest },
+] };
+
+const CodeWithSystem = {
+  arcTree: {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
+    {tp: {subject: null, predicate: FirstRest, object: null}, out: [
+      {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
+        {tp: {subject: null, predicate: { termType: Ns.fhir + 'v'}, object: null}, out: []}
+      ]},
+      {tp: {subject: null, predicate: { termType: Ns.fhir + 'system'}, object: null}, out: [
+        {tp: {subject: null, predicate: { termType: Ns.fhir + 'v'}, object: null}, out: []}
+      ]},
+    ]}
+  ]},
+  fhirQuery: 'code',
+  arg: (arcTree) => arcTree.out.out[0].out[0].out[0].out[0] + arcTree.out.out[0].out[1].out[0].out[0]
+};
+
+const CodeWithOutSystem = {
+  arcTree: {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
+    {tp: {subject: null, predicate: FirstRest, object: null}, out: [
+      {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
+        {tp: {subject: null, predicate: { termType: Ns.fhir + 'v'}, object: null}, out: []}
+      ]},
+    ]}
+  ]},
+  fhirQuery: 'code',
+  arg: (arcTree) => arcTree.out.out[0].out[0].out[0].out[0]
+};
+
 
 class FhirSparql {
   constructor (shex) {
@@ -65,15 +145,8 @@ class FhirSparql {
     this.predicateToShapeDecl = visitor.map;
   }
 
-  opBgpToFhirPathExecutions (query) {
-    const hardCoded = [];
+  getArcTrees (query) {
     const triples = query.where[0].triples;
-    // const obs = new FhirPathExecution();
-    // obs.triplePatterns = triples.slice(0, 9);
-    // hardCoded.push(obs);
-    // const pat = new FhirPathExecution();
-    // pat.triplePatterns = triples.slice(9);
-    // hardCoded.push(pat);
 
     const todo = triples.slice().sort((l, r) => FhirSparql.pStr(l.predicate).localeCompare(FhirSparql.pStr(r.predicate)));
     /*
@@ -91,18 +164,31 @@ class FhirSparql {
        0 ?obs a fhir:Observation
        9 ?subject a fhir:Patient
      */
-    const usedVars = {};
-    const connectingVariables = {};
+
+    // All known ArcTrees
     const arcTrees = [];
+    // Variables connecting ArcTrees
+    const connectingVariables = {};
+
+    // All variables in starting operation (like a BGP, but with path expressions included)
+    const usedVars = {};
 
     while (todo.length > 0) {
+      // Pick a starting triple from remaining triples
       const start = todo[0];
+
+      // Index from variable name to ArcTree
       const treeVars = {};
 
+      // Terminal ancesters of start.subject
       const roots = [];
+
+      // Working list of triples in start's tree.
       let tz = [start];
       do {
+        // tz for the next pass
         const newTz = [];
+
         tz.forEach(t => {
           // get the node's incoming arcs (actually, just one in every scenario I've imagined).
           const arcsIn = FhirSparql.getMatching(todo, null, null, t.subject);
@@ -123,41 +209,53 @@ class FhirSparql {
         });
         tz = newTz;
       } while (tz.length > 0);
-      console.assert(roots.length > 0, 'should have a root (if there were any triples at all)')
+      console.assert(roots.length > 0, 'should have a root (if there were any triples at all)');
 
       // build tree and index variables
       Array.prototype.push.apply(arcTrees, roots.map(root => FhirSparql.constructArcTree(todo, null, root, treeVars)));
 
+      // Sort treeVars for this tree
       for (const k in treeVars) {
         const treeNodes = treeVars[k];
         if (k in connectingVariables) {
+          // Already known ConnectingVariable
           Array.prototype.push.apply(treeNodes);
         } else if (k in usedVars) {
+          // Already used in previous ArcTree so it's now a ConnectingVariabel
           connectingVariables[k] = usedVars[k].concat(treeNodes);
           delete usedVars[k];
         } else {
+          // First tree in which this variable appears
           usedVars[k] = treeNodes;
         }
       }
     }
-debugger
+
     return {arcTrees, connectingVariables};
   }
 
+  opBgpToFhirPathExecutions ({arcTrees, connectingVariables}) {
+    return 1;
+  }
+
+  /** find triples matching (s, p, o)
+   */
   static getMatching (triplePatterns, s, p, o) {
     return triplePatterns.filter(tp =>
-      (s === null || FhirSparql.equals(tp.subject, s)) && 
-      (p === null || FhirSparql.equals(tp.predicate, p)) && 
+      (s === null || FhirSparql.equals(tp.subject, s)) &&
+      (p === null || FhirSparql.equals(tp.predicate, p)) &&
       (o === null || FhirSparql.equals(tp.object, o))
     );
   }
 
+  /** remove triples matching (s, p, o)
+   */
   static stealMatching (triplePatterns, s, p, o) {
     const ret = [];
     for (let i = 0; i < triplePatterns.length; ++i) {
       const tp = triplePatterns[i];
-      if ((s === null || FhirSparql.equals(tp.subject, s)) && 
-          (p === null || FhirSparql.equals(tp.predicate, p)) && 
+      if ((s === null || FhirSparql.equals(tp.subject, s)) &&
+          (p === null || FhirSparql.equals(tp.predicate, p)) &&
           (o === null || FhirSparql.equals(tp.object, o))) {
         ret.push(tp);
         triplePatterns.splice(i, 1);
@@ -167,20 +265,21 @@ debugger
     return ret;
   }
 
-  static getChildren (triplePatterns, from) {
-    const o = from.subject;
-    return triplePatterns.filter(tp => FhirSparql.equals(tp.subject, o));
-  }
-
+  /** Rdf node === Rdf node
+   * will be specialized for every graph API
+   */
   static equals (l, r) {
     return l.termType === r.termType && l.value === r.value;
   }
 
+  /** sort a list of triple (patterns), AKA arcs
+   * Bubble rdf:type to the top
+   * Sort remaining by predicate name.
+   *   Since all have same subject and there are no repeated properties in
+   *   FHIR/RDF, we can assume that that localeCompare will never return 0
+   */
   static sortArcs (triplePatterns) {
     const ret = [];
-    const Rdf = {
-      type: { termType: 'NamedNode', value: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type' },
-    };
     Array.prototype.push.apply(ret, FhirSparql.stealMatching(triplePatterns, null, Rdf.type, null));
     Array.prototype.push.apply(ret, triplePatterns.sort(
       (l, r) => FhirSparql.pStr(l.predicate).localeCompare(FhirSparql.pStr(r.predicate))
@@ -188,6 +287,9 @@ debugger
     return ret;
   }
 
+  /** Construct an ArcTree for an arc and all arcs it reaches
+   * Index variables in the same pass for efficiency.
+   */
   static constructArcTree (triplePatterns, forArc, node, treeVars) {
     // ArcTree's don't cross references (or canonical or ...?).
     if (forArc && forArc.predicate.value === 'http://hl7.org/fhir/reference')
@@ -197,27 +299,29 @@ debugger
     const arcsOut = FhirSparql.sortArcs(FhirSparql.stealMatching(triplePatterns, node, null, null));
 
     const out = arcsOut.map(triplePattern => {
-      return FhirSparql.constructArcTree(triplePatterns, triplePattern, triplePattern.object, treeVars);
-    });
-    const ret = new ArcTree(forArc, out);
+      const arcTree = FhirSparql.constructArcTree(triplePatterns, triplePattern, triplePattern.object, treeVars);
 
-    // Index the variables that connect the trees.
-    // Ignore connections formed by IRIs, BNodes or Literals.
-    arcsOut.forEach(triplePattern => {
+      // Index the variables that connect the trees.
       (['subject', 'object']).forEach(pos => {
         const v = triplePattern[pos];
+        // Ignore connections formed by IRIs, BNodes or Literals.
         if (v.termType === 'Variable') {
           if (!treeVars[v.value]) {
             treeVars[v.value] = [];
-          }
-          treeVars[v.value].push(ret);
+          };
+          treeVars[v.value].push({pos, arcTree});
         }
       });
+
+      return arcTree;
     });
 
-    return ret;
+    return new ArcTree(forArc, out);
   }
 
+  /** Stringize a predicate
+   * Used to sort arcs queried from graphs.
+   */
   static pStr (predicate) {
     return predicate.value
       ? '<' + predicate.value + '>'
@@ -225,4 +329,4 @@ debugger
   }
 }
 
-module.exports = {FhirSparql, PredicateToShapeDecl}
+module.exports = {FhirSparql, ConnectingVariables, PredicateToShapeDecl}
