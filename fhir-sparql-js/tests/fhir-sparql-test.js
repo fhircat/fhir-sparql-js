@@ -70,10 +70,12 @@ describe('FhirSparql', () => {
     expect(arcTrees[1].getBgp()).toEqual(BGP_subject);
 
     // test connectingVariables
-    console.log(ConnectingVariables.toString(connectingVariables));debugger
-    expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
-    const paths = rewriter.opBgpToFhirPathExecutions(arcTrees, connectingVariables, {});
-    expect(paths).toBe(1);
+    console.log(ConnectingVariables.toString(connectingVariables));
+    expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);debugger
+    for (let i = 0; i < 2; ++i) {
+      const paths = rewriter.opBgpToFhirPathExecutions(arcTrees[i], connectingVariables, {});
+      expect(paths).toBe(1);
+    }
   });
 
   it('should barf on cycles', () => {

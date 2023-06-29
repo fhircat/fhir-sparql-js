@@ -267,7 +267,7 @@ class FhirSparql {
     return {arcTrees, connectingVariables};
   }
 
-  opBgpToFhirPathExecutions ({arcTrees, connectingVariables, SparqlSolution}) {
+  opBgpToFhirPathExecutions ({arcTree, connectingVariables, SparqlSolution}) {
     return 1;
   }
 
