@@ -3,7 +3,7 @@ PREFIX sct: <http://snomed.info/id/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT ?obsId ?patId WHERE {				#    | goal |
+SELECT ?obs ?patId WHERE {				#    | goal |
   ?subject fhir:id ?patIdElt .				#  0 |   11 |
   ?codeElt fhir:code ?codeCode .			#  1 |    4 |
   ?codeCode fhir:v "789-8" .				#  2 |    5 |

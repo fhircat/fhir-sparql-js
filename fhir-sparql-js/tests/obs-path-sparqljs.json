@@ -1,7 +1,7 @@
 {
   "type":"query",
   "queryType":"SELECT",
-  "variables":[{"termType":"Variable","value":"obsId"},{"termType":"Variable","value":"patId"}],
+  "variables":[{"termType":"Variable","value":"obs"},{"termType":"Variable","value":"patId"}],
   "where":[
     {"type":"bgp",
      "triples":[
