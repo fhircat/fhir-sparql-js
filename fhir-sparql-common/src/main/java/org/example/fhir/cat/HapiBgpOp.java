@@ -32,64 +32,6 @@ import ca.uhn.fhir.rest.gclient.IQuery;
 //	
 public class HapiBgpOp extends OpExt {
 
-	private final class QueryIterExtension extends QueryIter {
-		private IQuery<Bundle> fhirSearch;
-		private Bundle bundle;
-		private QueryIterator results;
-		private IGenericClient client;
-
-		private QueryIterExtension(ExecutionContext execCxt, QueryIterator input, IGenericClient client) {
-			super(execCxt);
-			this.client = client;
-			fhirSearch = buildFhirSearch(input);
-		}
-
-		@Override
-		protected boolean hasNextBinding() {
-			if (bundle == null) {
-				bundle = fhirSearch.execute();
-			} 
-			if (results == null) {
-				return bundleToResultSet();
-			} else if (results.hasNext()) {
-				return true;
-			} else {
-				if (bundle.getLink(IBaseBundle.LINK_NEXT) == null) {
-					return false;
-				} else {
-					bundle = client.loadPage().next(bundle).execute();
-					return bundleToResultSet();
-				}
-			}
-		}
-
-		private boolean bundleToResultSet() {
-			String encodeResourceToString = ctx.newRDFParser().encodeResourceToString(bundle);
-			DatasetGraph dataset = RDFParser.create().fromString(encodeResourceToString).lang(RDFLanguages.TTL).build()
-					.toDatasetGraph();
-
-			results = new QueryEngineMain(original, dataset, BindingRoot.create(), new Context()).getPlan().iterator();
-			return results.hasNext();
-		}
-
-		@Override
-		protected Binding moveToNextBinding() {
-
-			return results.nextBinding();
-		}
-
-		@Override
-		protected void closeIterator() {
-			results.close();
-		}
-
-		@Override
-		protected void requestCancel() {
-			// TODO Auto-generated method stub
-
-		}
-	}
-
 	private final OpBGP original;
 	private final IGenericClient fhirClient;
 	private final FhirContext ctx;
@@ -154,6 +96,64 @@ public class HapiBgpOp extends OpExt {
 	private boolean match(String uri, Resource code) {
 
 		return uri.equals(code.getURI());
+	}
+
+	private final class QueryIterExtension extends QueryIter {
+		private IQuery<Bundle> fhirSearch;
+		private Bundle bundle;
+		private QueryIterator results;
+		private IGenericClient client;
+
+		private QueryIterExtension(ExecutionContext execCxt, QueryIterator input, IGenericClient client) {
+			super(execCxt);
+			this.client = client;
+			fhirSearch = buildFhirSearch(input);
+		}
+
+		@Override
+		protected boolean hasNextBinding() {
+			if (bundle == null) {
+				bundle = fhirSearch.execute();
+			}
+			if (results == null) {
+				return bundleToResultSet();
+			} else if (results.hasNext()) {
+				return true;
+			} else {
+				if (bundle.getLink(IBaseBundle.LINK_NEXT) == null) {
+					return false;
+				} else {
+					bundle = client.loadPage().next(bundle).execute();
+					return bundleToResultSet();
+				}
+			}
+		}
+
+		private boolean bundleToResultSet() {
+			String encodeResourceToString = ctx.newRDFParser().encodeResourceToString(bundle);
+			DatasetGraph dataset = RDFParser.create().fromString(encodeResourceToString).lang(RDFLanguages.TTL).build()
+					.toDatasetGraph();
+
+			results = new QueryEngineMain(original, dataset, BindingRoot.create(), new Context()).getPlan().iterator();
+			return results.hasNext();
+		}
+
+		@Override
+		protected Binding moveToNextBinding() {
+
+			return results.nextBinding();
+		}
+
+		@Override
+		protected void closeIterator() {
+			results.close();
+		}
+
+		@Override
+		protected void requestCancel() {
+			// TODO Auto-generated method stub
+
+		}
 	}
 
 }

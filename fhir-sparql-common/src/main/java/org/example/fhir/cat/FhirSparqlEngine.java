@@ -5,7 +5,7 @@ import org.apache.jena.sparql.ARQInternalErrorException;
 import org.apache.jena.sparql.algebra.Op;
 import org.apache.jena.sparql.algebra.Transform;
 import org.apache.jena.sparql.algebra.Transformer;
-import org.apache.jena.sparql.algebra.op.OpBGP;
+import org.apache.jena.sparql.algebra.op.OpJoin;
 import org.apache.jena.sparql.algebra.op.OpProject;
 import org.apache.jena.sparql.algebra.op.OpSequence;
 import org.apache.jena.sparql.core.DatasetGraph;
@@ -17,8 +17,7 @@ import org.apache.jena.sparql.engine.binding.Binding;
 import org.apache.jena.sparql.engine.main.QueryEngineMain;
 import org.apache.jena.sparql.util.Context;
 
-import java.util.List;
-import java.util.Stack;
+import java.util.Arrays;
 
 public class FhirSparqlEngine extends QueryEngineMain {
 
@@ -42,12 +41,19 @@ public class FhirSparqlEngine extends QueryEngineMain {
 
 		op = super.modifyOp(op);
 
+		ArcTree tree = null;
 		OpProject x = (OpProject) op;
-		Op op = x.getSubOp();
-		if(op instanceof OpSequence) {
-			OpSequence seq = (OpSequence) op;
-			ArcTree tree = createArcTree(seq);
+		Op subOp = x.getSubOp();
+		if(subOp instanceof OpSequence) {
+			tree = createArcTree((OpSequence)subOp);
+		} else if(subOp instanceof OpJoin) {
+			throw new RuntimeException("Not implemented yet");
+		} else {
+			throw new RuntimeException("Unrecognized operator " + subOp.getClass().getName());
 		}
+
+		OpProject transformedOp = new OpProject(new ArcTreeOp("Waldo", tree, op), x.getVars());
+
 
 		// bgp(triple(?subjectRef fhir:reference ?patient .)
 		// triple(?patient a fhir:Patient),
@@ -62,10 +68,40 @@ public class FhirSparqlEngine extends QueryEngineMain {
 		// hapi client operation.
 		// op = Algebra.toQuadForm(op) ;
 		FhirQueryContext fqc = (FhirQueryContext) context;
-		Transform someTransform = new OpBGPToHapiJoinsTransform(fqc.client(), fqc.fhirContext());
-		op = Transformer.transform(someTransform, op);
+		Transform someTransform = new OpSparqlToFhirTransform(fqc.client(), fqc.fhirContext());
+		op = Transformer.transform(someTransform, transformedOp);
 
 		return op;
+	}
+
+	//TODO Eric, please implement
+	public ArcTree createArcTree(OpSequence sequence) {
+		return new ArcTree(null,
+				Arrays.asList(
+						new ArcTree(TriplePattern.createVarPredicateObject("obs", "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "http://hl7.org/fhir/Observation"), null),
+						new ArcTree(TriplePattern.createVarPredicateVar("obs", "http://hl7.org/fhir/code", "codeList"),
+								Arrays.asList(new ArcTree(
+												TriplePattern.createVarPathVar("codeList", "http://www.w3.org/1999/02/22-rdf-syntax-ns#first*", "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest", "coding"),
+												Arrays.asList(
+														new ArcTree(
+																TriplePattern.createVarPredicateVar("coding", "http://hl7.org/fhir/code", "codeCode"),
+																Arrays.asList(
+																		new ArcTree(TriplePattern.createVarPredicateLiteral("codeCode", "http://hl7.org/fhir/v", "789-8"))
+																)
+														),
+														new ArcTree(
+																TriplePattern.createVarPredicateVar("coding", "http://hl7.org/fhir/system", "codingSystem"),
+																Arrays.asList(
+																		new ArcTree(TriplePattern.createVarPredicateLiteral("codingSystem", "http://hl7.org/fhir/v", "http://loinc.org"))
+																)
+														)
+												)
+										)
+
+								)
+						)
+				)
+		);
 	}
 
 	static QueryEngineFactory factory = new FhirQueryEngineFactory();

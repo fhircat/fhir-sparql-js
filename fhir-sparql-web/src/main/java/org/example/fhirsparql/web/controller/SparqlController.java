@@ -51,7 +51,7 @@ public class SparqlController {
     protected String executeSparqlQuery(String sparqlQuery) {
         IGenericClient client = ctx.newRestfulGenericClient(fhirBase);
         Query query = QueryFactory.create(sparqlQuery);
-        Plan plan = new FhirSparqlEngine.FhirQueryEngineFactory().create(query, DatasetGraphFactory.create(), BindingRoot.create(), new FhirQueryContext(client, ctx));
+        Plan plan = new FhirSparqlEngine.FhirQueryEngineFactory().create(query, DatasetGraphFactory.create(), BindingRoot.create(), new FhirQueryContext(ctx, null));
         QueryIterator results = plan.iterator();
         ResultSet resultSet = ResultSetFactory.create(results, query.getResultVars());
         //return new SPARQLResult(resultSet);

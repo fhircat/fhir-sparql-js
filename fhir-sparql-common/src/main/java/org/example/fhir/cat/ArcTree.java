@@ -38,11 +38,23 @@ public class ArcTree {
         this.children.add(child);
     }
 
+    public boolean hasChildren() {
+        return children != null && children.size() > 0;
+    }
+
     public boolean isRoot() {
         return currentNode == null;
     }
 
     public boolean isTerminal() {
-        return children == null || children.size() == 0;
+        return !hasChildren();
+    }
+
+    public boolean isNonEmptyTerminal() {
+        return isTerminal() && hasNode();
+    }
+
+    public boolean hasNode() {
+        return currentNode != null;
     }
 }

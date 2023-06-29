@@ -27,6 +27,13 @@ public class TriplePattern {
         return triplePath;
     }
 
+    public boolean hasTriple() {
+        return triple != null;
+    }
+
+    public boolean hasTriplePath() {
+        return triplePath != null;
+    }
     /**
      *
      * @param subjectLabel VariableName
