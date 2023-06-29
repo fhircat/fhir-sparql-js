@@ -7,38 +7,8 @@ const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/main/resources/');
 const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'org/uu3/ShEx-mini-terse.shex'), 'utf-8'));
 const {FhirSparql, ConnectingVariables, PredicateToShapeDecl} = require('../lib/fhir-sparql');
-
-// Namepaced terms
-const Xsd_ = 'http://www.w3.org/2001/XMLSchema#';
-const Xsd = {
-  integer: { termType: 'NamedNode', value: Xsd_ + 'integer' },
-  string: { termType: 'NamedNode', value: Xsd_ + 'string' },
-};
-const Rdf_ = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-const Rdf = {
-  type: { termType: 'NamedNode', value: Rdf_ + 'type' },
-};
-const Fhir_ = 'http://hl7.org/fhir/';
-const Fhir = {
-  v: { termType: 'NamedNode', value: Fhir_ + 'v' },
-}
-
-const FirstRest = { type: 'path', pathType: '/', items: [
-  {
-    "type": "path",
-    "items": [
-      {
-        "termType": "NamedNode",
-        "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#first",
-      }
-    ],
-    "pathType": "*"
-  },
-  {
-    "termType": "NamedNode",
-    "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest"
-  },
-] };
+// const X = require('../lib/Namespaces');
+const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../lib/Namespaces');
 
 describe('PredicateToShapeDecl', () => {
   it('should work from ShapeDecl', () => {
@@ -87,7 +57,7 @@ describe('FhirSparql', () => {
     expect(arcTrees[1].getBgp()).toEqual(BGP_subject);
 
     // test connectingVariables
-    console.log(ConnectingVariables.toString(connectingVariables, 1, 2, 3));
+    console.log(ConnectingVariables.toString(connectingVariables));
     expect(connectingVariables).toEqual(ConnectingVariables_obs_pat_mid);
     const paths = rewriter.opBgpToFhirPathExecutions(arcTrees, connectingVariables);
     expect(paths).toBe(1);

@@ -1,17 +1,5 @@
 const {Visitor: ShExVisitor} = require('./ShExVisitor');
-
-// Namespaces
-const Ns = {
-  fhir: 'http://hl7.org/fhir/',
-  rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
-};
-
-// Re-used RDF nodes
-const Rdf = {
-  type: { termType: 'NamedNode', value: Ns.rdf + 'type' },
-  first: { termType: 'NamedNode', value: Ns.rdf + 'first' },
-  rest: { termType: 'NamedNode', value: Ns.rdf + 'rest' },
-};
+const {Ns, Rdf, FirstRest} = require('./Namespaces');
 
 class PredicateToShapeDecl extends ShExVisitor {
   constructor (ctor_args) {
@@ -73,7 +61,7 @@ class ArcTree {
 // debugging printer
 function ToTurtle (x) {
   if ('subject' in x)
-    return `${ToTurtle(x.subject)} ${ToTurtle(x.predicate)} ${ToTurtle(x.object)}`
+    return `${ToTurtle(x.subject)} ${ToTurtle(x.predicate)} ${ToTurtle(x.object)} .`
   switch (x.termType) {
   case 'NamedNode': return '<' + x.value + '>';
   case 'BlankNode': return '_:' + x.value;
@@ -94,20 +82,12 @@ class ConnectingVariables {
     for (const variable in cvs) {
       lines.push(variable);
       cvs[variable].forEach((tree, i) =>
-        lines.push(` ${i} ${tree.pos} ${tree.arcTree.toString()}`)
+        lines.push(` ${i}: ${tree.pos} of { ${tree.arcTree.toString()} }`)
       );
     }
     return lines.join('\n');
   }
 }
-
-const FirstRest = { type: 'path', pathType: '/', items: [
-  { "type": "path",
-    "pathType": "*",
-    "items": [ { "termType": "NamedNode", "value": Rdf.first } ] },
-  { "termType": "NamedNode",
-    "value": Rdf.rest },
-] };
 
 const CodeWithSystem = {
   arcTree: {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
@@ -329,4 +309,4 @@ class FhirSparql {
   }
 }
 
-module.exports = {FhirSparql, ConnectingVariables, PredicateToShapeDecl}
+module.exports = {FhirSparql, ConnectingVariables, PredicateToShapeDecl};
