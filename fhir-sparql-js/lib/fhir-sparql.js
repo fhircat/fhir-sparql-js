@@ -4,7 +4,7 @@ const {Ns, Rdf, Fhir, FirstRest} = require('./Namespaces');
 class PredicateToShapeDecl extends ShExVisitor {
   constructor (ctor_args) {
     super(ctor_args);
-    this.map = {};
+    this.map = new Map();
     this.curDecl = null;
   }
 
@@ -25,9 +25,9 @@ class PredicateToShapeDecl extends ShExVisitor {
     if (this.curDecl === null)
       throw new Error(`visiting ${JSON.stringify(expr)} while not in a ShapeDecl`);
     if (!expr.predicate.startsWith(Ns.rdf) && [Ns.fhir + 'v', Ns.fhir + 'nodeRole'].indexOf(expr.predicate) === -1) {
-      if (!this.map[expr.predicate])
-        this.map[expr.predicate] = [];
-      this.map[expr.predicate].push(this.curDecl);
+      if (!this.map.has(expr.predicate))
+        this.map.set(expr.predicate, []);
+      this.map.get(expr.predicate).push(this.curDecl);
     }
     return null;
   }
@@ -60,6 +60,8 @@ class ArcTree {
 
 // debugging printer
 function ToTurtle (x) {
+  if (x === null)
+    return 'null';
   if ('subject' in x)
     return `${ToTurtle(x.subject)} ${ToTurtle(x.predicate)} ${ToTurtle(x.object)} .`
   switch (x.termType) {
@@ -67,11 +69,12 @@ function ToTurtle (x) {
   case 'BlankNode': return '_:' + x.value;
   case 'Variable': return '?' + x.value;
   case 'Literal': return '"' + x.value + '"' +
-      x.language
-      ? '@' + x.language
-      : x.datatype
-      ? ToTurtle(x.datatype)
-      : '';
+      (x.language
+       ? '@' + x.language
+       : x.datatype
+       ? ToTurtle(x.datatype)
+       : '');
+  // istanbul ignore next
   default: throw Exception(`ToTurtle - unrecognized argument ${JSON.stringify(x)}`);
   }
 }
@@ -79,9 +82,9 @@ function ToTurtle (x) {
 class ConnectingVariables {
   static toString (cvs, a, b, c) {
     const lines = [];
-    for (const variable in cvs) {
+    for (const [variable, trees] of cvs) {
       lines.push(variable);
-      cvs[variable].forEach((tree, i) =>
+      trees.forEach((tree, i) =>
         lines.push(` ${i}: ${tree.pos} of { ${tree.arcTree.toString()} }`)
       );
     }
@@ -199,17 +202,17 @@ class FhirSparql {
     // All known ArcTrees
     const arcTrees = [];
     // Variables connecting ArcTrees
-    const connectingVariables = {};
+    const connectingVariables = new Map();
 
     // All variables in starting operation (like a BGP, but with path expressions included)
-    const usedVars = {};
+    const usedVars = new Map();
 
     while (todo.length > 0) {
       // Pick a starting triple from remaining triples
       const start = todo[0];
 
       // Index from variable name to ArcTree
-      const treeVars = {};
+      const treeVars = new Map();
 
       // Terminal ancesters of start.subject
       const roots = [];
@@ -231,7 +234,7 @@ class FhirSparql {
             // barf if there's a cycle
             arcsIn.forEach(p => {
               if (FhirSparql.equals(p.subject, start.subject))
-                throw Error(``);
+                throw Error(`can't handle cycle involving ${ToTurtle(p.subject)}`);
             });
 
             // find parents of these arcs on next iteration
@@ -246,18 +249,17 @@ class FhirSparql {
       Array.prototype.push.apply(arcTrees, roots.map(root => FhirSparql.constructArcTree(todo, null, root, treeVars)));
 
       // Sort treeVars for this tree
-      for (const k in treeVars) {
-        const treeNodes = treeVars[k];
-        if (k in connectingVariables) {
+      for (const [k, treeNodes] of treeVars) {
+        if (connectingVariables.has(k)) {
           // Already known ConnectingVariable
           Array.prototype.push.apply(treeNodes);
-        } else if (k in usedVars) {
+        } else if (usedVars.has(k)) {
           // Already used in previous ArcTree so it's now a ConnectingVariabel
-          connectingVariables[k] = usedVars[k].concat(treeNodes);
-          delete usedVars[k];
+          connectingVariables.set(k, usedVars.get(k).concat(treeNodes));
+          usedVars.delete(k);
         } else {
           // First tree in which this variable appears
-          usedVars[k] = treeNodes;
+          usedVars.set(k, treeNodes);
         }
       }
     }
@@ -337,10 +339,10 @@ class FhirSparql {
         const v = triplePattern[pos];
         // Ignore connections formed by IRIs, BNodes or Literals.
         if (v.termType === 'Variable') {
-          if (!treeVars[v.value]) {
-            treeVars[v.value] = [];
+          if (!treeVars.has(v.value)) {
+            treeVars.set(v.value, []);
           };
-          treeVars[v.value].push({pos, arcTree});
+          treeVars.get(v.value).push({pos, arcTree});
         }
       });
 
@@ -360,4 +362,4 @@ class FhirSparql {
   }
 }
 
-module.exports = {FhirSparql, ConnectingVariables, PredicateToShapeDecl};
+module.exports = {FhirSparql, ConnectingVariables, PredicateToShapeDecl, ArcTree};
