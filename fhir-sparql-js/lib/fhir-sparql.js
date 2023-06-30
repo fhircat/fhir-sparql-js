@@ -67,7 +67,7 @@ function ToTurtle (x) {
   if (x.type === 'path')
     return x.value
       ? '<' + x.value + '>'
-      : '(' + x.items.map(item => FhirSparql.pStr(item) + (item.pathType || '')).join('/') + ')'
+      : '(' + x.items.map(item => FhirSparql.pStr(item) + (item.pathType || '')).join('/') + ')' // TODO: not correct
 
   switch (x.termType) {
   case 'NamedNode': return '<' + x.value + '>';
@@ -98,14 +98,14 @@ class ConnectingVariables {
 }
 
 const Rule_CodeWithSystem = {
-  arcTree: {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
-    {tp: {subject: null, predicate: { termType: Ns.fhir + 'coding'}, object: null}, out: [
+  arcTree: {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'code'}, object: null}, out: [
+    {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'coding'}, object: null}, out: [
       {tp: {subject: null, predicate: FirstRest, object: null}, out: [
-        {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
-          {tp: {subject: null, predicate: { termType: Ns.fhir + 'v'}, object: null}, out: []}
+        {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'code'}, object: null}, out: [
+          {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'v'}, object: null}, out: []}
         ]},
-        {tp: {subject: null, predicate: { termType: Ns.fhir + 'system'}, object: null}, out: [
-          {tp: {subject: null, predicate: { termType: Ns.fhir + 'v'}, object: null}, out: []}
+        {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'system'}, object: null}, out: [
+          {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'v'}, object: null}, out: []}
         ]},
       ]}
     ]}
@@ -115,10 +115,10 @@ const Rule_CodeWithSystem = {
 };
 
 const Rule_CodeWithOutSystem = {
-  arcTree: {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
+  arcTree: {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'code'}, object: null}, out: [
     {tp: {subject: null, predicate: FirstRest, object: null}, out: [
-      {tp: {subject: null, predicate: { termType: Ns.fhir + 'code'}, object: null}, out: [
-        {tp: {subject: null, predicate: { termType: Ns.fhir + 'v'}, object: null}, out: []}
+      {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'code'}, object: null}, out: [
+        {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'v'}, object: null}, out: []}
       ]},
     ]}
   ]},
@@ -127,7 +127,7 @@ const Rule_CodeWithOutSystem = {
 };
 
 const Rule_Id = {
-  arcTree: {tp: {subject: null, predicate: Ns.fhir + 'id', object: null}, out: [
+  arcTree: {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'id'}, object: null}, out: [
     {tp: {subject: null, predicate: Fhir.v, object: null }, out: []}
   ]},
   fhirQuery: 'id',
@@ -143,8 +143,8 @@ const Rule_Id = {
   ] [] )
 */
 const Rule_NameFamily = {
-  arcTree: {tp: {subject: null, predicate: Ns.fhir + 'name', object: null}, out: [
-    {tp: {subject: null, predicate: Ns.fhir + 'family', object: null}, out: [
+  arcTree: {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'name'}, object: null}, out: [
+    {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'family'}, object: null}, out: [
       {tp: {subject: null, predicate: Fhir.v, object: null }, out: []}
     ]}
   ]},
@@ -153,8 +153,8 @@ const Rule_NameFamily = {
 }
 
 const Rule_NameGiven = {
-  arcTree: {tp: {subject: null, predicate: Ns.fhir + 'name', object: null}, out: [
-    {tp: {subject: null, predicate: Ns.fhir + 'family', object: null}, out: [
+  arcTree: {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'name'}, object: null}, out: [
+    {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'family'}, object: null}, out: [
       {tp: {subject: null, predicate: Fhir.v, object: null }, out: []}
     ]}
   ]},
@@ -163,8 +163,8 @@ const Rule_NameGiven = {
 }
 
 const Rule_Given = {
-  arcTree: {tp: {subject: null, predicate: Ns.fhir + 'name', object: null}, out: [
-    {tp: {subject: null, predicate: Ns.fhir + 'family', object: null}, out: [
+  arcTree: {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'name'}, object: null}, out: [
+    {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'family'}, object: null}, out: [
       {tp: {subject: null, predicate: Fhir.v, object: null }, out: []}
     ]}
   ]},
@@ -172,10 +172,83 @@ const Rule_Given = {
   arg: (arcTree) => evalObject([0])
 }
 
+class QueryParam {
+  constructor (name, value) {
+    this.name = name;
+    this.value = value;
+  }
+}
+
+/** list of 1 or more candidate rules.
+ * last one standing wins
+ */
+class RuleChoice {
+  constructor (choices) {
+    this.choices = choices;
+    this.statuses = choices.map(_ => 0); // -1: dead, 0: in-play: 1: completed
+    this.cursors = choices.map(c => c.arcTree); // where each disjunct is
+  }
+
+  accept (arcTrees, sparqlSolution) {
+    for (let choiceNo = 0; choiceNo < this.choices.length; ++choiceNo) {
+      if (this.statuses[choiceNo] !== -1) {
+        const choice = this.choices[choiceNo];
+        const queryParams = this.parallelWalk(arcTrees, choice.arcTree, choiceNo, sparqlSolution);
+        if (queryParams !== null)
+          return queryParams;
+      }
+    }
+    return null;
+  }
+
+  parallelWalk (testArcTrees, myArcTree, choiceNo, sparqlSolution) {
+    const matched = testArcTrees.map(testArcTree => {
+      if (Equals(testArcTree.tp.predicate, myArcTree.tp.predicate)) {
+        if (myArcTree.out.length === 0) {
+          // match!
+          return new QueryParm (this.fhirQuery, null);
+        } else {
+          // this.choices[choiceNo] // advance me
+          for (let myOutIdx = 0; myOutIdx < myArcTree.out.length; ++myOutIdx) {
+            const ret = this.parallelWalk(testArcTree.out, myArcTree.out[myOutIdx], sparqlSolution);
+            if (ret !== null)
+              return ret;
+          }
+        }
+      } else {
+        // not this testArcTree; try again
+      }
+    }).filter(x => x);
+    if (matched.length > 0) {
+      console.log("matched");
+      return matched[0];
+    } else {
+      this.statuses[choiceNo] = -1;
+      return null;
+    }
+  }
+}
+
 const ResourceToPaths = {
-  "": [Rule_Id],
-  "Observation": [[Rule_CodeWithSystem, Rule_CodeWithOutSystem]],
-  "Patient": [Rule_NameFamily, Rule_NameGiven, Rule_Given],
+  "EveryResource": [new RuleChoice([Rule_Id])],
+  "Observation": [new RuleChoice([Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
+  "Patient": [new RuleChoice([Rule_NameFamily]), new RuleChoice([Rule_NameGiven]), new RuleChoice([Rule_Given])],
+  "Procedure": [new RuleChoice([Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
+  "Questionnaire": [],
+}
+
+const AllResources = [
+  'Observation',
+  'Patient',
+  'Procedure',
+  'Questionnaire'
+]; // That's all of 'em; trust me.
+
+/** Rdf node === Rdf node
+ * will be specialized for every graph API
+ */
+function Equals (l, r) {
+  return l.termType === r.termType && l.value === r.value;
 }
 
 class FhirSparql {
@@ -240,7 +313,7 @@ class FhirSparql {
           } else {
             // barf if there's a cycle
             arcsIn.forEach(p => {
-              if (FhirSparql.equals(p.subject, start.subject))
+              if (Equals(p.subject, start.subject))
                 throw Error(`can't handle cycle involving ${ToTurtle(p.subject)}`);
             });
 
@@ -274,17 +347,36 @@ class FhirSparql {
     return {arcTrees, connectingVariables};
   }
 
-  opBgpToFhirPathExecutions (arcTree, connectingVariables, SparqlSolution) {
-    return 1;
+  opBgpToFhirPathExecutions (arcTree, _connectingVariables, sparqlSolution) {
+    const candidateRules = ResourceToPaths.EveryResource;
+    const completedRules = [];
+    let candidateTypes = null; // initialized soon
+
+    // If there's a type arc, it's the first child.
+    if (Equals(arcTree.out[0].tp.predicate, Rdf.type)) {
+      const soleType = arcTree.out[0].tp.object.value.substring(Ns.fhir.length);
+      candidateTypes = [soleType];
+    } else {
+      candidateTypes = AllResources;
+    }
+
+    // Build list of candidate rules.
+    candidateTypes.forEach(type =>
+      Array.prototype.push.apply(candidateRules, ResourceToPaths[type])
+    );
+debugger
+    return candidateRules
+      .map(ruleChoice => ruleChoice.accept(arcTree.out, sparqlSolution)) // top tree has no tp
+      .filter(queryParam => queryParam !== null);
   }
 
   /** find triples matching (s, p, o)
    */
   static getMatching (triplePatterns, s, p, o) {
     return triplePatterns.filter(tp =>
-      (s === null || FhirSparql.equals(tp.subject, s)) &&
-      (p === null || FhirSparql.equals(tp.predicate, p)) &&
-      (o === null || FhirSparql.equals(tp.object, o))
+      (s === null || Equals(tp.subject, s)) &&
+      (p === null || Equals(tp.predicate, p)) &&
+      (o === null || Equals(tp.object, o))
     );
   }
 
@@ -294,22 +386,15 @@ class FhirSparql {
     const ret = [];
     for (let i = 0; i < triplePatterns.length; ++i) {
       const tp = triplePatterns[i];
-      if ((s === null || FhirSparql.equals(tp.subject, s)) &&
-          (p === null || FhirSparql.equals(tp.predicate, p)) &&
-          (o === null || FhirSparql.equals(tp.object, o))) {
+      if ((s === null || Equals(tp.subject, s)) &&
+          (p === null || Equals(tp.predicate, p)) &&
+          (o === null || Equals(tp.object, o))) {
         ret.push(tp);
         triplePatterns.splice(i, 1);
         --i;
       }
     }
     return ret;
-  }
-
-  /** Rdf node === Rdf node
-   * will be specialized for every graph API
-   */
-  static equals (l, r) {
-    return l.termType === r.termType && l.value === r.value;
   }
 
   /** sort a list of triple (patterns), AKA arcs
@@ -365,7 +450,7 @@ class FhirSparql {
   static pStr (predicate) {
     return predicate.value
       ? '<' + predicate.value + '>'
-      : predicate.items.map(item => FhirSparql.pStr(item) + (item.pathType || '')).join('/')
+      : '(' + predicate.items.map(item => FhirSparql.pStr(item) + (item.pathType || '')).join('/') + ')'; // TODO: not correct
   }
 }
 

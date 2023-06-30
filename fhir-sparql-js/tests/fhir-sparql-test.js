@@ -10,6 +10,8 @@ const {FhirSparql, ConnectingVariables, PredicateToShapeDecl, ArcTree, ToTurtle}
 // const X = require('../lib/Namespaces');
 const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../lib/Namespaces');
 
+const HapiServerAddr = 'http://localhost:8080/hapi/fhir/';
+
 describe('PredicateToShapeDecl', () => {
   it('should work from ShapeDecl', () => {
     const visitor = new PredicateToShapeDecl();
@@ -74,10 +76,13 @@ describe('FhirSparql', () => {
     // test connectingVariables
     console.log(ConnectingVariables.toString(connectingVariables));
     expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);debugger
-    for (let i = 0; i < 2; ++i) {
-      const paths = rewriter.opBgpToFhirPathExecutions(arcTrees[i], connectingVariables, {});
-      expect(paths).toBe(1);
-    }
+    const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], connectingVariables, {});
+    const patPath1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], connectingVariables, {
+      subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/1'}
+    });
+    const patPath2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], connectingVariables, {
+      subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
+    });
   });
 
   it('should barf on cycles', () => {
