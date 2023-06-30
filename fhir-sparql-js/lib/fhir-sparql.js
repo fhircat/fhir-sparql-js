@@ -111,7 +111,7 @@ const Rule_CodeWithSystem = {
     ]}
   ]},
   fhirQuery: 'code',
-  arg: (arcTree) => evalObject([0,0,0]) + '|' + evalObject([0,1,0])
+  arg: (values) => values[0] + '|' + values[1]
 };
 
 const Rule_CodeWithOutSystem = {
@@ -123,7 +123,7 @@ const Rule_CodeWithOutSystem = {
     ]}
   ]},
   fhirQuery: 'code',
-  arg: (arcTree) => evalObject([0,0,0])
+  arg: (values) => values[0]
 };
 
 const Rule_Id = {
@@ -131,7 +131,7 @@ const Rule_Id = {
     {tp: {subject: null, predicate: Fhir.v, object: null }, out: []}
   ]},
   fhirQuery: 'id',
-  arg: (arcTree) => evalObject([0])
+  arg: (values) => values[0]
 }
 
 /* e.g.
@@ -149,7 +149,7 @@ const Rule_NameFamily = {
     ]}
   ]},
   fhirQuery: 'name',
-  arg: (arcTree) => evalObject([0])
+  arg: (values) => values[0]
 }
 
 const Rule_NameGiven = {
@@ -158,8 +158,8 @@ const Rule_NameGiven = {
       {tp: {subject: null, predicate: Fhir.v, object: null }, out: []}
     ]}
   ]},
-  fhirQuery: 'given',
-  arg: (arcTree) => evalObject([0])
+  fhirQuery: 'name',
+  arg: (values) => values[0]
 }
 
 const Rule_Given = {
@@ -169,7 +169,7 @@ const Rule_Given = {
     ]}
   ]},
   fhirQuery: 'given',
-  arg: (arcTree) => evalObject([0])
+  arg: (values) => values[0]
 }
 
 class QueryParam {
@@ -193,9 +193,9 @@ class RuleChoice {
     for (let choiceNo = 0; choiceNo < this.choices.length; ++choiceNo) {
       if (this.statuses[choiceNo] !== -1) {
         const choice = this.choices[choiceNo];
-        const queryParams = this.parallelWalk(arcTrees, choice.arcTree, choiceNo, sparqlSolution);
-        if (queryParams !== null)
-          return queryParams;
+        const values = this.parallelWalk(arcTrees, choice.arcTree, choiceNo, sparqlSolution);
+        if (values !== null)
+          return new QueryParam (this.fhirQuery, this.choice.arg(values));
       }
     }
     return null;
@@ -206,11 +206,23 @@ class RuleChoice {
       if (Equals(testArcTree.tp.predicate, myArcTree.tp.predicate)) {
         if (myArcTree.out.length === 0) {
           // match!
-          return new QueryParm (this.fhirQuery, null);
+          const matchedTerm = testArcTree.tp.object;
+          switch (matchedTerm.termType) {
+          case 'NamedNode':
+          case 'BlankNode':
+            throw Error(`binding ${ToTurtle(matchedTerm)} seems unlikely`);
+          case 'Literal':
+            return [matchedTerm];
+          case 'Variable':
+            const boundValue = sparqlSolution[matchedTerm.value];
+            return boundValue ? [boundValue] : null;
+          default:
+            throw Error(`unexpected RDF term type in ${JSON.stringify(matchedTerm)}`)
+          }
         } else {
           // this.choices[choiceNo] // advance me
           for (let myOutIdx = 0; myOutIdx < myArcTree.out.length; ++myOutIdx) {
-            const ret = this.parallelWalk(testArcTree.out, myArcTree.out[myOutIdx], sparqlSolution);
+            const ret = this.parallelWalk(testArcTree.out, myArcTree.out[myOutIdx], choiceNo, sparqlSolution);
             if (ret !== null)
               return ret;
           }
@@ -218,7 +230,7 @@ class RuleChoice {
       } else {
         // not this testArcTree; try again
       }
-    }).filter(x => x);
+    }).filter(x => !!x);
     if (matched.length > 0) {
       console.log("matched");
       return matched[0];
