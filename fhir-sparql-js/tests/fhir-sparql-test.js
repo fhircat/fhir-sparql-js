@@ -74,12 +74,19 @@ describe('FhirSparql', () => {
     expect(arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
 
     // test connectingVariables
-    console.log(ConnectingVariables.toString(connectingVariables));
-    expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);debugger
+    expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
+
+    // generate FHIR Paths for the Observation ArcTree
     const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], connectingVariables, {});
+    expect(obsPaths).toEqual([ { name: 'code', value: '789-8|http://loinc.org' } ]);
+
+    // generate FHIR Paths for the first Patient ArcTree
     const patPath1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], connectingVariables, {
       subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/1'}
     });
+    console.log(patPath1);
+
+    // generate FHIR Paths for the second Patient ArcTree
     const patPath2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], connectingVariables, {
       subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
     });

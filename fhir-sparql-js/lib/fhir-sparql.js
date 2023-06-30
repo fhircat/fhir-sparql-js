@@ -195,13 +195,14 @@ class RuleChoice {
         const choice = this.choices[choiceNo];
         const values = this.parallelWalk(arcTrees, choice.arcTree, choiceNo, sparqlSolution);
         if (values !== null)
-          return new QueryParam (this.fhirQuery, this.choice.arg(values));
+          return new QueryParam (choice.fhirQuery, choice.arg(values.map(v => v.value)));
       }
     }
     return null;
   }
 
   parallelWalk (testArcTrees, myArcTree, choiceNo, sparqlSolution) {
+    const needed = myArcTree.out;
     const matched = testArcTrees.map(testArcTree => {
       if (Equals(testArcTree.tp.predicate, myArcTree.tp.predicate)) {
         if (myArcTree.out.length === 0) {
@@ -221,19 +222,26 @@ class RuleChoice {
           }
         } else {
           // this.choices[choiceNo] // advance me
-          for (let myOutIdx = 0; myOutIdx < myArcTree.out.length; ++myOutIdx) {
-            const ret = this.parallelWalk(testArcTree.out, myArcTree.out[myOutIdx], choiceNo, sparqlSolution);
-            if (ret !== null)
-              return ret;
+          const nestedRet = [];
+          for (let myOutIdx = 0; myOutIdx < needed.length; ++myOutIdx) {
+            const ret = this.parallelWalk(testArcTree.out, needed[myOutIdx], choiceNo, sparqlSolution);
+            if (ret !== null) {
+              needed.splice(myOutIdx, 1); // we matched a needed arcTree
+              --myOutIdx;
+              nestedRet.push(ret);
+            }
           }
+          return nestedRet.length === 0 ? null : nestedRet.flat();
         }
       } else {
         // not this testArcTree; try again
+        return null;
       }
-    }).filter(x => !!x);
-    if (matched.length > 0) {
-      console.log("matched");
-      return matched[0];
+    }).flat();
+    if (needed.length === 0) {
+      const vals = matched.filter(x => !!x);
+      // console.log(`matched ${JSON.stringify(vals)}`);
+      return vals;
     } else {
       this.statuses[choiceNo] = -1;
       return null;
