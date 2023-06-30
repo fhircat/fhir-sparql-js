@@ -185,18 +185,14 @@ class QueryParam {
 class RuleChoice {
   constructor (choices) {
     this.choices = choices;
-    this.statuses = choices.map(_ => 0); // -1: dead, 0: in-play: 1: completed
-    this.cursors = choices.map(c => c.arcTree); // where each disjunct is
   }
 
   accept (arcTrees, sparqlSolution) {
     for (let choiceNo = 0; choiceNo < this.choices.length; ++choiceNo) {
-      if (this.statuses[choiceNo] !== -1) {
-        const choice = this.choices[choiceNo];
-        const values = this.parallelWalk(arcTrees, choice.arcTree, choiceNo, sparqlSolution);
-        if (values !== null)
-          return new QueryParam (choice.fhirQuery, choice.arg(values.map(v => v.value)));
-      }
+      const choice = this.choices[choiceNo];
+      const values = this.parallelWalk(arcTrees, choice.arcTree, choiceNo, sparqlSolution);
+      if (values !== null)
+        return new QueryParam (choice.fhirQuery, choice.arg(values.map(v => v.value)));
     }
     return null;
   }
@@ -243,7 +239,6 @@ class RuleChoice {
       // console.log(`matched ${JSON.stringify(vals)}`);
       return vals;
     } else {
-      this.statuses[choiceNo] = -1;
       return null;
     }
   }
