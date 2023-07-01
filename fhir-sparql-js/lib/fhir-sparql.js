@@ -142,6 +142,8 @@ const Rule_Id = {
      fhir:given ( [ fhir:v "Peter" ] [ fhir:v "James" ] )
   ] [] )
 */
+
+/* probably `name` parameters are superceded by `family` and `given`
 const Rule_NameFamily = {
   arcTree: {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'name'}, object: null}, out: [
     {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'family'}, object: null}, out: [
@@ -161,10 +163,21 @@ const Rule_NameGiven = {
   fhirQuery: 'name',
   arg: (values) => values[0]
 }
+*/
+
+const Rule_Family = {
+  arcTree: {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'name'}, object: null}, out: [
+    {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'family'}, object: null}, out: [
+      {tp: {subject: null, predicate: Fhir.v, object: null }, out: []}
+    ]}
+  ]},
+  fhirQuery: 'family',
+  arg: (values) => values[0]
+}
 
 const Rule_Given = {
   arcTree: {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'name'}, object: null}, out: [
-    {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'family'}, object: null}, out: [
+    {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'given'}, object: null}, out: [
       {tp: {subject: null, predicate: Fhir.v, object: null }, out: []}
     ]}
   ]},
@@ -176,6 +189,14 @@ class QueryParam {
   constructor (name, value) {
     this.name = name;
     this.value = value;
+  }
+}
+
+class FhirPathExecution {
+  constructor (type, version, paths) {
+    this.type = type;
+    this.version = version;
+    this.paths = paths;
   }
 }
 
@@ -234,8 +255,8 @@ class RuleChoice {
         return null;
       }
     }).flat();
-    if (needed.length === 0) {
-      const vals = matched.filter(x => !!x);
+    const vals = matched.filter(x => !!x);
+    if (vals.length && needed.length === 0) {
       // console.log(`matched ${JSON.stringify(vals)}`);
       return vals;
     } else {
@@ -244,10 +265,12 @@ class RuleChoice {
   }
 }
 
+const RuleChoice_Id = new RuleChoice([Rule_Id]); // gets removed if id supplied by root URL
+
 const ResourceToPaths = {
-  "EveryResource": [new RuleChoice([Rule_Id])],
+  "EveryResource": [RuleChoice_Id],
   "Observation": [new RuleChoice([Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
-  "Patient": [new RuleChoice([Rule_NameFamily]), new RuleChoice([Rule_NameGiven]), new RuleChoice([Rule_Given])],
+  "Patient": [new RuleChoice([Rule_Given])], // new RuleChoice([Rule_NameFamily]), new RuleChoice([Rule_NameGiven])
   "Procedure": [new RuleChoice([Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
   "Questionnaire": [],
 }
@@ -265,6 +288,8 @@ const AllResources = [
 function Equals (l, r) {
   return l.termType === r.termType && l.value === r.value;
 }
+
+const ResourceTypeRegexp = new RegExp('^https?://.*?/([A-Z][a-z]+)/([^/]+)(?:|(.*))$');
 
 class FhirSparql {
   constructor (shex) {
@@ -301,6 +326,8 @@ class FhirSparql {
 
     // All variables in starting operation (like a BGP, but with path expressions included)
     const usedVars = new Map();
+
+    const referents = new Set();
 
     while (todo.length > 0) {
       // Pick a starting triple from remaining triples
@@ -341,7 +368,9 @@ class FhirSparql {
       console.assert(roots.length > 0, 'should have a root (if there were any triples at all)');
 
       // build tree and index variables
-      Array.prototype.push.apply(arcTrees, roots.map(root => FhirSparql.constructArcTree(todo, null, root, treeVars)));
+      Array.prototype.push.apply(arcTrees, roots.map(root =>
+        FhirSparql.constructArcTree(todo, null, root, treeVars, referents)
+      ));
 
       // Sort treeVars for this tree
       for (const [k, treeNodes] of treeVars) {
@@ -359,18 +388,55 @@ class FhirSparql {
       }
     }
 
-    return {arcTrees, connectingVariables};
+    return {arcTrees, connectingVariables, referents};
   }
 
-  opBgpToFhirPathExecutions (arcTree, _connectingVariables, sparqlSolution) {
-    const candidateRules = ResourceToPaths.EveryResource;
+  opBgpToFhirPathExecutions (arcTree, referents, sparqlSolution) {
+    let resourceType = null;
+    let resourceId = null;
+    let resourceVersion = null;
+
+    const prefilledRules = [];
+    const candidateRules = ResourceToPaths.EveryResource.slice();
     const completedRules = [];
     let candidateTypes = null; // initialized soon
 
-    // If there's a type arc, it's the first child.
-    if (Equals(arcTree.out[0].tp.predicate, Rdf.type)) {
-      const soleType = arcTree.out[0].tp.object.value.substring(Ns.fhir.length);
-      candidateTypes = [soleType];
+    // There must be at least one Triple in the arcTree or it wouldn't exist.
+    const rootTriple = arcTree.out[0].tp;
+
+    if (rootTriple.subject.termType === 'Variable' &&
+        referents.has(rootTriple.subject.value) &&
+        sparqlSolution[rootTriple.subject.value]) {
+
+      // If the root node was the object of a FHIR reference
+      const subjectBinding = sparqlSolution[rootTriple.subject.value].value;
+      // parse the URL according to FHIR Protocol
+      const match = subjectBinding.match(ResourceTypeRegexp);
+      if (!match)
+        throw Error(`subject node ${subjectBinding} didn't match FHIR protocol`);
+      resourceType = match[1]; // shouldn't be null
+      resourceId = match[2] || null;// `|| null` changes `undefined` to `null` for consistency
+      resourceVersion = match[3] || null;
+
+      // Sanity-check parsed resourcetype
+      if (AllResources.indexOf(resourceType) === -1)
+        throw Error(`did not recognize FHIR Resource in ${ToTurtle(subjectBinding)}`)
+      candidateTypes = [resourceType];
+
+      // Add id QueryParam
+      prefilledRules.push(new QueryParam(Rule_Id.fhirQuery, resourceId));
+
+      // Remove Rule_Id from candidateRules
+      const idRuleIdx = candidateRules.indexOf(RuleChoice_Id);
+      if (idRuleIdx === -1)
+        throw Error(`should have an id rule from ResourceToPaths.EveryResource: ${ResourceToPaths.EveryResource}`);
+      candidateRules.splice(idRuleIdx, 1);
+    } else if (Equals(rootTriple.predicate, Rdf.type)) {
+      // If there's a type arc, it's the first child.
+      resourceType = rootTriple.object.value.substring(Ns.fhir.length);
+      candidateTypes = [resourceType];
+
+      // could be any resource.
     } else {
       candidateTypes = AllResources;
     }
@@ -379,10 +445,13 @@ class FhirSparql {
     candidateTypes.forEach(type =>
       Array.prototype.push.apply(candidateRules, ResourceToPaths[type])
     );
-debugger
-    return candidateRules
-      .map(ruleChoice => ruleChoice.accept(arcTree.out, sparqlSolution)) // top tree has no tp
-      .filter(queryParam => queryParam !== null);
+
+    const acceptedPaths = candidateRules
+          .map(ruleChoice => ruleChoice.accept(arcTree.out, sparqlSolution)) // top tree has no tp
+          .filter(queryParam => queryParam !== null);
+    const paths = prefilledRules.concat(acceptedPaths);
+
+    return new FhirPathExecution(resourceType, resourceVersion, paths);
   }
 
   /** find triples matching (s, p, o)
@@ -430,16 +499,20 @@ debugger
   /** Construct an ArcTree for an arc and all arcs it reaches
    * Index variables in the same pass for efficiency.
    */
-  static constructArcTree (triplePatterns, forArc, node, treeVars) {
+  static constructArcTree (triplePatterns, forArc, node, treeVars, referents) {
     // ArcTree's don't cross references (or canonical or ...?).
-    if (forArc && forArc.predicate.value === 'http://hl7.org/fhir/reference')
+    if (forArc && forArc.predicate.value === 'http://hl7.org/fhir/reference') {
+      const object = forArc.object;
+      if (object.termType === 'Variable' && !referents.has(object.value))
+        referents.add(object.value); // mark as referent
       return new ArcTree(forArc, []);
+    }
 
     // Canonical order to match order in FhirQuery rule bodies
     const arcsOut = FhirSparql.sortArcs(FhirSparql.stealMatching(triplePatterns, node, null, null));
 
     const out = arcsOut.map(triplePattern => {
-      const arcTree = FhirSparql.constructArcTree(triplePatterns, triplePattern, triplePattern.object, treeVars);
+      const arcTree = FhirSparql.constructArcTree(triplePatterns, triplePattern, triplePattern.object, treeVars, referents);
 
       // Index the variables that connect the trees.
       (['subject', 'object']).forEach(pos => {
@@ -469,4 +542,4 @@ debugger
   }
 }
 
-module.exports = {FhirSparql, ConnectingVariables, PredicateToShapeDecl, ArcTree, ToTurtle};
+module.exports = {FhirSparql, ConnectingVariables, PredicateToShapeDecl, ArcTree, FhirPathExecution, ToTurtle};

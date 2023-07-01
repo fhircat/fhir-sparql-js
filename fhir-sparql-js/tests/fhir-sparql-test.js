@@ -6,7 +6,7 @@ const ShExParser = require("@shexjs/parser").construct();
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/main/resources/');
 const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'org/uu3/ShEx-mini-terse.shex'), 'utf-8'));
-const {FhirSparql, ConnectingVariables, PredicateToShapeDecl, ArcTree, ToTurtle} = require('../lib/fhir-sparql');
+const {FhirSparql, ConnectingVariables, PredicateToShapeDecl, ArcTree, FhirPathExecution, ToTurtle} = require('../lib/fhir-sparql');
 // const X = require('../lib/Namespaces');
 const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../lib/Namespaces');
 
@@ -64,7 +64,7 @@ describe('FhirSparql', () => {
   it('should translate obs-path', () => {
     const rewriter = new FhirSparql(FhirShEx);
     const iQuery = SparqlParser.parse(File.readFileSync(Path.join(Tests, '../../notes/obs-pat-mid.srq'), 'utf-8'));
-    const {arcTrees, connectingVariables} = rewriter.getArcTrees(iQuery);
+    const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
 
     // test arcTrees
     expect(arcTrees[0].getBgp().map(ToTurtle)).toEqual(BGP_obs.map(ToTurtle)); // ToTurtle helps with debugging
@@ -73,23 +73,39 @@ describe('FhirSparql', () => {
     expect(arcTrees[1].getBgp()).toEqual(BGP_subject);
     expect(arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
 
+    // connectingVariables
+    expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
+ 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
+ 1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
+ 2: subject of { ?subject <http://hl7.org/fhir/id> ?patIdElt . }`)
+
+    // referents
+    expect(referents).toEqual(new Set(['subject']));
+
     // test connectingVariables
     expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
 
     // generate FHIR Paths for the Observation ArcTree
-    const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], connectingVariables, {});
-    expect(obsPaths).toEqual([ { name: 'code', value: '789-8|http://loinc.org' } ]);
+    const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
+    expect(obsPaths).toEqual(new FhirPathExecution(
+      'Observation', // type
+      null, // version
+      [ // paths
+        { name: 'code', value: '789-8|http://loinc.org' }
+      ]
+    ));
 
     // generate FHIR Paths for the first Patient ArcTree
-    const patPath1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], connectingVariables, {
+    const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
       subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/1'}
     });
-    console.log(patPath1);
+    expect(patPaths1).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ]));
 
     // generate FHIR Paths for the second Patient ArcTree
-    const patPath2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], connectingVariables, {
+    const patPaths2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
       subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
     });
+    expect(patPaths2).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ]));
   });
 
   it('should barf on cycles', () => {
