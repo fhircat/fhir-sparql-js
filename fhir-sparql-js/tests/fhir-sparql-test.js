@@ -1,12 +1,10 @@
 const File = require('fs');
 const Path = require('path');
-const SparqlJs = require('sparqljs');
-const SparqlParser = new SparqlJs.Parser();
 const ShExParser = require("@shexjs/parser").construct();
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));
-const {RdfUtils} = require('../lib/RdfUtils');
+const {RdfUtils, SparqlQuery} = require('../lib/RdfUtils');
 const {ArcTree} = require('../lib/ArcTree.js');
 const {FhirSparql, ConnectingVariables, PredicateToShapeDecl, FhirPathExecution} = require('../lib/fhir-sparql');
 // const X = require('../lib/Namespaces');
@@ -46,9 +44,14 @@ describe('parsers', () => {
   it('should parse SPARQL', () => {
     const iFileName = Path.join(Resources, 'obs-pat.srq');
     const iText = File.readFileSync(iFileName, 'utf-8');
-    const iQuery = SparqlParser.parse(iText);
+    const iQuery = SparqlQuery.parse(iText).getQuery();
     const refSparqlObj = JSON.parse(File.readFileSync(Path.join(Tests, 'obs-path-sparqljs.json')));
     expect(iQuery).toEqual(refSparqlObj);
+    // expect(iQuery.queryType).toEqual(refSparqlObj.queryType);
+    // expect(iQuery.prefixes).toEqual(refSparqlObj.prefixes);
+    // expect(iQuery.variables).toEqual(refSparqlObj.variables);
+    // expect(iQuery.where[0].type).toEqual(refSparqlObj.where[0].type);
+    // expect(iQuery.where[0].triples.slice(5,6)).toEqual(refSparqlObj.where[0].triples.slice(5,6));
   });
 
   it('should parse ShEx', () => {
@@ -65,7 +68,7 @@ describe('FhirSparql', () => {
 
   it('should translate obs-path', () => {
     const rewriter = new FhirSparql(FhirShEx);
-    const iQuery = SparqlParser.parse(File.readFileSync(Path.join(Resources, 'obs-pat-disordered.srq'), 'utf-8'));
+    const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-disordered.srq'), 'utf-8'));
     const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
 
     // test arcTrees
@@ -114,7 +117,7 @@ describe('FhirSparql', () => {
 
   xit('should translate obs-id', () => {
     const rewriter = new FhirSparql(FhirShEx);
-    const iQuery = SparqlParser.parse(File.readFileSync(Path.join(Resources, 'obs-id.srq'), 'utf-8'));
+    const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-id.srq'), 'utf-8'));
     const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
     expect(arcTrees[0].getBgp().length).toEqual(8);
     expect(connectingVariables).toEqual(new Map([]))
@@ -124,7 +127,7 @@ describe('FhirSparql', () => {
   });
 
   it('should barf on cycles', () => {
-    expect(() => new FhirSparql(FhirShEx).getArcTrees(SparqlParser.parse(
+    expect(() => new FhirSparql(FhirShEx).getArcTrees(SparqlQuery.parse(
       `PREFIX fhir: <http://hl7.org/fhir/>
 ASK {?obs fhir:subject ?subjectRef . ?subjectRef fhir:reference ?obs}`
     ))).toThrow("can't handle cycle involving ?subjectRef");

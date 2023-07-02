@@ -1,4 +1,6 @@
 const {Ns, Rdf, Fhir, FirstRest} = require('./Namespaces');
+const SparqlJs = require('sparqljs');
+const SparqlParser = new SparqlJs.Parser();
 
 class RdfUtils {
 
@@ -32,9 +34,9 @@ class RdfUtils {
    */
   static getMatching (triplePatterns, s, p, o) {
     return triplePatterns.filter(tp =>
-      (s === null || RdfUtils.Equals(tp.subject, s)) &&
-      (p === null || RdfUtils.Equals(tp.predicate, p)) &&
-      (o === null || RdfUtils.Equals(tp.object, o))
+      (s === null || tp.subject.equals(s)) &&
+      (p === null || tp.predicate.equals(p)) &&
+      (o === null || tp.object.equals(o))
     );
   }
 
@@ -44,9 +46,9 @@ class RdfUtils {
     const ret = [];
     for (let i = 0; i < triplePatterns.length; ++i) {
       const tp = triplePatterns[i];
-      if ((s === null || RdfUtils.Equals(tp.subject, s)) &&
-          (p === null || RdfUtils.Equals(tp.predicate, p)) &&
-          (o === null || RdfUtils.Equals(tp.object, o))) {
+      if ((s === null || tp.subject.equals(s)) &&
+          (p === null || tp.predicate.equals(p)) &&
+          (o === null || tp.object.equals(o))) {
         ret.push(tp);
         triplePatterns.splice(i, 1);
         --i;
@@ -70,6 +72,89 @@ class RdfUtils {
       ? '<' + predicate.value + '>'
       : '(' + predicate.items.map(item => RdfUtils.pStr(item) + (item.pathType || '')).join('/') + ')'; // TODO: not correct
   }
+
+  static parseSparql (text) {
+    // iQuery.where[0].triples
+  }
 }
 
-module.exports = {RdfUtils};
+class Term {
+  constructor (termType, value) {
+    this.termType = termType;
+    this.value = value;
+  }
+  equals (r) {
+    return this.termType === r.termType && this.value === r.value;
+  }
+  static blessSparqlJs (sparqlJsTerm) {
+    if (sparqlJsTerm.type === 'path')
+      return new Path(sparqlJsTerm.pathType, sparqlJsTerm.items.map(item => Term.blessSparqlJs(item)));
+
+    switch (sparqlJsTerm.termType) {
+    case 'NamedNode': return new NamedNode(sparqlJsTerm.value);
+    case 'BlankNode': return new BlankNode(sparqlJsTerm.value);
+    case 'Literal': return new Literal(sparqlJsTerm.value, sparqlJsTerm.language,
+                                       sparqlJsTerm.datatype ? Term.blessSparqlJs(sparqlJsTerm.datatype) : undefined
+                                      );
+    case 'Variable': return new Variable(sparqlJsTerm.value);
+    default: throw Error(`unknown SparqlJs term type in ${JSON.stringify(sparqlJsTerm)}`);
+    }
+  }
+}
+
+class NamedNode extends Term { constructor (value) { super('NamedNode', value); } }
+class BlankNode extends Term { constructor (value) { super('BlankNode', value); } }
+class Variable  extends Term { constructor (value) { super('Variable', value); } }
+class Literal   extends Term { constructor (value, language, datatype) {
+  super('Literal', value);
+  this.language = language;
+  this.datatype = datatype;
+} }
+
+class Path {
+  constructor (pathType, items) {
+    this.type = 'path';
+    this.pathType = pathType;
+    this.items = items;
+  }
+  equals (r) {
+    if (this.type !== r.type) return false;
+    if (this.pathType !== r.pathType) return false;
+    if (this.items.length !== r.items.lenth) return false;
+    for (let i = 0; i < this.items.length; ++i)
+      if (!this.items[i].euqals(r.items[i]))
+        return false;
+    return true;
+  }
+}
+
+class Triple {
+  constructor (subject, predicate, object) {
+    this.subject   = (subject);
+    this.predicate = (predicate);
+    this.object    = (object);
+  }
+  static blessSparqlJs (sparqlJsTriple) {
+    return new Triple(
+      Term.blessSparqlJs(sparqlJsTriple.subject),
+      Term.blessSparqlJs(sparqlJsTriple.predicate),
+      Term.blessSparqlJs(sparqlJsTriple.object)
+    );
+  }
+}
+
+class SparqlQuery {
+  constructor (query) {
+    query.where[0].triples = query.where[0].triples.map(t => Triple.blessSparqlJs(t));
+    this.query = query;
+  }
+
+  getQuery () { return this.query; }
+  getWhere () { return this.query.where; };
+
+  static parse (text) {
+    return new SparqlQuery(SparqlParser.parse(text));
+  }
+}
+
+module.exports = {RdfUtils, SparqlQuery};

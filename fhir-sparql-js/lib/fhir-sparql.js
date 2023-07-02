@@ -260,7 +260,7 @@ class FhirSparql {
   }
 
   getArcTrees (query) {
-    const triples = query.where[0].triples;
+    const triples = query.getWhere()[0].triples;
 
     const todo = triples.slice().sort((l, r) => RdfUtils.pStr(l.predicate).localeCompare(RdfUtils.pStr(r.predicate)));
     /*
