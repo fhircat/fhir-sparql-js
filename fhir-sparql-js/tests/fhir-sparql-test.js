@@ -6,7 +6,9 @@ const ShExParser = require("@shexjs/parser").construct();
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));
-const {FhirSparql, ConnectingVariables, PredicateToShapeDecl, ArcTree, FhirPathExecution, ToTurtle} = require('../lib/fhir-sparql');
+const {RdfUtils} = require('../lib/RdfUtils');
+const {ArcTree} = require('../lib/ArcTree.js');
+const {FhirSparql, ConnectingVariables, PredicateToShapeDecl, FhirPathExecution} = require('../lib/fhir-sparql');
 // const X = require('../lib/Namespaces');
 const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../lib/Namespaces');
 
@@ -67,9 +69,9 @@ describe('FhirSparql', () => {
     const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
 
     // test arcTrees
-    expect(arcTrees[0].getBgp().map(ToTurtle)).toEqual(BGP_obs.map(ToTurtle)); // ToTurtle helps with debugging
+    expect(arcTrees[0].getBgp().map(RdfUtils.ToTurtle)).toEqual(BGP_obs.map(RdfUtils.ToTurtle)); // ToTurtle helps with debugging
     expect(arcTrees[0].getBgp()).toEqual(BGP_obs);
-    expect(arcTrees[1].getBgp().map(ToTurtle)).toEqual(BGP_subject.map(ToTurtle));
+    expect(arcTrees[1].getBgp().map(RdfUtils.ToTurtle)).toEqual(BGP_subject.map(RdfUtils.ToTurtle));
     expect(arcTrees[1].getBgp()).toEqual(BGP_subject);
     expect(arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
 

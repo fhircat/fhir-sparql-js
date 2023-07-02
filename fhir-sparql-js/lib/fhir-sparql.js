@@ -1,5 +1,7 @@
 const {Visitor: ShExVisitor} = require('./ShExVisitor');
 const {Ns, Rdf, Fhir, FirstRest} = require('./Namespaces');
+const {RdfUtils} = require('./RdfUtils');
+const {ArcTree} = require('./ArcTree');
 
 class PredicateToShapeDecl extends ShExVisitor {
   constructor (ctor_args) {
@@ -34,58 +36,6 @@ class PredicateToShapeDecl extends ShExVisitor {
 
   visitNodeConstraint(shape, ...args) { // don't bother visiting NodeConstraints
     return null;
-  }
-}
-
-class ArcTree {
-  constructor (tp, out) {
-    this.tp = tp;
-    this.out = out;
-    if (!out) throw Error(`${ToTurtle(this.tp)} has no out rule array`);
-  }
-
-  getBgp () {
-    const ret = [];
-    if (this.tp !== null)
-      ret.push(this.tp);
-    this.out.forEach(tree =>
-      Array.prototype.push.apply(ret, tree.getBgp())
-    );
-    return ret;
-  }
-
-  toString (indent = '') {
-    const tpStr = this.tp === null ? 'null' : ToTurtle(this.tp);
-    const outStrs = this.out.map(out => out.toString(indent + '  '));
-    return this.out.length === 0
-      ? indent + tpStr
-      : indent + tpStr + ' [\n' + outStrs.join('\n') + indent + '\n]';
-  }
-}
-
-// debugging printer
-function ToTurtle (x) {
-  if (x === null)
-    return 'null';
-  if ('subject' in x)
-    return `${ToTurtle(x.subject)} ${ToTurtle(x.predicate)} ${ToTurtle(x.object)} .`
-  if (x.type === 'path')
-    return x.value
-      ? '<' + x.value + '>'
-      : '(' + x.items.map(item => FhirSparql.pStr(item) + (item.pathType || '')).join('/') + ')' // TODO: not correct
-
-  switch (x.termType) {
-  case 'NamedNode': return '<' + x.value + '>';
-  case 'BlankNode': return '_:' + x.value;
-  case 'Variable': return '?' + x.value;
-  case 'Literal': return '"' + x.value + '"' +
-      (x.language
-       ? '@' + x.language
-       : x.datatype
-       ? ToTurtle(x.datatype)
-       : '');
-  // istanbul ignore next
-  default: throw Error(`ToTurtle - unrecognized argument ${JSON.stringify(x)}`);
   }
 }
 
@@ -239,7 +189,7 @@ class RuleChoice {
   parallelWalk (testArcTrees, myArcTree, choiceNo, sparqlSolution) {
     const needed = myArcTree.out;
     const matched = testArcTrees.map(testArcTree => {
-      if (Equals(testArcTree.tp.predicate, myArcTree.tp.predicate)) {
+      if (RdfUtils.Equals(testArcTree.tp.predicate, myArcTree.tp.predicate)) {
         if (myArcTree.out.length === 0) {
           // match!
           const matchedTerm = testArcTree.tp.object;
@@ -299,13 +249,6 @@ const AllResources = [
   'Questionnaire'
 ]; // That's all of 'em; trust me.
 
-/** Rdf node === Rdf node
- * will be specialized for every graph API
- */
-function Equals (l, r) {
-  return l.termType === r.termType && l.value === r.value;
-}
-
 const ResourceTypeRegexp = new RegExp('^https?://.*?/([A-Z][a-z]+)/([^/]+)(?:|(.*))$');
 
 class FhirSparql {
@@ -319,7 +262,7 @@ class FhirSparql {
   getArcTrees (query) {
     const triples = query.where[0].triples;
 
-    const todo = triples.slice().sort((l, r) => FhirSparql.pStr(l.predicate).localeCompare(FhirSparql.pStr(r.predicate)));
+    const todo = triples.slice().sort((l, r) => RdfUtils.pStr(l.predicate).localeCompare(RdfUtils.pStr(r.predicate)));
     /*
       console.log(todo.map(t => t.subject.value + ' ' + FhirSparql.pStr(t.predicate) + ' ' + t.object.value).join("\n"));
        1 ?obs fhir:code ?codeList
@@ -364,7 +307,7 @@ class FhirSparql {
 
         tz.forEach(t => {
           // get the node's incoming arcs (actually, just one in every scenario I've imagined).
-          const arcsIn = FhirSparql.getMatching(todo, null, null, t.subject);
+          const arcsIn = RdfUtils.getMatching(todo, null, null, t.subject);
 
           // it either has incoming arcs or it's a root.
           if (arcsIn.length === 0) {
@@ -372,8 +315,8 @@ class FhirSparql {
           } else {
             // barf if there's a cycle
             arcsIn.forEach(p => {
-              if (Equals(p.subject, start.subject))
-                throw Error(`can't handle cycle involving ${ToTurtle(p.subject)}`);
+              if (RdfUtils.Equals(p.subject, start.subject))
+                throw Error(`can't handle cycle involving ${RdfUtils.ToTurtle(p.subject)}`);
             });
 
             // find parents of these arcs on next iteration
@@ -386,7 +329,7 @@ class FhirSparql {
 
       // build tree and index variables
       Array.prototype.push.apply(arcTrees, roots.map(root =>
-        FhirSparql.constructArcTree(todo, null, root, treeVars, referents)
+        ArcTree.constructArcTree(todo, null, root, treeVars, referents)
       ));
 
       // Sort treeVars for this tree
@@ -443,7 +386,7 @@ class FhirSparql {
 
       // Sanity-check parsed resourcetype
       if (AllResources.indexOf(resourceType) === -1)
-        throw Error(`did not recognize FHIR Resource in ${ToTurtle(resourceUrl)}`)
+        throw Error(`did not recognize FHIR Resource in ${RdfUtils.ToTurtle(resourceUrl)}`)
       candidateTypes = [resourceType];
 
       // Add id QueryParam
@@ -455,7 +398,7 @@ class FhirSparql {
         throw Error(`should have an id rule from ResourceToPaths.EveryResource: ${ResourceToPaths.EveryResource}`);
       candidateRules.splice(idRuleIdx, 1);
 
-    } else if (Equals(rootTriple.predicate, Rdf.type)) {
+    } else if (RdfUtils.Equals(rootTriple.predicate, Rdf.type)) {
       // If there's a type arc, it's the first child.
       resourceType = rootTriple.object.value.substring(Ns.fhir.length);
       candidateTypes = [resourceType];
@@ -477,93 +420,6 @@ class FhirSparql {
 
     return new FhirPathExecution(resourceType, resourceVersion, paths);
   }
-
-  /** find triples matching (s, p, o)
-   */
-  static getMatching (triplePatterns, s, p, o) {
-    return triplePatterns.filter(tp =>
-      (s === null || Equals(tp.subject, s)) &&
-      (p === null || Equals(tp.predicate, p)) &&
-      (o === null || Equals(tp.object, o))
-    );
-  }
-
-  /** remove triples matching (s, p, o)
-   */
-  static stealMatching (triplePatterns, s, p, o) {
-    const ret = [];
-    for (let i = 0; i < triplePatterns.length; ++i) {
-      const tp = triplePatterns[i];
-      if ((s === null || Equals(tp.subject, s)) &&
-          (p === null || Equals(tp.predicate, p)) &&
-          (o === null || Equals(tp.object, o))) {
-        ret.push(tp);
-        triplePatterns.splice(i, 1);
-        --i;
-      }
-    }
-    return ret;
-  }
-
-  /** sort a list of triple (patterns), AKA arcs
-   * Bubble rdf:type to the top
-   * Sort remaining by predicate name.
-   *   Since all have same subject and there are no repeated properties in
-   *   FHIR/RDF, we can assume that that localeCompare will never return 0
-   */
-  static sortArcs (triplePatterns) {
-    const ret = [];
-    Array.prototype.push.apply(ret, FhirSparql.stealMatching(triplePatterns, null, Rdf.type, null));
-    Array.prototype.push.apply(ret, triplePatterns.sort(
-      (l, r) => FhirSparql.pStr(l.predicate).localeCompare(FhirSparql.pStr(r.predicate))
-    ));
-    return ret;
-  }
-
-  /** Construct an ArcTree for an arc and all arcs it reaches
-   * Index variables in the same pass for efficiency.
-   */
-  static constructArcTree (triplePatterns, forArc, node, treeVars, referents) {
-    // ArcTree's don't cross references (or canonical or ...?).
-    if (forArc && forArc.predicate.value === 'http://hl7.org/fhir/reference') {
-      const object = forArc.object;
-      if (object.termType === 'Variable' && !referents.has(object.value))
-        referents.add(object.value); // mark as referent
-      return new ArcTree(forArc, []);
-    }
-
-    // Canonical order to match order in FhirQuery rule bodies
-    const arcsOut = FhirSparql.sortArcs(FhirSparql.stealMatching(triplePatterns, node, null, null));
-
-    const out = arcsOut.map(triplePattern => {
-      const arcTree = FhirSparql.constructArcTree(triplePatterns, triplePattern, triplePattern.object, treeVars, referents);
-
-      // Index the variables that connect the trees.
-      (['subject', 'object']).forEach(pos => {
-        const v = triplePattern[pos];
-        // Ignore connections formed by IRIs, BNodes or Literals.
-        if (v.termType === 'Variable') {
-          if (!treeVars.has(v.value)) {
-            treeVars.set(v.value, []);
-          };
-          treeVars.get(v.value).push({pos, arcTree});
-        }
-      });
-
-      return arcTree;
-    });
-
-    return new ArcTree(forArc, out);
-  }
-
-  /** Stringize a predicate
-   * Used to sort arcs queried from graphs.
-   */
-  static pStr (predicate) {
-    return predicate.value
-      ? '<' + predicate.value + '>'
-      : '(' + predicate.items.map(item => FhirSparql.pStr(item) + (item.pathType || '')).join('/') + ')'; // TODO: not correct
-  }
 }
 
-module.exports = {FhirSparql, ConnectingVariables, PredicateToShapeDecl, ArcTree, FhirPathExecution, ToTurtle};
+module.exports = {FhirSparql, ConnectingVariables, PredicateToShapeDecl, ArcTree, FhirPathExecution};
