@@ -4,8 +4,8 @@ const SparqlJs = require('sparqljs');
 const SparqlParser = new SparqlJs.Parser();
 const ShExParser = require("@shexjs/parser").construct();
 const Tests = __dirname;
-const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/main/resources/');
-const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'org/uu3/ShEx-mini-terse.shex'), 'utf-8'));
+const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
+const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));
 const {FhirSparql, ConnectingVariables, PredicateToShapeDecl, ArcTree, FhirPathExecution, ToTurtle} = require('../lib/fhir-sparql');
 // const X = require('../lib/Namespaces');
 const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../lib/Namespaces');
@@ -31,18 +31,18 @@ describe('PredicateToShapeDecl', () => {
       subject: {termType: 'BlankNode', value: 'b1'},
       predicate: Fhir.v,
       object: null
-    }).toString()).toEqual('_:b1 <http://hl7.org/fhir/v> null .');
+    }, []).toString()).toEqual('_:b1 <http://hl7.org/fhir/v> null .');
     expect(new ArcTree({
       subject: {termType: 'NamedNode', value: 'http://a.example/#a'},
       predicate: Fhir.v,
       object: {termType: 'Literal', value: 'a'}
-    }).toString()).toEqual('<http://a.example/#a> <http://hl7.org/fhir/v> "a" .');
+    }, []).toString()).toEqual('<http://a.example/#a> <http://hl7.org/fhir/v> "a" .');
   })
 });
 
 describe('parsers', () => {
   it('should parse SPARQL', () => {
-    const iFileName = Path.join(Tests, '../../notes/obs-pat.srq');
+    const iFileName = Path.join(Resources, 'obs-pat.srq');
     const iText = File.readFileSync(iFileName, 'utf-8');
     const iQuery = SparqlParser.parse(iText);
     const refSparqlObj = JSON.parse(File.readFileSync(Path.join(Tests, 'obs-path-sparqljs.json')));
@@ -50,7 +50,7 @@ describe('parsers', () => {
   });
 
   it('should parse ShEx', () => {
-    const refFhirShExObj = JSON.parse(File.readFileSync(Path.join(Tests, 'ShEx-mini-terse.json'), 'utf-8'));
+    const refFhirShExObj = JSON.parse(File.readFileSync(Path.join(Resources, 'ShEx-mini-terse.json'), 'utf-8'));
     expect(FhirShEx).toEqual(refFhirShExObj);
   });
 });
@@ -63,7 +63,7 @@ describe('FhirSparql', () => {
 
   it('should translate obs-path', () => {
     const rewriter = new FhirSparql(FhirShEx);
-    const iQuery = SparqlParser.parse(File.readFileSync(Path.join(Tests, '../../notes/obs-pat-mid.srq'), 'utf-8'));
+    const iQuery = SparqlParser.parse(File.readFileSync(Path.join(Resources, 'obs-pat-disordered.srq'), 'utf-8'));
     const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
 
     // test arcTrees
@@ -77,7 +77,9 @@ describe('FhirSparql', () => {
     expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
  0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
  1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
- 2: subject of { ?subject <http://hl7.org/fhir/id> ?patIdElt . }`)
+ 2: subject of { ?subject <http://hl7.org/fhir/id> ?patIdElt . [
+  ?patIdElt <http://hl7.org/fhir/v> ?patId .
+] }`)
 
     // referents
     expect(referents).toEqual(new Set(['subject']));
@@ -106,6 +108,17 @@ describe('FhirSparql', () => {
       subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
     });
     expect(patPaths2).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ]));
+  });
+
+  xit('should translate obs-id', () => {
+    const rewriter = new FhirSparql(FhirShEx);
+    const iQuery = SparqlParser.parse(File.readFileSync(Path.join(Resources, 'obs-id.srq'), 'utf-8'));
+    const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+    expect(arcTrees[0].getBgp().length).toEqual(8);
+    expect(connectingVariables).toEqual(new Map([]))
+    expect(referents).toEqual(new Set());
+    const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
+    expect(obsPaths).toEqual(new FhirPathExecution('Observation', null, [{ name: 'id', value: '789' }]));
   });
 
   it('should barf on cycles', () => {

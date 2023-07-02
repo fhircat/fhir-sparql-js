@@ -41,6 +41,7 @@ class ArcTree {
   constructor (tp, out) {
     this.tp = tp;
     this.out = out;
+    if (!out) throw Error(`${ToTurtle(this.tp)} has no out rule array`);
   }
 
   getBgp () {
@@ -53,8 +54,12 @@ class ArcTree {
     return ret;
   }
 
-  toString () {
-    return this.tp === null ? 'null' : ToTurtle(this.tp);
+  toString (indent = '') {
+    const tpStr = this.tp === null ? 'null' : ToTurtle(this.tp);
+    const outStrs = this.out.map(out => out.toString(indent + '  '));
+    return this.out.length === 0
+      ? indent + tpStr
+      : indent + tpStr + ' [\n' + outStrs.join('\n') + indent + '\n]';
   }
 }
 
@@ -85,7 +90,7 @@ function ToTurtle (x) {
 }
 
 class ConnectingVariables {
-  static toString (cvs, a, b, c) {
+  static toString (cvs) {
     const lines = [];
     for (const [variable, trees] of cvs) {
       lines.push(variable);
@@ -94,6 +99,17 @@ class ConnectingVariables {
       );
     }
     return lines.join('\n');
+  }
+}
+
+class Rule {
+  constructor (arcTree, fhirQuery, arg) {
+    this.arcTree = arcTree;
+    this.fhirQuery = fhirQuery;
+    this.arg = arg;
+  }
+  toString () {
+    return "TODO"
   }
 }
 
@@ -106,7 +122,7 @@ const Rule_CodeWithSystem = {
         ]},
         {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'system'}, object: null}, out: [
           {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'v'}, object: null}, out: []}
-        ]},
+        ]}
       ]}
     ]}
   ]},
@@ -116,10 +132,12 @@ const Rule_CodeWithSystem = {
 
 const Rule_CodeWithOutSystem = {
   arcTree: {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'code'}, object: null}, out: [
-    {tp: {subject: null, predicate: FirstRest, object: null}, out: [
-      {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'code'}, object: null}, out: [
-        {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'v'}, object: null}, out: []}
-      ]},
+    {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'coding'}, object: null}, out: [
+      {tp: {subject: null, predicate: FirstRest, object: null}, out: [
+        {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'code'}, object: null}, out: [
+          {tp: {subject: null, predicate: {termType: 'NamedNode', value: Ns.fhir + 'v'}, object: null}, out: []}
+        ]}
+      ]}
     ]}
   ]},
   fhirQuery: 'code',
@@ -228,7 +246,6 @@ class RuleChoice {
           switch (matchedTerm.termType) {
           case 'NamedNode':
           case 'BlankNode':
-            throw Error(`binding ${ToTurtle(matchedTerm)} seems unlikely`);
           case 'Literal':
             return [matchedTerm];
           case 'Variable':
@@ -394,6 +411,7 @@ class FhirSparql {
   opBgpToFhirPathExecutions (arcTree, referents, sparqlSolution) {
     let resourceType = null;
     let resourceId = null;
+    let resourceUrl = null;
     let resourceVersion = null;
 
     const prefilledRules = [];
@@ -404,23 +422,28 @@ class FhirSparql {
     // There must be at least one Triple in the arcTree or it wouldn't exist.
     const rootTriple = arcTree.out[0].tp;
 
-    if (rootTriple.subject.termType === 'Variable' &&
-        referents.has(rootTriple.subject.value) &&
-        sparqlSolution[rootTriple.subject.value]) {
-
+    switch (rootTriple.subject.termType) {
+    case 'NamedNode':
+      resourceUrl = rootTriple.subject.value;
+      break;
+    case 'Variable':
+      if (referents.has(rootTriple.subject.value) && sparqlSolution[rootTriple.subject.value])
       // If the root node was the object of a FHIR reference
-      const subjectBinding = sparqlSolution[rootTriple.subject.value].value;
+      resourceUrl = sparqlSolution[rootTriple.subject.value].value;
+    }
+
+    if (resourceUrl !== null) {
       // parse the URL according to FHIR Protocol
-      const match = subjectBinding.match(ResourceTypeRegexp);
+      const match = resourceUrl.match(ResourceTypeRegexp);
       if (!match)
-        throw Error(`subject node ${subjectBinding} didn't match FHIR protocol`);
+        throw Error(`subject node ${resourceUrl} didn't match FHIR protocol`);
       resourceType = match[1]; // shouldn't be null
       resourceId = match[2] || null;// `|| null` changes `undefined` to `null` for consistency
       resourceVersion = match[3] || null;
 
       // Sanity-check parsed resourcetype
       if (AllResources.indexOf(resourceType) === -1)
-        throw Error(`did not recognize FHIR Resource in ${ToTurtle(subjectBinding)}`)
+        throw Error(`did not recognize FHIR Resource in ${ToTurtle(resourceUrl)}`)
       candidateTypes = [resourceType];
 
       // Add id QueryParam
@@ -431,13 +454,14 @@ class FhirSparql {
       if (idRuleIdx === -1)
         throw Error(`should have an id rule from ResourceToPaths.EveryResource: ${ResourceToPaths.EveryResource}`);
       candidateRules.splice(idRuleIdx, 1);
+
     } else if (Equals(rootTriple.predicate, Rdf.type)) {
       // If there's a type arc, it's the first child.
       resourceType = rootTriple.object.value.substring(Ns.fhir.length);
       candidateTypes = [resourceType];
 
-      // could be any resource.
     } else {
+      // could be any resource.
       candidateTypes = AllResources;
     }
 
