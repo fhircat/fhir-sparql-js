@@ -105,7 +105,7 @@ class QueryAnalyzer {
           } else {
             // barf if there's a cycle
             arcsIn.forEach(p => {
-              if (RdfUtils.Equals(p.subject, start.subject))
+              if (p.subject.equals(start.subject))
                 throw Error(`can't handle cycle involving ${RdfUtils.ToTurtle(p.subject)}`);
             });
 

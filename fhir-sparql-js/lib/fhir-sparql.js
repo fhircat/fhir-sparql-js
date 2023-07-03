@@ -147,7 +147,7 @@ class RuleChoice {
   parallelWalk (testArcTrees, myArcTree, choiceNo, sparqlSolution) {
     const needed = myArcTree.out;
     const matched = testArcTrees.map(testArcTree => {
-      if (RdfUtils.Equals(testArcTree.tp.predicate, myArcTree.tp.predicate)) {
+      if (testArcTree.tp.predicate.equals(myArcTree.tp.predicate)) {
         if (myArcTree.out.length === 0) {
           // match!
           const matchedTerm = testArcTree.tp.object;
@@ -259,7 +259,7 @@ class FhirSparql extends QueryAnalyzer {
         throw Error(`should have an id rule from ResourceToPaths.EveryResource: ${ResourceToPaths.EveryResource}`);
       candidateRules.splice(idRuleIdx, 1);
 
-    } else if (RdfUtils.Equals(rootTriple.predicate, Rdf.type)) {
+    } else if (rootTriple.predicate.equals(Rdf.type)) {
       // If there's a type arc, it's the first child.
       resourceType = rootTriple.object.value.substring(Ns.fhir.length);
       candidateTypes = [resourceType];

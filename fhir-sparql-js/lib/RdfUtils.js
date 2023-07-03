@@ -57,13 +57,6 @@ class RdfUtils {
     return ret;
   }
 
-  /** Rdf node === Rdf node
-   * will be specialized for every graph API
-   */
-  static Equals (l, r) {
-    return l.termType === r.termType && l.value === r.value;
-  }
-
   /** Stringize a predicate
    * Used to sort arcs queried from graphs.
    */
@@ -105,11 +98,16 @@ class Term {
 class NamedNode extends Term { constructor (value) { super('NamedNode', value); } }
 class BlankNode extends Term { constructor (value) { super('BlankNode', value); } }
 class Variable  extends Term { constructor (value) { super('Variable', value); } }
-class Literal   extends Term { constructor (value, language, datatype) {
-  super('Literal', value);
-  this.language = language;
-  this.datatype = datatype;
-} }
+class Literal   extends Term {
+  constructor (value, language, datatype) {
+    super('Literal', value);
+    this.language = language;
+    this.datatype = datatype;
+  }
+  equals (r) {
+    return super.equals(r) && this.language === r.language && this.datatype === r.datatype;
+  }
+}
 
 class Path {
   constructor (pathType, items) {
@@ -120,9 +118,9 @@ class Path {
   equals (r) {
     if (this.type !== r.type) return false;
     if (this.pathType !== r.pathType) return false;
-    if (this.items.length !== r.items.lenth) return false;
+    if (this.items.length !== r.items.length) return false;
     for (let i = 0; i < this.items.length; ++i)
-      if (!this.items[i].euqals(r.items[i]))
+      if (!this.items[i].equals(r.items[i]))
         return false;
     return true;
   }
