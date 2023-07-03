@@ -95,14 +95,22 @@ class Term {
   }
 }
 
-class NamedNode extends Term { constructor (value) { super('NamedNode', value); } }
-class BlankNode extends Term { constructor (value) { super('BlankNode', value); } }
-class Variable  extends Term { constructor (value) { super('Variable', value); } }
+class NamedNode extends Term { constructor (value) { super('NamedNode', value); } toString() { return '<' + this.value + '>'; } }
+class BlankNode extends Term { constructor (value) { super('BlankNode', value); } toString() { return '_:' + this.value; } }
+class Variable  extends Term { constructor (value) { super('Variable', value); } toString() { return '?' + this.value; } }
 class Literal   extends Term {
   constructor (value, language, datatype) {
     super('Literal', value);
     this.language = language;
     this.datatype = datatype;
+  }
+  toString () {
+    return '"' + this.value + '"' +
+      (this.language
+       ? '@' + this.language
+       : this.datatype
+       ? '^^' + this.datatype.toString()
+       : '');
   }
   equals (r) {
     return super.equals(r) && this.language === r.language && this.datatype === r.datatype;
@@ -132,6 +140,14 @@ class Triple {
     this.predicate = (predicate);
     this.object    = (object);
   }
+  toString () {
+    return `${this.subject} ${this.predicate} ${this.object} .`;
+  }
+  equals (r) {
+    return this.subject.equals(r.subject) &&
+      this.predicate.equals(r.predicate) &&
+      this.object.equals(r.object);
+  }
   static blessSparqlJs (sparqlJsTriple) {
     return new Triple(
       Term.blessSparqlJs(sparqlJsTriple.subject),
@@ -141,9 +157,24 @@ class Triple {
   }
 }
 
+class Bgp {
+  constructor (triples) {
+    this.type = 'bgp';
+    this.triples = triples;
+  }
+  toString (indent = '') {
+    return indent + '{\n' + this.triples.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
+  }
+  static blessSparqlJs (sparqlJsBgp) {
+    if (sparqlJsBgp.type !== 'bgp') throw Error(`expected to bless something with .type=bgp in ${JSON.stringify(sparqlJsBgp)}`);
+    return new Bgp(sparqlJsBgp.triples.map(t => Triple.blessSparqlJs(t)));
+  }
+}
+
 class SparqlQuery {
   constructor (query) {
-    query.where[0].triples = query.where[0].triples.map(t => Triple.blessSparqlJs(t));
+    // query.where[0].triples = query.where[0].triples.map(t => Triple.blessSparqlJs(t));
+    query.where = query.where.map(bgp => Bgp.blessSparqlJs(bgp));
     this.query = query;
   }
 
@@ -155,4 +186,4 @@ class SparqlQuery {
   }
 }
 
-module.exports = {RdfUtils, SparqlQuery};
+module.exports = {RdfUtils, Term, SparqlQuery};

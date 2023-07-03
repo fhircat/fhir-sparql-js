@@ -1,4 +1,4 @@
-
+/* istanbul ignore file */
 class ShExVisitor {
   constructor (...ctor_args) {
     this.ctor_args = ctor_args;

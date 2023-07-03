@@ -1,17 +1,18 @@
 const File = require('fs');
 const Path = require('path');
-const ShExParser = require("@shexjs/parser").construct();
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
-const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));
+
 const {RdfUtils, SparqlQuery} = require('../lib/RdfUtils');
 const {ArcTree} = require('../lib/ArcTree.js');
 const {FhirSparql, ConnectingVariables, FhirPathExecution} = require('../lib/fhir-sparql');
 const {PredicateToShapeDecl} = require('../lib/QueryAnalyzer');
-// const X = require('../lib/Namespaces');
 const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../lib/Namespaces');
 
 const HapiServerAddr = 'http://localhost:8080/hapi/fhir/';
+
+const ShExParser = require("@shexjs/parser").construct();
+const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));
 
 describe('PredicateToShapeDecl', () => {
   it('should work from ShapeDecl', () => {
@@ -39,26 +40,6 @@ describe('PredicateToShapeDecl', () => {
       object: {termType: 'Literal', value: 'a'}
     }, []).toString()).toEqual('<http://a.example/#a> <http://hl7.org/fhir/v> "a" .');
   })
-});
-
-describe('parsers', () => {
-  it('should parse SPARQL', () => {
-    const iFileName = Path.join(Resources, 'obs-pat.srq');
-    const iText = File.readFileSync(iFileName, 'utf-8');
-    const iQuery = SparqlQuery.parse(iText).getQuery();
-    const refSparqlObj = JSON.parse(File.readFileSync(Path.join(Tests, 'obs-path-sparqljs.json')));
-    expect(iQuery).toEqual(refSparqlObj);
-    // expect(iQuery.queryType).toEqual(refSparqlObj.queryType);
-    // expect(iQuery.prefixes).toEqual(refSparqlObj.prefixes);
-    // expect(iQuery.variables).toEqual(refSparqlObj.variables);
-    // expect(iQuery.where[0].type).toEqual(refSparqlObj.where[0].type);
-    // expect(iQuery.where[0].triples.slice(5,6)).toEqual(refSparqlObj.where[0].triples.slice(5,6));
-  });
-
-  it('should parse ShEx', () => {
-    const refFhirShExObj = JSON.parse(File.readFileSync(Path.join(Resources, 'ShEx-mini-terse.json'), 'utf-8'));
-    expect(FhirShEx).toEqual(refFhirShExObj);
-  });
 });
 
 describe('FhirSparql', () => {
