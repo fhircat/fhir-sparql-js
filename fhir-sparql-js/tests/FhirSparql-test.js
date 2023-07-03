@@ -5,7 +5,7 @@ const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resour
 
 const {RdfUtils, Bgp, SparqlQuery} = require('../lib/RdfUtils');
 const {ArcTree} = require('../lib/ArcTree.js');
-const {FhirSparql, ConnectingVariables, FhirPathExecution} = require('../lib/fhir-sparql');
+const {FhirSparql, ConnectingVariables, FhirPathExecution} = require('../lib/FhirSparql');
 const {PredicateToShapeDecl} = require('../lib/QueryAnalyzer');
 const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../lib/Namespaces');
 
