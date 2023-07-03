@@ -54,8 +54,8 @@ class ArcTree {
     return new Bgp(ret);
   }
 
-  toString (indent = '') {debugger
-    const tpStr = this.tp === null ? 'null' : this.tp.toString();
+  toString (indent = '') {
+    const tpStr = this.tp.toString(); // this.tp === null ? 'null' : 
     const outStrs = this.out.map(out => out.toString(indent + '  '));
     return this.out.length === 0
       ? indent + tpStr

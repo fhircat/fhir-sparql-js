@@ -35,6 +35,13 @@ describe('FhirSparql', () => {
     expect(rewriter.predicateToShapeDecl.get('http://hl7.org/fhir/item').map(d => d.id)).toEqual([ 'Questionnaire', 'Questionnaire.item' ]);
   });
 
+  it('should barf on cycles', () => {
+    expect(() => new FhirSparql(FhirShEx).getArcTrees(SparqlQuery.parse(
+      `PREFIX fhir: <http://hl7.org/fhir/>
+ASK {?obs fhir:subject ?subjectRef . ?subjectRef fhir:reference ?obs}`
+    ))).toThrow("can't handle cycle involving ?subjectRef <http://hl7.org/fhir/reference> ?obs .");
+  });
+
   it('should translate obs-path', () => {
     const rewriter = new FhirSparql(FhirShEx);
     const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-disordered.srq'), 'utf-8'));
@@ -84,22 +91,15 @@ describe('FhirSparql', () => {
     expect(patPaths2).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ]));
   });
 
-  xit('should translate obs-id', () => {
+  it('should translate obs-id', () => {
     const rewriter = new FhirSparql(FhirShEx);
     const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-id.srq'), 'utf-8'));
     const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
-    expect(arcTrees[0].getBgp().length).toEqual(8);
+    expect(arcTrees[0].getBgp().triples.length).toEqual(8);
     expect(connectingVariables).toEqual(new Map([]))
     expect(referents).toEqual(new Set());
     const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
     expect(obsPaths).toEqual(new FhirPathExecution('Observation', null, [{ name: 'id', value: '789' }]));
-  });
-
-  it('should barf on cycles', () => {
-    expect(() => new FhirSparql(FhirShEx).getArcTrees(SparqlQuery.parse(
-      `PREFIX fhir: <http://hl7.org/fhir/>
-ASK {?obs fhir:subject ?subjectRef . ?subjectRef fhir:reference ?obs}`
-    ))).toThrow("can't handle cycle involving ?subjectRef <http://hl7.org/fhir/reference> ?obs .");
   });
 });
 

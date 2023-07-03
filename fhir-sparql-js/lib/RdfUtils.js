@@ -5,6 +5,7 @@ const SparqlParser = new SparqlJs.Parser();
 class RdfUtils {
 
   /** find triples matching (s, p, o)
+   * could move to Bgp, but is always invokes on a List
    */
   static getMatching (triplePatterns, s, p, o) {
     return triplePatterns.filter(tp =>
@@ -38,10 +39,6 @@ class RdfUtils {
     return predicate.value
       ? '<' + predicate.value + '>'
       : '(' + predicate.items.map(item => RdfUtils.pStr(item) + (item.pathType || '')).join('/') + ')'; // TODO: not correct
-  }
-
-  static parseSparql (text) {
-    // iQuery.where[0].triples
   }
 }
 

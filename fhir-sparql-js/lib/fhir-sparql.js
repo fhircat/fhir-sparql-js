@@ -153,9 +153,11 @@ class RuleChoice {
           const matchedTerm = testArcTree.tp.object;
           switch (matchedTerm.termType) {
           case 'NamedNode':
+            throw Error(`why are we binding ${matchedTerm}`);
           case 'BlankNode':
+            return null; // this indicates we don't have a value so we can't bind it
           case 'Literal':
-            return [matchedTerm];
+            return [matchedTerm]; // guessing lanuage and datatype are unimportant in FHIRPath
           case 'Variable':
             const boundValue = sparqlSolution[matchedTerm.value];
             return boundValue ? [boundValue] : null;
