@@ -6,7 +6,8 @@ const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resour
 const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));
 const {RdfUtils, SparqlQuery} = require('../lib/RdfUtils');
 const {ArcTree} = require('../lib/ArcTree.js');
-const {FhirSparql, ConnectingVariables, PredicateToShapeDecl, FhirPathExecution} = require('../lib/fhir-sparql');
+const {FhirSparql, ConnectingVariables, FhirPathExecution} = require('../lib/fhir-sparql');
+const {PredicateToShapeDecl} = require('../lib/QueryAnalyzer');
 // const X = require('../lib/Namespaces');
 const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../lib/Namespaces');
 
