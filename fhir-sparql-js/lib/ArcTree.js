@@ -1,11 +1,11 @@
-const {RdfUtils} = require('./RdfUtils');
+const {RdfUtils, Bgp} = require('./RdfUtils');
 const {Ns, Rdf, Fhir, FirstRest} = require('./Namespaces');
 
 class ArcTree {
   constructor (tp, out) {
     this.tp = tp;
     this.out = out;
-    if (!out) throw Error(`${RdfUtils.ToTurtle(this.tp)} has no out rule array`);
+    if (!out) throw Error(`${this.tp} has no out rule array`);
   }
 
   /** Construct an ArcTree for an arc and all arcs it reaches
@@ -49,13 +49,13 @@ class ArcTree {
     if (this.tp !== null)
       ret.push(this.tp);
     this.out.forEach(tree =>
-      Array.prototype.push.apply(ret, tree.getBgp())
+      Array.prototype.push.apply(ret, tree.getBgp().triples)
     );
-    return ret;
+    return new Bgp(ret);
   }
 
-  toString (indent = '') {
-    const tpStr = this.tp === null ? 'null' : RdfUtils.ToTurtle(this.tp);
+  toString (indent = '') {debugger
+    const tpStr = this.tp === null ? 'null' : this.tp.toString();
     const outStrs = this.out.map(out => out.toString(indent + '  '));
     return this.out.length === 0
       ? indent + tpStr

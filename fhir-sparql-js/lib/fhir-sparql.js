@@ -247,7 +247,7 @@ class FhirSparql extends QueryAnalyzer {
 
       // Sanity-check parsed resourcetype
       if (AllResources.indexOf(resourceType) === -1)
-        throw Error(`did not recognize FHIR Resource in ${RdfUtils.ToTurtle(resourceUrl)}`)
+        throw Error(`did not recognize FHIR Resource in ${resourceUrl}`)
       candidateTypes = [resourceType];
 
       // Add id QueryParam

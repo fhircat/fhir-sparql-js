@@ -3,7 +3,7 @@ const Path = require('path');
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 
-const {RdfUtils, SparqlQuery} = require('../lib/RdfUtils');
+const {RdfUtils, Bgp, SparqlQuery} = require('../lib/RdfUtils');
 const {ArcTree} = require('../lib/ArcTree.js');
 const {FhirSparql, ConnectingVariables, FhirPathExecution} = require('../lib/fhir-sparql');
 const {PredicateToShapeDecl} = require('../lib/QueryAnalyzer');
@@ -27,19 +27,6 @@ describe('PredicateToShapeDecl', () => {
     expect(() => visitor.visitSchema({type: "schema999"})).toThrow(/got {"type":"schema999"}/);
     expect(() => visitor.visitShapeExpr(FhirShEx.shapes[0].shapeExpr)).toThrow(/while not in a ShapeDecl/);
   });
-
-  it(`should construct and render ArcTrees`, () => {
-    expect(new ArcTree({
-      subject: {termType: 'BlankNode', value: 'b1'},
-      predicate: Fhir.v,
-      object: null
-    }, []).toString()).toEqual('_:b1 <http://hl7.org/fhir/v> null .');
-    expect(new ArcTree({
-      subject: {termType: 'NamedNode', value: 'http://a.example/#a'},
-      predicate: Fhir.v,
-      object: {termType: 'Literal', value: 'a'}
-    }, []).toString()).toEqual('<http://a.example/#a> <http://hl7.org/fhir/v> "a" .');
-  })
 });
 
 describe('FhirSparql', () => {
@@ -54,9 +41,9 @@ describe('FhirSparql', () => {
     const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
 
     // test arcTrees
-    expect(arcTrees[0].getBgp().map(RdfUtils.ToTurtle)).toEqual(BGP_obs.map(RdfUtils.ToTurtle)); // ToTurtle helps with debugging
+    expect(arcTrees[0].getBgp().toString()).toEqual(BGP_obs.toString());
     expect(arcTrees[0].getBgp()).toEqual(BGP_obs);
-    expect(arcTrees[1].getBgp().map(RdfUtils.ToTurtle)).toEqual(BGP_subject.map(RdfUtils.ToTurtle));
+    expect(arcTrees[1].getBgp().toString()).toEqual(BGP_subject.toString());
     expect(arcTrees[1].getBgp()).toEqual(BGP_subject);
     expect(arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
 
@@ -112,7 +99,7 @@ describe('FhirSparql', () => {
     expect(() => new FhirSparql(FhirShEx).getArcTrees(SparqlQuery.parse(
       `PREFIX fhir: <http://hl7.org/fhir/>
 ASK {?obs fhir:subject ?subjectRef . ?subjectRef fhir:reference ?obs}`
-    ))).toThrow("can't handle cycle involving ?subjectRef");
+    ))).toThrow("can't handle cycle involving ?subjectRef <http://hl7.org/fhir/reference> ?obs .");
   });
 });
 
@@ -223,7 +210,7 @@ const ConnectingVariables_obs_pat_mid = {
 };
 
 // BGPs
-const BGP_obs = [
+const BGP_obs = Bgp.blessSparqlJs({type: 'bgp', triples: [
   T_obs_A_Observation,
   T_obs_code_code,
   T_code_coding_codeList,
@@ -234,9 +221,9 @@ const BGP_obs = [
   T_codingSystem_v_snomed,
   T_obs_subject_subjectRef,
   T_subjectRef_reference_subject,
-];
-const BGP_subject = [
+]});
+const BGP_subject = Bgp.blessSparqlJs({type: 'bgp', triples: [
   T_subject_a_Patient,
   T_subject_id_patIdElt,
   T_patIdElt_v_patId,
-];
+]});

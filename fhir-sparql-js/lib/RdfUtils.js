@@ -4,32 +4,6 @@ const SparqlParser = new SparqlJs.Parser();
 
 class RdfUtils {
 
-  // debugging printer
-  static ToTurtle (x) {
-    if (x === null)
-      return 'null';
-    if ('subject' in x)
-      return `${RdfUtils.ToTurtle(x.subject)} ${RdfUtils.ToTurtle(x.predicate)} ${RdfUtils.ToTurtle(x.object)} .`
-    if (x.type === 'path')
-      return x.value
-      ? '<' + x.value + '>'
-      : '(' + x.items.map(item => RdfUtils.pStr(item) + (item.pathType || '')).join('/') + ')' // TODO: not correct
-
-    switch (x.termType) {
-    case 'NamedNode': return '<' + x.value + '>';
-    case 'BlankNode': return '_:' + x.value;
-    case 'Variable': return '?' + x.value;
-    case 'Literal': return '"' + x.value + '"' +
-        (x.language
-         ? '@' + x.language
-         : x.datatype
-         ? RdfUtils.ToTurtle(x.datatype)
-         : '');
-      // istanbul ignore next
-    default: throw Error(`ToTurtle - unrecognized argument ${JSON.stringify(x)}`);
-    }
-  }
-
   /** find triples matching (s, p, o)
    */
   static getMatching (triplePatterns, s, p, o) {
@@ -186,4 +160,4 @@ class SparqlQuery {
   }
 }
 
-module.exports = {RdfUtils, Term, SparqlQuery};
+module.exports = {RdfUtils, Bgp, Triple, Path, Term, SparqlQuery};
