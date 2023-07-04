@@ -18,9 +18,9 @@ class ConnectingVariables {
 
 class Rule {
   constructor (fhirQuery, sparql, arg = (values) => values[0]) {
+    this.fhirQuery = fhirQuery;
     const query = SparqlQuery.parse('PREFIX fhir: <http://hl7.org/fhir/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT ?v1 { ' + sparql + ' }');
     this.arcTree = new QueryAnalyzer(null).getArcTrees(query).arcTrees[0].out[0];
-    this.fhirQuery = fhirQuery;
     this.arg = arg;
   }
 
@@ -285,4 +285,4 @@ class FhirSparql extends QueryAnalyzer {
   }
 }
 
-module.exports = {FhirSparql, ConnectingVariables, ArcTree, FhirPathExecution};
+module.exports = {FhirSparql, ConnectingVariables, ArcTree, FhirPathExecution, Rule_CodeWithSystem};
