@@ -1,3 +1,6 @@
+# QueryAnalyzer.getArcTrees() test 2
+# Verify order-independence of algorithm by starting in middle of tree.
+
 PREFIX fhir: <http://hl7.org/fhir/>
 PREFIX sct: <http://snomed.info/id/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
