@@ -166,7 +166,7 @@ class RuleChoice {
           // case 'Variable':
           //   const boundValue = sparqlSolution[matchedTerm.value];
           //   return boundValue ? [boundValue] : null;
-          default:
+          default: // istanbul ignore next line
             throw Error(`unexpected RDF term type in ${JSON.stringify(matchedTerm)}`)
           }
         } else {
@@ -246,14 +246,14 @@ class FhirSparql extends QueryAnalyzer {
     if (resourceUrl !== null) {
       // parse the URL according to FHIR Protocol
       const match = resourceUrl.match(ResourceTypeRegexp);
-      if (!match)
+      if (!match) // istanbul ignore next linew
         throw Error(`subject node ${resourceUrl} didn't match FHIR protocol`);
       resourceType = match[1]; // shouldn't be null
       resourceId = match[2] || null;// `|| null` changes `undefined` to `null` for consistency
       resourceVersion = match[3] || null;
 
       // Sanity-check parsed resourcetype
-      if (AllResources.indexOf(resourceType) === -1)
+      if (AllResources.indexOf(resourceType) === -1) // istanbul ignore next linew
         throw Error(`did not recognize FHIR Resource in ${resourceUrl}`)
       candidateTypes = [resourceType];
 
@@ -262,7 +262,7 @@ class FhirSparql extends QueryAnalyzer {
 
       // Remove Rule_Id from candidateRules
       const idRuleIdx = candidateRules.indexOf(RuleChoice_Id);
-      if (idRuleIdx === -1)
+      if (idRuleIdx === -1) // istanbul ignore next linew
         throw Error(`should have an id rule from ResourceToPaths.EveryResource: ${ResourceToPaths.EveryResource}`);
       candidateRules.splice(idRuleIdx, 1);
 

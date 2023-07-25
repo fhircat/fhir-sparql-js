@@ -1,3 +1,5 @@
+/* istanbul ignore file */
+
 const {Ns, Rdf, Fhir, FirstRest} = require('./Namespaces');
 const SparqlJs = require('sparqljs');
 const SparqlParser = new SparqlJs.Parser();

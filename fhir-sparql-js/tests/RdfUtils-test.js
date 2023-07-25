@@ -17,6 +17,7 @@ describe('RdfUtils', () => {
       const iQuery = iSparql.getQuery();
       const refSparqlObj = JSON.parse(File.readFileSync(Path.join(Tests, 'obs-path-sparqljs.json')));
       expect(iQuery).toEqual(refSparqlObj);
+      // iQuery expanded to first-level components:
       // expect(iQuery.queryType).toEqual(refSparqlObj.queryType);
       // expect(iQuery.prefixes).toEqual(refSparqlObj.prefixes);
       // expect(iQuery.variables).toEqual(refSparqlObj.variables);
