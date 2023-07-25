@@ -1,0 +1,29 @@
+# QueryAnalyzer.getArcTrees() test 1
+# Reflect order of final ArcTrees.
+
+PREFIX fhir: <http://hl7.org/fhir/>
+PREFIX sct: <http://snomed.info/id/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?obs ?patId WHERE {
+  #   code
+  ?obs fhir:code ?code .					#  1
+    ?code fhir:coding ?codeList .				#  2
+      ?codeList (rdf:first/rdf:rest)*/rdf:first ?codeElt .	#  3
+        ?codeElt fhir:code ?codeCode .				#  4
+          ?codeCode fhir:v "789-8" .				#  5
+        ?codeElt fhir:system ?codingSystem .			#  6
+          ?codingSystem fhir:v "http://loinc.org"^^xsd:anyURI .	#  7
+
+  #   subject
+  ?obs fhir:subject ?subjectRef .				#  8
+    ?subjectRef fhir:reference ?subject .			#  9
+
+  # Patient
+  ?subject a fhir:Patient .					# 10
+
+  #   id
+  ?subject fhir:id ?patIdElt .					# 11
+    ?patIdElt fhir:v ?patId .					# 12
+}

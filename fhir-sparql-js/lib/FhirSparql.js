@@ -145,7 +145,7 @@ class RuleChoice {
   }
 
   parallelWalk (testArcTrees, myArcTree, choiceNo, sparqlSolution) {
-    const needed = myArcTree.out;
+    const needed = myArcTree.out.slice(); // copy because needed gets spliced if members are matched
     const matched = testArcTrees.map(testArcTree => {
       if (testArcTree.tp.predicate.equals(myArcTree.tp.predicate)) {
         if (myArcTree.out.length === 0) {
@@ -206,7 +206,7 @@ const ResourceToPaths = {
   "Procedure": [new RuleChoice([Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
   "Questionnaire": [],
 }
-
+globalThis.R2Pz = ResourceToPaths
 const AllResources = [
   'Observation',
   'Patient',
@@ -282,7 +282,10 @@ class FhirSparql extends QueryAnalyzer {
     );
 
     const acceptedPaths = candidateRules
-          .map(ruleChoice => ruleChoice.accept(arcTree.out, sparqlSolution)) // top tree has no tp
+          .map(ruleChoice => {
+            const ret = ruleChoice.accept(arcTree.out, sparqlSolution)
+            return ret;
+          }) // top tree has no tp
           .filter(queryParam => queryParam !== null);
     const paths = prefilledRules.concat(acceptedPaths);
 

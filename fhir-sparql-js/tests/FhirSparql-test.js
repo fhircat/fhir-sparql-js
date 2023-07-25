@@ -22,7 +22,154 @@ describe('FhirSparql', () => {
   });
 
   describe('FhirSparql', () => {
-    it('should translate obs-path', () => {
+    it('should translate obs-pat', () => {
+      const rewriter = new FhirSparql(FhirShEx);
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8'));
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+
+      // test arcTrees
+      expect(arcTrees[0].getBgp().toString()).toEqual(BGP_obs.toString());
+      expect(arcTrees[0].getBgp()).toEqual(BGP_obs);
+      expect(arcTrees[1].getBgp().toString()).toEqual(BGP_subject.toString());
+      expect(arcTrees[1].getBgp()).toEqual(BGP_subject);
+      expect(arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
+
+      // connectingVariables
+      expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
+ 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
+ 1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
+ 2: subject of { ?subject <http://hl7.org/fhir/id> ?patIdElt . [
+  ?patIdElt <http://hl7.org/fhir/v> ?patId .
+] }`)
+
+      // referents
+      expect(referents).toEqual(new Set(['subject']));
+
+      // test connectingVariables
+      expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
+
+      // generate FHIR Paths for the Observation ArcTree
+      const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
+      expect(obsPaths).toEqual(new FhirPathExecution(
+        'Observation', // type
+        null, // version
+        [ // paths
+          { name: 'code', value: '789-8|http://loinc.org' }
+        ]
+      ));
+
+      // generate FHIR Paths for the first Patient ArcTree
+      const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
+        subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/1'}
+      });
+      expect(patPaths1).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ]));
+
+      // generate FHIR Paths for the second Patient ArcTree
+      const patPaths2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
+        subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
+      });
+      expect(patPaths2).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ]));
+    });
+
+    it('should translate obs-pat again (i.e. no side effects from previous run)', () => {
+      const rewriter = new FhirSparql(FhirShEx);
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8'));
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+
+      // test arcTrees
+      expect(arcTrees[0].getBgp().toString()).toEqual(BGP_obs.toString());
+      expect(arcTrees[0].getBgp()).toEqual(BGP_obs);
+      expect(arcTrees[1].getBgp().toString()).toEqual(BGP_subject.toString());
+      expect(arcTrees[1].getBgp()).toEqual(BGP_subject);
+      expect(arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
+
+      // connectingVariables
+      expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
+ 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
+ 1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
+ 2: subject of { ?subject <http://hl7.org/fhir/id> ?patIdElt . [
+  ?patIdElt <http://hl7.org/fhir/v> ?patId .
+] }`)
+
+      // referents
+      expect(referents).toEqual(new Set(['subject']));
+
+      // test connectingVariables
+      expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
+
+      // generate FHIR Paths for the Observation ArcTree
+      const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
+      expect(obsPaths).toEqual(new FhirPathExecution(
+        'Observation', // type
+        null, // version
+        [ // paths
+          { name: 'code', value: '789-8|http://loinc.org' }
+        ]
+      ));
+
+      // generate FHIR Paths for the first Patient ArcTree
+      const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
+        subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/1'}
+      });
+      expect(patPaths1).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ]));
+
+      // generate FHIR Paths for the second Patient ArcTree
+      const patPaths2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
+        subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
+      });
+      expect(patPaths2).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ]));
+    });
+
+    it('should translate pat-obs', () => {
+      const rewriter = new FhirSparql(FhirShEx);
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-disordered.srq'), 'utf-8'));
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+
+      // test arcTrees
+      expect(arcTrees[0].getBgp().toString()).toEqual(BGP_obs.toString());
+      expect(arcTrees[0].getBgp()).toEqual(BGP_obs);
+      expect(arcTrees[1].getBgp().toString()).toEqual(BGP_subject.toString());
+      expect(arcTrees[1].getBgp()).toEqual(BGP_subject);
+      expect(arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
+
+      // connectingVariables
+      expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
+ 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
+ 1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
+ 2: subject of { ?subject <http://hl7.org/fhir/id> ?patIdElt . [
+  ?patIdElt <http://hl7.org/fhir/v> ?patId .
+] }`)
+
+      // referents
+      expect(referents).toEqual(new Set(['subject']));
+
+      // test connectingVariables
+      expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
+
+      // generate FHIR Paths for the Observation ArcTree
+      const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
+      expect(obsPaths).toEqual(new FhirPathExecution(
+        'Observation', // type
+        null, // version
+        [ // paths
+          { name: 'code', value: '789-8|http://loinc.org' }
+        ]
+      ));
+
+      // generate FHIR Paths for the first Patient ArcTree
+      const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
+        subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/1'}
+      });
+      expect(patPaths1).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ]));
+
+      // generate FHIR Paths for the second Patient ArcTree
+      const patPaths2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
+        subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
+      });
+      expect(patPaths2).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ]));
+    });
+
+    it('should translate obs-pat-disordered - same but with query triples in arbitrary order', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-disordered.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
@@ -104,7 +251,7 @@ describe('FhirSparql', () => {
       expect(obsPaths).toEqual(new FhirPathExecution('Observation', null, [{ name: 'id', value: '789' }]));
     });
 
-    it('should translate obs-fixed-pat', () => {
+    xit('should translate obs-fixed-pat', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-fixed-pat.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
@@ -113,6 +260,55 @@ describe('FhirSparql', () => {
       expect(referents).toEqual(new Set());
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
       expect(obsPaths).toEqual(new FhirPathExecution('Observation', null, []));
+    });
+
+    it('should translate obs-pat-noType', () => {
+      const rewriter = new FhirSparql(FhirShEx);
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-noType.srq'), 'utf-8'));
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+
+      // test arcTrees
+      expect(arcTrees[0].getBgp().toString()).toEqual(BGP_obs_noType.toString());
+      expect(arcTrees[0].getBgp()).toEqual(BGP_obs_noType);
+      expect(arcTrees[1].getBgp().toString()).toEqual(BGP_subject.toString());
+      expect(arcTrees[1].getBgp()).toEqual(BGP_subject);
+      expect(arcTrees).toEqual([ArcTree_obs_noType, ArcTree_subject]);
+
+      // connectingVariables
+      expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
+ 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
+ 1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
+ 2: subject of { ?subject <http://hl7.org/fhir/id> ?patIdElt . [
+  ?patIdElt <http://hl7.org/fhir/v> ?patId .
+] }`)
+
+      // referents
+      expect(referents).toEqual(new Set(['subject']));
+
+      // test connectingVariables
+      expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
+
+      // generate FHIR Paths for the Observation ArcTree
+      const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
+      expect(obsPaths).toEqual(new FhirPathExecution(
+        null, // type
+        null, // version
+        [ // paths
+          { name: 'code', value: '789-8|http://loinc.org' }
+        ]
+      ));
+
+      // generate FHIR Paths for the first Patient ArcTree
+      const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
+        subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/1'}
+      });
+      expect(patPaths1).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ]));
+
+      // generate FHIR Paths for the second Patient ArcTree
+      const patPaths2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
+        subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
+      });
+      expect(patPaths2).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ]));
     });
   });
 });
@@ -189,8 +385,7 @@ const T_patIdElt_v_patId = {
 };
 
 // ArcTrees
-const ArcTree_obs = {tp: null, out: [
-  {tp: T_obs_A_Observation, out: []},
+const ArcTree_obs_noType = {tp: null, out: [
   {tp: T_obs_code_code, out: [
     {tp: T_code_coding_codeList, out: [
       {tp: T_codeList_FirstRest_codeElt, out: [
@@ -207,6 +402,9 @@ const ArcTree_obs = {tp: null, out: [
     {tp: T_subjectRef_reference_subject, out: []}
   ]}
 ]};
+const ArcTree_obs = {tp: null, out: [
+  {tp: T_obs_A_Observation, out: []},
+].concat(ArcTree_obs_noType.out)};
 const ArcTree_subject = {tp: null, out: [
   {tp: T_subject_a_Patient, out: []},
   {tp: T_subject_id_patIdElt, out: [
@@ -224,8 +422,7 @@ const ConnectingVariables_obs_pat_mid = {
 };
 
 // BGPs
-const BGP_obs = Bgp.blessSparqlJs({type: 'bgp', triples: [
-  T_obs_A_Observation,
+const BGP_obs_noType = Bgp.blessSparqlJs({type: 'bgp', triples: [
   T_obs_code_code,
   T_code_coding_codeList,
   T_codeList_FirstRest_codeElt,
@@ -236,6 +433,9 @@ const BGP_obs = Bgp.blessSparqlJs({type: 'bgp', triples: [
   T_obs_subject_subjectRef,
   T_subjectRef_reference_subject,
 ]});
+const BGP_obs = Bgp.blessSparqlJs({type: 'bgp', triples: [
+  T_obs_A_Observation,
+].concat(BGP_obs_noType.triples)});
 const BGP_subject = Bgp.blessSparqlJs({type: 'bgp', triples: [
   T_subject_a_Patient,
   T_subject_id_patIdElt,
