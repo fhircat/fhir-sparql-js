@@ -206,7 +206,7 @@ const ResourceToPaths = {
   "Procedure": [new RuleChoice([Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
   "Questionnaire": [],
 }
-globalThis.R2Pz = ResourceToPaths
+
 const AllResources = [
   'Observation',
   'Patient',
@@ -226,7 +226,7 @@ class FhirSparql extends QueryAnalyzer {
     let resourceVersion = null;
 
     const prefilledRules = [];
-    const candidateRules = ResourceToPaths.EveryResource.slice();
+    const allResourceRules = ResourceToPaths.EveryResource.slice();
     const completedRules = [];
     let candidateTypes = null; // initialized soon
 
@@ -261,10 +261,10 @@ class FhirSparql extends QueryAnalyzer {
       prefilledRules.push(new QueryParam(Rule_Id.fhirQuery, resourceId));
 
       // Remove Rule_Id from candidateRules
-      const idRuleIdx = candidateRules.indexOf(RuleChoice_Id);
+      const idRuleIdx = allResourceRules.indexOf(RuleChoice_Id);
       if (idRuleIdx === -1) // istanbul ignore next linew
         throw Error(`should have an id rule from ResourceToPaths.EveryResource: ${ResourceToPaths.EveryResource}`);
-      candidateRules.splice(idRuleIdx, 1);
+      allResourceRules.splice(idRuleIdx, 1);
 
     } else if (rootTriple.predicate.equals(Rdf.type)) {
       // If there's a type arc, it's the first child.
@@ -277,19 +277,19 @@ class FhirSparql extends QueryAnalyzer {
     }
 
     // Build list of candidate rules.
-    candidateTypes.forEach(type =>
-      Array.prototype.push.apply(candidateRules, ResourceToPaths[type])
-    );
-
-    const acceptedPaths = candidateRules
-          .map(ruleChoice => {
-            const ret = ruleChoice.accept(arcTree.out, sparqlSolution)
-            return ret;
-          }) // top tree has no tp
+    return candidateTypes.map(type => {
+      const myResourceRules = allResourceRules.slice();
+      Array.prototype.push.apply(myResourceRules, ResourceToPaths[type]);
+      globalThis.R2Pz = ResourceToPaths
+      const acceptedPaths = myResourceRules
+          .map(ruleChoice => ruleChoice.accept(arcTree.out, sparqlSolution)) // top tree has no tp
           .filter(queryParam => queryParam !== null);
-    const paths = prefilledRules.concat(acceptedPaths);
+      const paths = prefilledRules.concat(acceptedPaths);
 
-    return new FhirPathExecution(resourceType, resourceVersion, paths);
+      return new FhirPathExecution(type, resourceVersion, paths);
+    })
+    // hacky filter for now. accept needs to return an answer that says ArcTree touched predicates that aren't in the schema
+      .filter(ret => ret.paths.length > 0);
   }
 }
 

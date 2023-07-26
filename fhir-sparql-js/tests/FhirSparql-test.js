@@ -50,25 +50,25 @@ describe('FhirSparql', () => {
 
       // generate FHIR Paths for the Observation ArcTree
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
-      expect(obsPaths).toEqual(new FhirPathExecution(
+      expect(obsPaths).toEqual([new FhirPathExecution(
         'Observation', // type
         null, // version
         [ // paths
           { name: 'code', value: '789-8|http://loinc.org' }
         ]
-      ));
+      )]);
 
       // generate FHIR Paths for the first Patient ArcTree
       const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
         subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/1'}
       });
-      expect(patPaths1).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ]));
+      expect(patPaths1).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ])]);
 
       // generate FHIR Paths for the second Patient ArcTree
       const patPaths2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
         subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
       });
-      expect(patPaths2).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ]));
+      expect(patPaths2).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ])]);
     });
 
     it('should translate obs-pat again (i.e. no side effects from previous run)', () => {
@@ -99,25 +99,25 @@ describe('FhirSparql', () => {
 
       // generate FHIR Paths for the Observation ArcTree
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
-      expect(obsPaths).toEqual(new FhirPathExecution(
+      expect(obsPaths).toEqual([new FhirPathExecution(
         'Observation', // type
         null, // version
         [ // paths
           { name: 'code', value: '789-8|http://loinc.org' }
         ]
-      ));
+      )]);
 
       // generate FHIR Paths for the first Patient ArcTree
       const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
         subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/1'}
       });
-      expect(patPaths1).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ]));
+      expect(patPaths1).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ])]);
 
       // generate FHIR Paths for the second Patient ArcTree
       const patPaths2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
         subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
       });
-      expect(patPaths2).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ]));
+      expect(patPaths2).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ])]);
     });
 
     it('should translate pat-obs', () => {
@@ -148,25 +148,25 @@ describe('FhirSparql', () => {
 
       // generate FHIR Paths for the Observation ArcTree
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
-      expect(obsPaths).toEqual(new FhirPathExecution(
+      expect(obsPaths).toEqual([new FhirPathExecution(
         'Observation', // type
         null, // version
         [ // paths
           { name: 'code', value: '789-8|http://loinc.org' }
         ]
-      ));
+      )]);
 
       // generate FHIR Paths for the first Patient ArcTree
       const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
         subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/1'}
       });
-      expect(patPaths1).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ]));
+      expect(patPaths1).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ])]);
 
       // generate FHIR Paths for the second Patient ArcTree
       const patPaths2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
         subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
       });
-      expect(patPaths2).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ]));
+      expect(patPaths2).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ])]);
     });
 
     it('should translate obs-pat-disordered - same but with query triples in arbitrary order', () => {
@@ -197,25 +197,25 @@ describe('FhirSparql', () => {
 
       // generate FHIR Paths for the Observation ArcTree
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
-      expect(obsPaths).toEqual(new FhirPathExecution(
+      expect(obsPaths).toEqual([new FhirPathExecution(
         'Observation', // type
         null, // version
         [ // paths
           { name: 'code', value: '789-8|http://loinc.org' }
         ]
-      ));
+      )]);
 
       // generate FHIR Paths for the first Patient ArcTree
       const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
         subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/1'}
       });
-      expect(patPaths1).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ]));
+      expect(patPaths1).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ])]);
 
       // generate FHIR Paths for the second Patient ArcTree
       const patPaths2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
         subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
       });
-      expect(patPaths2).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ]));
+      expect(patPaths2).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ])]);
     });
 
     it('should translate obs-code', () => {
@@ -231,13 +231,13 @@ describe('FhirSparql', () => {
 
       // generate FHIR Paths for the Observation ArcTree
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
-      expect(obsPaths).toEqual(new FhirPathExecution(
+      expect(obsPaths).toEqual([new FhirPathExecution(
         'Observation', // type
         null, // version
         [ // paths
           { name: 'code', value: '789-8' }
         ]
-      ));
+      )]);
     });
 
     it('should translate obs-id', () => {
@@ -248,7 +248,7 @@ describe('FhirSparql', () => {
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
-      expect(obsPaths).toEqual(new FhirPathExecution('Observation', null, [{ name: 'id', value: '789' }]));
+      expect(obsPaths).toEqual([new FhirPathExecution('Observation', null, [{ name: 'id', value: '789' }])]);
     });
 
     xit('should translate obs-fixed-pat', () => {
@@ -259,7 +259,7 @@ describe('FhirSparql', () => {
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
-      expect(obsPaths).toEqual(new FhirPathExecution('Observation', null, []));
+      expect(obsPaths).toEqual([new FhirPathExecution('Observation', null, [])]);
     });
 
     it('should translate obs-pat-noType', () => {
@@ -290,25 +290,33 @@ describe('FhirSparql', () => {
 
       // generate FHIR Paths for the Observation ArcTree
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
-      expect(obsPaths).toEqual(new FhirPathExecution(
-        null, // type
-        null, // version
-        [ // paths
-          { name: 'code', value: '789-8|http://loinc.org' }
-        ]
-      ));
+      expect(obsPaths).toEqual([
+        new FhirPathExecution(
+          'Observation', // type
+          null, // version
+          [ // paths
+            { name: 'code', value: '789-8|http://loinc.org' }
+          ]
+        ),
+        new FhirPathExecution(
+          'Procedure', // type
+          null, // version
+          [ // paths
+            { name: 'code', value: '789-8|http://loinc.org' }
+          ]
+        )]);
 
       // generate FHIR Paths for the first Patient ArcTree
       const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
         subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/1'}
       });
-      expect(patPaths1).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ]));
+      expect(patPaths1).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ])]);
 
       // generate FHIR Paths for the second Patient ArcTree
       const patPaths2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
         subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
       });
-      expect(patPaths2).toEqual(new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ]));
+      expect(patPaths2).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ])]);
     });
   });
 });
