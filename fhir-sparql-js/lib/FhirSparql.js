@@ -151,16 +151,14 @@ class RuleChoice {
         if (myArcTree.out.length === 0) {
           // match!
           let matchedTerm = testArcTree.tp.object;
-          if (matchedTerm.termType === 'Variable') {
+          if (['Variable', 'BlankNode'].indexOf(matchedTerm.termType) !== -1) {
             if (!sparqlSolution[matchedTerm.value])
               return null;
             matchedTerm = sparqlSolution[matchedTerm.value]
           }
           switch (matchedTerm.termType) {
-          // case 'NamedNode':
-          //   throw Error(`why are we binding ${matchedTerm}`);
-          case 'BlankNode':
-            return null; // this indicates we don't have a value so we can't bind it
+          // case 'BlankNode':
+          //   return null; // this indicates we don't have a value so we can't bind it
           case 'Literal':
             return [matchedTerm]; // guessing lanuage and datatype are unimportant in FHIRPath
           // case 'Variable':

@@ -35,6 +35,7 @@ describe('FhirSparql', () => {
       expect(arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
 
       // connectingVariables
+      expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
       expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
  0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
  1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
@@ -44,9 +45,6 @@ describe('FhirSparql', () => {
 
       // referents
       expect(referents).toEqual(new Set(['subject']));
-
-      // test connectingVariables
-      expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
 
       // generate FHIR Paths for the Observation ArcTree
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
@@ -84,6 +82,7 @@ describe('FhirSparql', () => {
       expect(arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
 
       // connectingVariables
+      expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
       expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
  0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
  1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
@@ -93,9 +92,6 @@ describe('FhirSparql', () => {
 
       // referents
       expect(referents).toEqual(new Set(['subject']));
-
-      // test connectingVariables
-      expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
 
       // generate FHIR Paths for the Observation ArcTree
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
@@ -133,6 +129,7 @@ describe('FhirSparql', () => {
       expect(arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
 
       // connectingVariables
+      expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
       expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
  0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
  1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
@@ -142,9 +139,6 @@ describe('FhirSparql', () => {
 
       // referents
       expect(referents).toEqual(new Set(['subject']));
-
-      // test connectingVariables
-      expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
 
       // generate FHIR Paths for the Observation ArcTree
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
@@ -182,6 +176,7 @@ describe('FhirSparql', () => {
       expect(arcTrees).toEqual([ArcTree_obs, ArcTree_subject]);
 
       // connectingVariables
+      expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
       expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
  0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
  1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
@@ -192,8 +187,46 @@ describe('FhirSparql', () => {
       // referents
       expect(referents).toEqual(new Set(['subject']));
 
-      // test connectingVariables
-      expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
+      // generate FHIR Paths for the Observation ArcTree
+      const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
+      expect(obsPaths).toEqual([new FhirPathExecution(
+        'Observation', // type
+        null, // version
+        [ // paths
+          { name: 'code', value: '789-8|http://loinc.org' }
+        ]
+      )]);
+
+      // generate FHIR Paths for the first Patient ArcTree
+      const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
+        subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/1'}
+      });
+      expect(patPaths1).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '1' } ])]);
+
+      // generate FHIR Paths for the second Patient ArcTree
+      const patPaths2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
+        subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
+      });
+      expect(patPaths2).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ])]);
+    });
+
+    it('should translate obs-pat-maxBnodes - same but with blank nodes where possible', () => {
+      const rewriter = new FhirSparql(FhirShEx);
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-maxBnodes.srq'), 'utf-8'));
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+
+      // connectingVariables
+      expect([...connectingVariables.keys()]).toEqual(["subject"]);
+      expect(connectingVariables.get('subject').map(elt =>
+        ({pos: elt.pos, p: elt.arcTree.tp.predicate.value})
+      )).toEqual([
+        {pos: "object", p: "http://hl7.org/fhir/reference"},
+        {pos: "subject", p: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"},
+        {pos: "subject", p: "http://hl7.org/fhir/id"},
+      ]);
+
+      // referents
+      expect(referents).toEqual(new Set(['subject']));
 
       // generate FHIR Paths for the Observation ArcTree
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
@@ -275,6 +308,7 @@ describe('FhirSparql', () => {
       expect(arcTrees).toEqual([ArcTree_obs_noType, ArcTree_subject]);
 
       // connectingVariables
+      expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
       expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
  0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
  1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
@@ -284,9 +318,6 @@ describe('FhirSparql', () => {
 
       // referents
       expect(referents).toEqual(new Set(['subject']));
-
-      // test connectingVariables
-      expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
 
       // generate FHIR Paths for the Observation ArcTree
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
