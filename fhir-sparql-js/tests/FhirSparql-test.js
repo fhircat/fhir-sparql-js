@@ -349,6 +349,50 @@ describe('FhirSparql', () => {
       });
       expect(patPaths2).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ])]);
     });
+
+    it('should translate obs-proc', () => {
+      const rewriter = new FhirSparql(FhirShEx);
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-proc.srq'), 'utf-8'));
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      // console.log(arcTrees.map(arcTree => arcTree.toString()));
+
+      // referents
+      expect(referents).toEqual(new Set(['subject']));
+
+      // generate FHIR Paths for the Observation ArcTree
+      const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
+      expect(obsPaths).toEqual([
+        new FhirPathExecution(
+          'Observation', // type
+          null, // version
+          [ // paths
+            { name: 'code', value: '789-8|http://loinc.org' }
+          ]
+        )]);
+      const procPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {});
+      expect(procPaths).toEqual([
+        new FhirPathExecution(
+          'Procedure', // type
+          null, // version
+          [ // paths
+            { name: 'code', value: '789-8|http://loinc.org' }
+          ]
+        )]);
+
+      // generate FHIR Paths for the first Patient ArcTree
+      const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {
+      });
+      expect(patPaths1).toEqual([new FhirPathExecution('Observation', null, [ { name: 'code', value: '789-8|http://loinc.org' } ])]);
+
+      // generate FHIR Paths for the second Patient ArcTree
+      const patPaths2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
+        subject: {termType: 'NamedNode', value: HapiServerAddr + 'Patient/2'}
+      });
+      expect(patPaths2).toEqual([new FhirPathExecution('Procedure', null, [
+        { name: 'subject', value: 'http://localhost:8080/hapi/fhir/Patient/2' },
+        { name: 'code', value: '789-8|http://loinc.org' },
+      ])]);
+    });
   });
 });
 

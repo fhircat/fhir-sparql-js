@@ -55,11 +55,10 @@ class ArcTree {
   }
 
   toString (indent = '') {
-    const tpStr = this.tp.toString(); // this.tp === null ? 'null' : 
-    const outStrs = this.out.map(out => out.toString(indent + '  '));
+    const tpStr = this.tp === null ? '<root>' : this.tp.toString(); // this.tp === null ? 'null' :
     return this.out.length === 0
       ? indent + tpStr
-      : indent + tpStr + ' [\n' + outStrs.join('\n') + indent + '\n]';
+      : indent + tpStr + ' [\n' + this.out.map(out => out.toString(indent + '  ')).join('\n') + '\n' + indent + ']';
   }
 
   /** sort a list of triple (patterns), AKA arcs

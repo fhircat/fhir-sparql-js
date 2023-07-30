@@ -31,6 +31,8 @@ class Rule {
 
 const Rule_Id = new Rule('id', '[] fhir:id [ fhir:v ?v1 ]')
 
+const Rule_Subject = new Rule('subject', '[] fhir:subject [ fhir:reference ?v1 ]')
+
 const Rule_CodeWithSystem = new Rule(
   'code',
   `
@@ -159,6 +161,7 @@ class RuleChoice {
           switch (matchedTerm.termType) {
           // case 'BlankNode':
           //   return null; // this indicates we don't have a value so we can't bind it
+          case 'NamedNode':
           case 'Literal':
             return [matchedTerm]; // guessing lanuage and datatype are unimportant in FHIRPath
           // case 'Variable':
@@ -199,9 +202,9 @@ const RuleChoice_Id = new RuleChoice([Rule_Id]); // gets removed if id supplied 
 
 const ResourceToPaths = {
   "EveryResource": [RuleChoice_Id],
-  "Observation": [new RuleChoice([Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
+  "Observation": [new RuleChoice([Rule_Subject]), new RuleChoice([Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
   "Patient": [new RuleChoice([Rule_Given])], // new RuleChoice([Rule_NameFamily]), new RuleChoice([Rule_NameGiven])
-  "Procedure": [new RuleChoice([Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
+  "Procedure": [new RuleChoice([Rule_Subject]), new RuleChoice([Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
   "Questionnaire": [],
 }
 
