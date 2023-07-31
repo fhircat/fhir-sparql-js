@@ -158,6 +158,7 @@ class RuleChoice {
               return null;
             matchedTerm = sparqlSolution[matchedTerm.value]
           }
+          // istanbul ignore next line -- otherwise flags next line as uncovered though tests show it isn't.
           switch (matchedTerm.termType) {
           // case 'BlankNode':
           //   return null; // this indicates we don't have a value so we can't bind it
@@ -166,7 +167,8 @@ class RuleChoice {
             return [matchedTerm]; // guessing lanuage and datatype are unimportant in FHIRPath
           // case 'Variable':
           //   const boundValue = sparqlSolution[matchedTerm.value];
-          //   return boundValue ? [boundValue] : null;
+            //   return boundValue ? [boundValue] : null;
+            // istanbul ignore next line
           default: // istanbul ignore next line
             throw Error(`unexpected RDF term type in ${JSON.stringify(matchedTerm)}`)
           }
@@ -215,7 +217,9 @@ const AllResources = [
   'Questionnaire'
 ]; // That's all of 'em; trust me.
 
-const ResourceTypeRegexp = new RegExp('^https?://.*?/([A-Z][a-z]+)/([^/]+)(?:|(.*))$');
+const ResourceTypeRegexp = new RegExp(
+            '^https?://.*?/([A-Z][a-z]+)/([^/|]+)(?:\\|(.*))?$'
+);
 
 class FhirSparql extends QueryAnalyzer {
   constructor (shex) { super(shex); }
@@ -247,14 +251,15 @@ class FhirSparql extends QueryAnalyzer {
     if (resourceUrl !== null) {
       // parse the URL according to FHIR Protocol
       const match = resourceUrl.match(ResourceTypeRegexp);
-      if (!match) // istanbul ignore next linew
+      if (!match)
         throw Error(`subject node ${resourceUrl} didn't match FHIR protocol`);
-      resourceType = match[1]; // shouldn't be null
-      resourceId = match[2] || null;// `|| null` changes `undefined` to `null` for consistency
+      resourceType = match[1];
+      resourceId = match[2];
       resourceVersion = match[3] || null;
 
       // Sanity-check parsed resourcetype
-      if (AllResources.indexOf(resourceType) === -1) // istanbul ignore next linew
+      // istanbul ignore next line
+      if (AllResources.indexOf(resourceType) === -1) // istanbul ignore next line
         throw Error(`did not recognize FHIR Resource in ${resourceUrl}`)
       candidateTypes = [resourceType];
 
@@ -263,7 +268,8 @@ class FhirSparql extends QueryAnalyzer {
 
       // Remove Rule_Id from candidateRules
       const idRuleIdx = allResourceRules.indexOf(RuleChoice_Id);
-      if (idRuleIdx === -1) // istanbul ignore next linew
+      // istanbul ignore next line
+      if (idRuleIdx === -1) // istanbul ignore next line
         throw Error(`should have an id rule from ResourceToPaths.EveryResource: ${ResourceToPaths.EveryResource}`);
       allResourceRules.splice(idRuleIdx, 1);
 

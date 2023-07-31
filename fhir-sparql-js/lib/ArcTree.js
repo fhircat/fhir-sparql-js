@@ -55,7 +55,7 @@ class ArcTree {
   }
 
   toString (indent = '') {
-    const tpStr = this.tp === null ? '<root>' : this.tp.toString(); // this.tp === null ? 'null' :
+    const tpStr = this.tp === null ? '<root>' : this.tp.toString();
     return this.out.length === 0
       ? indent + tpStr
       : indent + tpStr + ' [\n' + this.out.map(out => out.toString(indent + '  ')).join('\n') + '\n' + indent + ']';
