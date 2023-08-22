@@ -378,7 +378,13 @@ describe('FhirSparql', () => {
           [ // paths
             { name: 'code', value: '789-8|http://loinc.org' }
           ]
-        )]);
+        ),
+        new FhirPathExecution(
+            'Questionnaire', // type
+            null, // version
+            []
+        ),
+      ]);
 
       // generate FHIR Paths for the first Patient ArcTree
       const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {

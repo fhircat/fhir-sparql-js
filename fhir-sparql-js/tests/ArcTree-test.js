@@ -21,15 +21,26 @@ describe('ArcTree', () => {
   });
 
   it(`should construct and render ArcTrees`, () => {
-    expect(new ArcTree(Triple.blessSparqlJs({
+    const b1_code_b2 = {
       subject: {termType: 'BlankNode', value: 'b1'},
-      predicate: {termType: 'NamedNode', value: 'http://hl7.org/fhir/v'},
+      predicate: {termType: 'NamedNode', value: 'http://hl7.org/fhir/code'},
       object: {termType: 'BlankNode', value: 'b2'}
-    }), []).toString()).toEqual('_:b1 <http://hl7.org/fhir/v> _:b2 .');
-    expect(new ArcTree(Triple.blessSparqlJs({
-      subject: {termType: 'NamedNode', value: 'http://a.example/#a'},
+    };
+    const b2_v_a = {
+      subject: {termType: 'BlankNode', value: 'b2'},
       predicate: {termType: 'NamedNode', value: 'http://hl7.org/fhir/v'},
       object: {termType: 'Literal', value: 'a'}
-    }), []).toString()).toEqual('<http://a.example/#a> <http://hl7.org/fhir/v> "a" .');
+    };
+    const root = new ArcTree(null, [
+      new ArcTree(Triple.blessSparqlJs(b1_code_b2), [
+        new ArcTree(Triple.blessSparqlJs(b2_v_a), [])
+      ])
+    ]);
+    expect(root.toString()).toEqual(`<root> [
+  _:b1 <http://hl7.org/fhir/code> _:b2 . [
+    _:b2 <http://hl7.org/fhir/v> "a" .
+  ]
+]`);
+    expect(root.toSparqlTriplePatterns()).toEqual([b1_code_b2, b2_v_a]);
   })
 });

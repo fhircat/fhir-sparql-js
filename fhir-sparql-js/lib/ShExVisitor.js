@@ -4,16 +4,28 @@ class ShExVisitor {
     this.ctor_args = ctor_args;
 
     // A lot of ShExVisitor's functions are the same. This creates them.
-    this.visitBase = this.visitStart = this.visitClosed = this["visit@context"] = this._visitValue;
-    this.visitRestricts = this.visitExtends = this._visitShapeExprList;
-    this.visitExtra = this.visitAnnotations = this._visitList;
-    this.visitAbstract = this.visitInverse = this.visitPredicate = this._visitValue;
-    this.visitName = this.visitId = this.visitCode = this.visitMin = this.visitMax = this._visitValue;
-
-    this.visitType = this.visitNodeKind = this.visitDatatype = this.visitPattern = this.visitFlags = this.visitLength = this.visitMinlength = this.visitMaxlength = this.visitMininclusive = this.visitMinexclusive = this.visitMaxinclusive = this.visitMaxexclusive = this.visitTotaldigits = this.visitFractiondigits = this._visitValue;
-    this.visitOneOf = this.visitEachOf = this._visitGroup;
-    this.visitShapeAnd = this.visitShapeOr = this._visitShapeGroup;
-    this.visitInclude = this._visitValue;
+    const reusedMethods = {
+      '_visitValue': [
+        "visit@context", "visitBase", "visitInclude", "visitStart",
+        "visitAbstract", "visitClosed",
+        "visitInverse", "visitPredicate", "visitName", "visitId", "visitCode", "visitMin", "visitMax",
+        "visitType", "visitNodeKind", "visitDatatype", "visitPattern", "visitFlags",
+        "visitLength", "visitMinlength", "visitMaxlength",
+        "visitMininclusive", "visitMinexclusive", "visitMaxinclusive", "visitMaxexclusive",
+        "visitTotaldigits", "visitFractiondigits",
+      ],
+      '_visitShapeExprList': [ "visitRestricts", "visitExtends", ],
+      '_visitList': [ "visitExtra", "visitAnnotations", ],
+      '_visitGroup': [ "visitOneOf", "visitEachOf", ],
+      '_visitShapeGroup': [ "visitShapeAnd", "visitShapeOr", ]
+    };
+    for (const reuseMe in reusedMethods) {
+      const toFill = reusedMethods[reuseMe];
+      for (const needed of toFill)
+        if (!(needed in this)) {
+          this[needed] = this[reuseMe];
+        }
+    }
   }
 
   static isTerm (t) {

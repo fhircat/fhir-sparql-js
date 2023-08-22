@@ -3,10 +3,11 @@ const {Ns} = require('./Namespaces');
 const {RdfUtils} = require('./RdfUtils');
 const {ArcTree} = require('./ArcTree');
 
-class PredicateToShapeDecl extends ShExVisitor {
+class PredicateToShapeDecls extends ShExVisitor {
   constructor (ctor_args) {
     super(ctor_args);
-    this.map = new Map();
+    this.predicateToShapeDecls = new Map(); // not used
+    this.resourceTypeToShapeDeclIds = new Map();
     this.curDecl = null;
   }
 
@@ -17,6 +18,17 @@ class PredicateToShapeDecl extends ShExVisitor {
   }
 
   visitShapeDecl(decl, ...args) {
+
+    // capture hierarchy implied by shape labels text
+    let resourceType = (decl.id.split(/\./))[0];
+    let ids = this.resourceTypeToShapeDeclIds.get(resourceType);
+    if (!ids) {
+      ids = [];
+      this.resourceTypeToShapeDeclIds.set(resourceType, ids);
+    }
+    ids.push(decl.id);
+
+    // index nested tripleExprs
     this.curDecl = decl;
     const ret = super.visitShapeDecl(decl, ...args);
     this.curDecl = null;
@@ -27,9 +39,9 @@ class PredicateToShapeDecl extends ShExVisitor {
     if (this.curDecl === null)
       throw new Error(`visiting ${JSON.stringify(expr)} while not in a ShapeDecl`);
     if (!expr.predicate.startsWith(Ns.rdf) && [Ns.fhir + 'v', Ns.fhir + 'nodeRole'].indexOf(expr.predicate) === -1) {
-      if (!this.map.has(expr.predicate))
-        this.map.set(expr.predicate, []);
-      this.map.get(expr.predicate).push(this.curDecl);
+      if (!this.predicateToShapeDecls.has(expr.predicate))
+        this.predicateToShapeDecls.set(expr.predicate, []);
+      this.predicateToShapeDecls.get(expr.predicate).push(this.curDecl);
     }
     return null;
   }
@@ -43,9 +55,10 @@ class QueryAnalyzer {
   constructor (shex) {
     this.shex = shex;
     if (shex) { // allow for shex-less invocation for rule compilation
-      const visitor = new PredicateToShapeDecl();
+      const visitor = new PredicateToShapeDecls();
       visitor.visitSchema(shex);
-      this.predicateToShapeDecl = visitor.map;
+      this.predicateToShapeDecls = visitor.predicateToShapeDecls; // not used
+      this.resourceTypeToShapeDeclIds = visitor.resourceTypeToShapeDeclIds;
     }
   }
 
@@ -142,4 +155,4 @@ class QueryAnalyzer {
   }
 }
 
-module.exports = {QueryAnalyzer, PredicateToShapeDecl}
+module.exports = {QueryAnalyzer, PredicateToShapeDecls}

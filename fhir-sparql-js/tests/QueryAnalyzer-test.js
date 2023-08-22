@@ -4,7 +4,7 @@ const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 
 const {RdfUtils, Bgp, SparqlQuery} = require('../lib/RdfUtils');
-const {QueryAnalyzer, PredicateToShapeDecl} = require('../lib/QueryAnalyzer');
+const {QueryAnalyzer, PredicateToShapeDecls} = require('../lib/QueryAnalyzer');
 const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../lib/Namespaces');
 
 const ShExParser = require("@shexjs/parser").construct();
@@ -13,12 +13,12 @@ const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'ShEx-m
 describe('QueryAnalyzer', () => {
   describe('PredicateToShapeDecl', () => {
     it('should work from ShapeDecl', () => {
-      const visitor = new PredicateToShapeDecl();
+      const visitor = new PredicateToShapeDecls();
       expect(visitor.visitShapeDecl(FhirShEx.shapes[0]).type).toEqual("ShapeDecl");
     });
 
     it('should throw with bad arguments', () => {
-      const visitor = new PredicateToShapeDecl();
+      const visitor = new PredicateToShapeDecls();
       expect(() => visitor.visitSchema(null)).toThrow(/got null/);
       expect(() => visitor.visitSchema("schema")).toThrow(/got "schema"/);
       expect(() => visitor.visitSchema({type: "schema999"})).toThrow(/got {"type":"schema999"}/);
@@ -29,7 +29,7 @@ describe('QueryAnalyzer', () => {
   describe('QueryAnalyzer', () => {
     it('should index predicates', () => {
       const rewriter = new QueryAnalyzer(FhirShEx);
-      expect(rewriter.predicateToShapeDecl.get('http://hl7.org/fhir/item').map(d => d.id)).toEqual([ 'Questionnaire', 'Questionnaire.item' ]);
+      expect(rewriter.predicateToShapeDecls.get('http://hl7.org/fhir/item').map(d => d.id)).toEqual([ 'Questionnaire', 'Questionnaire.item' ]);
     });
 
     it('should barf on cycles', () => {

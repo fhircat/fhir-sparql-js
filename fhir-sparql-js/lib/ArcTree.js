@@ -54,6 +54,11 @@ class ArcTree {
     return new Bgp(ret);
   }
 
+  // not used
+  toSparqlTriplePatterns () {
+    return (this.tp ? [this.tp] : []).concat((this.out).flatMap(child => child.toSparqlTriplePatterns()));
+  }
+
   toString (indent = '') {
     const tpStr = this.tp === null ? '<root>' : this.tp.toString();
     return this.out.length === 0

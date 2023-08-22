@@ -2,6 +2,7 @@ const {QueryAnalyzer} = require('./QueryAnalyzer');
 const {Ns, Rdf, Fhir, FirstRest} = require('./Namespaces');
 const {RdfUtils, SparqlQuery} = require('./RdfUtils');
 const {ArcTree} = require('./ArcTree');
+const {ArcTreeFitsInShapeExpr} = require('./ArcTreeFitsInShapeExpr');
 
 class ConnectingVariables {
   static toString (cvs) {
@@ -224,7 +225,7 @@ const ResourceTypeRegexp = new RegExp(
 class FhirSparql extends QueryAnalyzer {
   constructor (shex) { super(shex); }
 
-  opBgpToFhirPathExecutions (arcTree, referents, sparqlSolution) {
+  opBgpToFhirPathExecutions (arcTree, referents, sparqlSolution, meta = {base: '', prefixes: {}}) {
     let resourceType = null;
     let resourceId = null;
     let resourceUrl = null;
@@ -284,7 +285,18 @@ class FhirSparql extends QueryAnalyzer {
     }
 
     // Build list of candidate rules.
-    return candidateTypes.map(type => {
+    const tester = new ArcTreeFitsInShapeExpr(this.shex);
+    return candidateTypes.filter(type => {
+      // const tpz = arcTree.toSparqlTriplePatterns(sparqlSolution, meta);
+      const candidateShapeLabels = this.resourceTypeToShapeDeclIds.get(type);
+      return candidateShapeLabels.find(label => { // stop on first match in canidate shape even if it fits in multiple places
+        const shapeDecl = this.shex.shapes.find(decl => decl.id === label);
+        // istanbul ignore next line
+        if (arcTree.tp !== null) // istanbul ignore next line
+          throw Error(`Expected root of ArcTree to be null: ${arcTree.toString()}`)
+        return !!arcTree.out.find(child => tester.test(child, shapeDecl.shapeExpr));
+      });
+    }).map(type => {
       const myResourceRules = allResourceRules.slice();
       Array.prototype.push.apply(myResourceRules, ResourceToPaths[type]);
       globalThis.R2Pz = ResourceToPaths
@@ -295,8 +307,6 @@ class FhirSparql extends QueryAnalyzer {
 
       return new FhirPathExecution(type, resourceVersion, paths);
     })
-    // hacky filter for now. accept needs to return an answer that says ArcTree touched predicates that aren't in the schema
-      .filter(ret => ret.paths.length > 0);
   }
 }
 
