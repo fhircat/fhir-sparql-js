@@ -22,7 +22,7 @@ describe('FhirSparql', () => {
   });
 
   describe('FhirSparql', () => {
-    it('should translate obs-pat', () => {
+    it('should handle Obs-Patient ref', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
@@ -103,7 +103,7 @@ describe('FhirSparql', () => {
       expect(patPaths2).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ])]);
     });
 
-    it('should translate obs-pat again (i.e. no side effects from previous run)', () => {
+    it('should execute last test again (i.e. no side effects from previous run)', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
@@ -150,7 +150,7 @@ describe('FhirSparql', () => {
       expect(patPaths2).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ])]);
     });
 
-    it('should translate pat-obs', () => {
+    it('should handle Patient-Obs ref', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-disordered.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
@@ -197,7 +197,7 @@ describe('FhirSparql', () => {
       expect(patPaths2).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ])]);
     });
 
-    it('should translate obs-pat-disordered - same but with query triples in arbitrary order', () => {
+    it('should handle Obs-Patient ref with pesimized query triples order', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-disordered.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
@@ -244,7 +244,7 @@ describe('FhirSparql', () => {
       expect(patPaths2).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ])]);
     });
 
-    it('should translate obs-pat-anons - same but with blank nodes where possible', () => {
+    it('should Obs-Patient ref with blank nodes where possible', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-anons.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
@@ -285,7 +285,7 @@ describe('FhirSparql', () => {
       expect(patPaths2).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ])]);
     });
 
-    it('should translate obs-code', () => {
+    it('should recognize fall-back (simple) path rule', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-code.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
@@ -307,7 +307,7 @@ describe('FhirSparql', () => {
       )]);
     });
 
-    it('should translate obs-anons-id', () => {
+    it('should translate a structure of nested (anonymous) BNodes', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-anons-id.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
@@ -318,7 +318,7 @@ describe('FhirSparql', () => {
       expect(obsPaths).toEqual([new FhirPathExecution('Observation', null, [{ name: 'id', value: '789' }])]);
     });
 
-    it('should translate obs-fixed-pat', () => {
+    it('should inject multiple literal values', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-fixed-pat.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
@@ -338,7 +338,7 @@ describe('FhirSparql', () => {
       ])]);
     });
 
-    it('should translate obs-pat-noType', () => {
+    it('should handle lack of Resource type', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-noType.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
@@ -399,7 +399,7 @@ describe('FhirSparql', () => {
       expect(patPaths2).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ])]);
     });
 
-    it('should translate obs-proc', () => {
+    it('should unify coincident variables', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-proc.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
