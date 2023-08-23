@@ -36,14 +36,21 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     			@<Period>  OR 
     			@<Timing>  OR 
     			@<instant>  ?;
-    fhir:value
+     # for coverage, rephrase Constraint UniqueKey:obs-6 as a OneOf (bug: requires either value or dataAbsentReason)
+    (   fhir:value
     			@<CodeableConcept>  OR 
     			@<string>  OR 
-    			@<boolean>
-                        ?;
+    			@<boolean> ;
+      |
+        fhir:dataAbsentReason @<CodeableConcept>;
+    );
     fhir:referenceRange @<OneOrMore_Observation.referenceRange>?;
     fhir:component @<OneOrMore_Observation.component>?;
-}
+} AND (
+ # Constraint UniqueKey:obs-6
+ NOT { fhir:dataAbsentReason {fhir:v .} }  OR  NOT { fhir:value {fhir:v .} }
+)
+
 
 <Observation.referenceRange> EXTENDS @<BackboneElement> CLOSED {
     fhir:low @<Quantity>?;

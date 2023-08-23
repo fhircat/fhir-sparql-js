@@ -12,11 +12,11 @@ class ArcTreeFitsInShapeExpr extends ShExVisitor {
   }
 
   visitShapeAnd (expr, arcTree, ...args) {
-    return expr.shapeExprs.find(nested => this.visitShapeExpr(nested, arcTree, closed, ...args));
+    return expr.shapeExprs.find(nested => this.visitShapeExpr(nested, arcTree, ...args));
   }
 
   visitShapeOr (expr, arcTree, ...args) {
-    return expr.shapeExprs.find(nested => this.visitShapeExpr(nested, arcTree, closed, ...args));
+    return expr.shapeExprs.find(nested => this.visitShapeExpr(nested, arcTree, ...args));
   }
 
   visitShapeNot (expr, arcTree, ...args) {
@@ -24,10 +24,10 @@ class ArcTreeFitsInShapeExpr extends ShExVisitor {
   }
 
   visitShape (shape, arcTree, ...args) {
-    return this.visitTripleExpr(shape.expression, arcTree, ...args);
+    return this.visitTripleExpr(shape.expression, arcTree, shape.closed, ...args);
   }
 
-  visitNodeConstraint (shape, arcTree, ...args) { // don't bother visiting NodeConstraints
+  visitNodeConstraint (shape, arcTree, closed, ...args) { // don't bother visiting NodeConstraints
     return true;
   }
 

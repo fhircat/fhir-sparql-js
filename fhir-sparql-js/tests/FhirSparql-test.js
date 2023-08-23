@@ -442,6 +442,31 @@ describe('FhirSparql', () => {
         { name: 'code', value: '789-8|http://loinc.org' },
       ])]);
     });
+
+    xit('should dive into extended and datatypes', () => {
+      const rewriter = new FhirSparql(FhirShEx);
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text.srq'), 'utf-8'));
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      expect(arcTrees[0].getBgp().triples.length).toEqual(2);
+      expect(connectingVariables).toEqual(new Map([]))
+      expect(referents).toEqual(new Set());
+      const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
+      expect(obsPaths).toEqual([
+          // TODO: should be much more than a Questionnaire
+          new FhirPathExecution('Questionnaire', null, [])
+      ]);
+    });
+
+    it('should restrict types with each successive ArcTree', () => {
+      const rewriter = new FhirSparql(FhirShEx);
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text-required.srq'), 'utf-8'));
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      expect(arcTrees[0].getBgp().triples.length).toEqual(4);
+      expect(connectingVariables).toEqual(new Map([]))
+      expect(referents).toEqual(new Set());
+      const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
+      expect(obsPaths).toEqual([new FhirPathExecution('Questionnaire', null, [])]);
+    });
   });
 });
 
