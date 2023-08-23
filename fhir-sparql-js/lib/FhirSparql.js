@@ -223,7 +223,10 @@ const ResourceTypeRegexp = new RegExp(
 );
 
 class FhirSparql extends QueryAnalyzer {
-  constructor (shex) { super(shex); }
+  constructor (shex) {
+    super(shex);
+    this.tester = new ArcTreeFitsInShapeExpr(shex);
+  }
 
   opBgpToFhirPathExecutions (arcTree, referents, sparqlSolution, meta = {base: '', prefixes: {}}) {
     let resourceType = null;
@@ -244,9 +247,9 @@ class FhirSparql extends QueryAnalyzer {
       resourceUrl = rootTriple.subject.value;
       break;
     case 'Variable':
-      if (referents.has(rootTriple.subject.value) && sparqlSolution[rootTriple.subject.value])
       // If the root node was the object of a FHIR reference
-      resourceUrl = sparqlSolution[rootTriple.subject.value].value;
+      if (referents.has(rootTriple.subject.value) && sparqlSolution[rootTriple.subject.value])
+        resourceUrl = sparqlSolution[rootTriple.subject.value].value;
     }
 
     if (resourceUrl !== null) {
@@ -285,16 +288,14 @@ class FhirSparql extends QueryAnalyzer {
     }
 
     // Build list of candidate rules.
-    const tester = new ArcTreeFitsInShapeExpr(this.shex);
     return candidateTypes.filter(type => {
       // const tpz = arcTree.toSparqlTriplePatterns(sparqlSolution, meta);
       const candidateShapeLabels = this.resourceTypeToShapeDeclIds.get(type);
       return candidateShapeLabels.find(label => { // stop on first match in canidate shape even if it fits in multiple places
-        const shapeDecl = this.shex.shapes.find(decl => decl.id === label);
         // istanbul ignore next line
         if (arcTree.tp !== null) // istanbul ignore next line
           throw Error(`Expected root of ArcTree to be null: ${arcTree.toString()}`)
-        return !!arcTree.out.find(child => tester.test(child, shapeDecl.shapeExpr));
+        return !arcTree.out.find(child => !this.tester.visitShapeRef(label, child));
       });
     }).map(type => {
       const myResourceRules = allResourceRules.slice();

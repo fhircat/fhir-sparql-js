@@ -5,6 +5,11 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT ?resource ?text WHERE {
   ?resource
-    fhir:text [ fhir:v ?text ] ;
-    fhir:required [ fhir:v true ]
+    fhir:status [ fhir:v "active" ] ;
+    fhir:item [
+      (rdf:first/rdf:rest)*/rdf:first [
+        fhir:text [ fhir:v ?text ] ;
+        fhir:required [ fhir:v true ] ;
+      ]
+    ]
 }
