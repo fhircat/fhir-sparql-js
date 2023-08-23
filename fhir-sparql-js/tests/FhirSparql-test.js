@@ -244,9 +244,9 @@ describe('FhirSparql', () => {
       expect(patPaths2).toEqual([new FhirPathExecution('Patient', null, [ { name: 'id', value: '2' } ])]);
     });
 
-    it('should translate obs-pat-maxBnodes - same but with blank nodes where possible', () => {
+    it('should translate obs-pat-anons - same but with blank nodes where possible', () => {
       const rewriter = new FhirSparql(FhirShEx);
-      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-maxBnodes.srq'), 'utf-8'));
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-anons.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
 
       // connectingVariables
@@ -307,9 +307,9 @@ describe('FhirSparql', () => {
       )]);
     });
 
-    it('should translate obs-id', () => {
+    it('should translate obs-anons-id', () => {
       const rewriter = new FhirSparql(FhirShEx);
-      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-id.srq'), 'utf-8'));
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-anons-id.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
       expect(arcTrees[0].getBgp().triples.length).toEqual(8);
       expect(connectingVariables).toEqual(new Map([]))
@@ -450,126 +450,115 @@ describe('FhirSparql', () => {
  */
 
 // Triples
-const T_obs_A_Observation = {
-  subject: { termType: 'Variable', value: 'obs' },
-  predicate: Rdf.type,
-  object: { termType: 'NamedNode', value: 'http://hl7.org/fhir/Observation' }
-};
-const T_obs_code_code = {
-  subject: { termType: 'Variable', value: 'obs' },
-  predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/code' },
-  object: { termType: 'Variable', value: 'code' }
-};
-const T_code_coding_codeList = {
-  subject: { termType: 'Variable', value: 'code' },
-  predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/coding' },
-  object: { termType: 'Variable', value: 'codeList' }
-};
-const T_codeList_FirstRest_codeElt = {
-  subject: { termType: 'Variable', value: 'codeList' },
-  predicate: FirstRest,
-  object: { termType: 'Variable', value: 'codeElt' }
-};
-const T_codeElt_code_codeCode = {
-  subject: { termType: 'Variable', value: 'codeElt' },
-  predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/code' },
-  object: { termType: 'Variable', value: 'codeCode' }
-};
-const T_codeCode_v_789_8 = {
-  subject: { termType: 'Variable', value: 'codeCode' },
-  predicate: Fhir.v,
-  object: { termType: 'Literal', value: '789-8', language: '', datatype: Xsd.string }
-};
-const T_codeElt_sytem_codingSystem = {
-  subject: { termType: 'Variable', value: 'codeElt' },
-  predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/system' },
-  object: { termType: 'Variable', value: 'codingSystem' }
-};
-const T_codingSystem_v_snomed = {
-  subject: { termType: 'Variable', value: 'codingSystem' },
-  predicate: Fhir.v,
-  object: { termType: 'Literal', value: 'http://loinc.org', language: '', datatype: Xsd.anyURI }
-};
-const T_obs_subject_subjectRef = {
-  subject: { termType: 'Variable', value: 'obs' },
-  predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/subject' },
-  object: { termType: 'Variable', value: 'subjectRef' }
-};
-const T_subjectRef_reference_subject = {
-  subject: { termType: 'Variable', value: 'subjectRef' },
-  predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/reference' },
-  object: { termType: 'Variable', value: 'subject' }
-};
-const T_subject_a_Patient = {
-  subject: { termType: 'Variable', value: 'subject' },
-  predicate: Rdf.type,
-  object: { termType: 'NamedNode', value: 'http://hl7.org/fhir/Patient' }
-};
-const T_subject_id_patIdElt = {
-  subject: { termType: 'Variable', value: 'subject' },
-  predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/id' },
-  object: { termType: 'Variable', value: 'patIdElt' }
-};
-const T_patIdElt_v_patId = {
-  subject: { termType: 'Variable', value: 'patIdElt' },
-  predicate: Fhir.v,
-  object: { termType: 'Variable', value: 'patId' }
-};
+const Triples = {
+  obs_A_Observation: {
+    subject: { termType: 'Variable', value: 'obs' },
+    predicate: Rdf.type,
+    object: { termType: 'NamedNode', value: 'http://hl7.org/fhir/Observation' } },
+  obs_code_code: {
+    subject: { termType: 'Variable', value: 'obs' },
+    predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/code' },
+    object: { termType: 'Variable', value: 'code' } },
+  code_coding_codeList: {
+    subject: { termType: 'Variable', value: 'code' },
+    predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/coding' },
+    object: { termType: 'Variable', value: 'codeList' } },
+  codeList_FirstRest_codeElt: {
+    subject: { termType: 'Variable', value: 'codeList' },
+    predicate: FirstRest,
+    object: { termType: 'Variable', value: 'codeElt' } },
+  codeElt_code_codeCode: {
+    subject: { termType: 'Variable', value: 'codeElt' },
+    predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/code' },
+    object: { termType: 'Variable', value: 'codeCode' } },
+  codeCode_v_789_8: {
+    subject: { termType: 'Variable', value: 'codeCode' },
+    predicate: Fhir.v,
+    object: { termType: 'Literal', value: '789-8', language: '', datatype: Xsd.string } },
+  codeElt_sytem_codingSystem: {
+    subject: { termType: 'Variable', value: 'codeElt' },
+    predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/system' },
+    object: { termType: 'Variable', value: 'codingSystem' } },
+  codingSystem_v_snomed: {
+    subject: { termType: 'Variable', value: 'codingSystem' },
+    predicate: Fhir.v,
+    object: { termType: 'Literal', value: 'http://loinc.org', language: '', datatype: Xsd.anyURI } },
+  obs_subject_subjectRef: {
+    subject: { termType: 'Variable', value: 'obs' },
+    predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/subject' },
+    object: { termType: 'Variable', value: 'subjectRef' } },
+  subjectRef_reference_subject: {
+    subject: { termType: 'Variable', value: 'subjectRef' },
+    predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/reference' },
+    object: { termType: 'Variable', value: 'subject' } },
+  subject_a_Patient: {
+    subject: { termType: 'Variable', value: 'subject' },
+    predicate: Rdf.type,
+    object: { termType: 'NamedNode', value: 'http://hl7.org/fhir/Patient' } },
+  subject_id_patIdElt: {
+    subject: { termType: 'Variable', value: 'subject' },
+    predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/id' },
+    object: { termType: 'Variable', value: 'patIdElt' } },
+  patIdElt_v_patId: {
+    subject: { termType: 'Variable', value: 'patIdElt' },
+    predicate: Fhir.v,
+    object: { termType: 'Variable', value: 'patId' } },
+}
 
 // ArcTrees
 const ArcTree_obs_noType = {tp: null, out: [
-  {tp: T_obs_code_code, out: [
-    {tp: T_code_coding_codeList, out: [
-      {tp: T_codeList_FirstRest_codeElt, out: [
-        {tp: T_codeElt_code_codeCode, out: [
-          {tp: T_codeCode_v_789_8, out: []}
+  {tp: Triples.obs_code_code, out: [
+    {tp: Triples.code_coding_codeList, out: [
+      {tp: Triples.codeList_FirstRest_codeElt, out: [
+        {tp: Triples.codeElt_code_codeCode, out: [
+          {tp: Triples.codeCode_v_789_8, out: []}
         ]},
-        {tp: T_codeElt_sytem_codingSystem, out: [
-          {tp: T_codingSystem_v_snomed, out: []}
+        {tp: Triples.codeElt_sytem_codingSystem, out: [
+          {tp: Triples.codingSystem_v_snomed, out: []}
         ]}
       ]}
     ]}
   ]},
-  {tp: T_obs_subject_subjectRef, out: [
-    {tp: T_subjectRef_reference_subject, out: []}
+  {tp: Triples.obs_subject_subjectRef, out: [
+    {tp: Triples.subjectRef_reference_subject, out: []}
   ]}
 ]};
 const ArcTree_obs = {tp: null, out: [
-  {tp: T_obs_A_Observation, out: []},
+  {tp: Triples.obs_A_Observation, out: []},
 ].concat(ArcTree_obs_noType.out)};
 const ArcTree_subject = {tp: null, out: [
-  {tp: T_subject_a_Patient, out: []},
-  {tp: T_subject_id_patIdElt, out: [
-    {tp: T_patIdElt_v_patId, out: []}
+  {tp: Triples.subject_a_Patient, out: []},
+  {tp: Triples.subject_id_patIdElt, out: [
+    {tp: Triples.patIdElt_v_patId, out: []}
   ]}
 ]};
 
 // ConnectingVariables
 const ConnectingVariables_obs_pat_mid = {
   subject: [
-    {pos: 'object', arcTree: ArcTree_obs.out[2].out[0]}, // ArcTree_obs ArcTree with tp=T_subjectRef_reference_subject
-    {pos: 'subject', arcTree: ArcTree_subject.out[0]}, // ArcTree_subject ArcTree with tp=T_subject_a_Patient
-    {pos: 'subject', arcTree: ArcTree_subject.out[1]}, // ArcTree_subject ArcTree with tp=T_subject_id_patIdElt
+    {pos: 'object', arcTree: ArcTree_obs.out[2].out[0]}, // ArcTree_obs ArcTree with tp=Triples.subjectRef_reference_subject
+    {pos: 'subject', arcTree: ArcTree_subject.out[0]}, // ArcTree_subject ArcTree with tp=Triples.subject_a_Patient
+    {pos: 'subject', arcTree: ArcTree_subject.out[1]}, // ArcTree_subject ArcTree with tp=Triples.subject_id_patIdElt
   ]
 };
 
 // BGPs
 const BGP_obs_noType = Bgp.blessSparqlJs({type: 'bgp', triples: [
-  T_obs_code_code,
-  T_code_coding_codeList,
-  T_codeList_FirstRest_codeElt,
-  T_codeElt_code_codeCode,
-  T_codeCode_v_789_8,
-  T_codeElt_sytem_codingSystem,
-  T_codingSystem_v_snomed,
-  T_obs_subject_subjectRef,
-  T_subjectRef_reference_subject,
+  Triples.obs_code_code,
+  Triples.code_coding_codeList,
+  Triples.codeList_FirstRest_codeElt,
+  Triples.codeElt_code_codeCode,
+  Triples.codeCode_v_789_8,
+  Triples.codeElt_sytem_codingSystem,
+  Triples.codingSystem_v_snomed,
+  Triples.obs_subject_subjectRef,
+  Triples.subjectRef_reference_subject,
 ]});
 const BGP_obs = Bgp.blessSparqlJs({type: 'bgp', triples: [
-  T_obs_A_Observation,
+  Triples.obs_A_Observation,
 ].concat(BGP_obs_noType.triples)});
 const BGP_subject = Bgp.blessSparqlJs({type: 'bgp', triples: [
-  T_subject_a_Patient,
-  T_subject_id_patIdElt,
-  T_patIdElt_v_patId,
+  Triples.subject_a_Patient,
+  Triples.subject_id_patIdElt,
+  Triples.patIdElt_v_patId,
 ]});

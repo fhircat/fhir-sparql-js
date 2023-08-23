@@ -12,19 +12,15 @@ class ArcTreeFitsInShapeExpr extends ShExVisitor {
   }
 
   visitShapeAnd (expr, arcTree, ...args) {
-    return expr.shapeExprs.find(nested => {
-      return this.visitTripleExpr(nested, arcTree, closed, ...args);
-    });
+    return expr.shapeExprs.find(nested => this.visitShapeExpr(nested, arcTree, closed, ...args));
   }
 
   visitShapeOr (expr, arcTree, ...args) {
-    return expr.shapeExprs.find(nested => {
-      return this.visitTripleExpr(nested, arcTree, closed, ...args);
-    });
+    return expr.shapeExprs.find(nested => this.visitShapeExpr(nested, arcTree, closed, ...args));
   }
 
   visitShapeNot (expr, arcTree, ...args) {
-    return !this.visitShapeExpr(expr.shapeExpr, arcTree, ...args);
+    return this.visitShapeExpr(expr.shapeExpr, arcTree, ...args);
   }
 
   visitShape (shape, arcTree, ...args) {
@@ -36,15 +32,11 @@ class ArcTreeFitsInShapeExpr extends ShExVisitor {
   }
 
   visitEachOf (expr, arcTree, closed, ...args) {
-    return expr.expressions.find(nested => {
-      return this.visitTripleExpr(nested, arcTree, closed, ...args);
-    });
+    return !!expr.expressions.find(nested => this.visitTripleExpr(nested, arcTree, closed, ...args));
   }
 
   visitOneOf (expr, arcTree, closed, ...args) {
-    return expr.expressions.find(nested => {
-      return this.visitTripleExpr(nested, arcTree, closed, ...args);
-    });
+    return !!expr.expressions.find(nested => this.visitTripleExpr(nested, arcTree, closed, ...args));
   }
 
   visitTripleConstraint(expr, arcTree, closed, ...args) {
@@ -56,7 +48,7 @@ class ArcTreeFitsInShapeExpr extends ShExVisitor {
     if (!expr.valueExpr)
       return false;
     return !arcTree.out.find(childArcTree => {
-      return !this.test(childArcTree, expr.valueExpr);
+      return !this.test(childArcTree, expr.valueExpr, ...args);
     });
   }
 
