@@ -97,8 +97,9 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     fhir:identifier @<OneOrMore_Identifier>?;
     fhir:version @<string>?;
     fhir:name @<string>?;
-    fhir:status @<code> AND
-    	{fhir:v @fhirvs:publication-status};
+    fhir:status # reordered for coverage: @<code> AND
+    	{fhir:v @fhirvs:publication-status}
+        AND @<code>;
     fhir:subjectType @<OneOrMore_code> AND
     	{fhir:v @fhirvs:resource-types}?;
     fhir:date @<dateTime>?;

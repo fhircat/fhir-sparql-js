@@ -438,7 +438,7 @@ describe('FhirSparql', () => {
       ])]);
     });
 
-    xit('should dive into extended and datatypes', () => {
+    it('should dive into extended and datatypes', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
@@ -447,20 +447,46 @@ describe('FhirSparql', () => {
       expect(referents).toEqual(new Set());
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
       expect(obsPaths).toEqual([
-          // TODO: should be much more than a Questionnaire
-          new FhirPathExecution('Questionnaire', null, [])
+        new FhirPathExecution('Observation', null, []),
+        new FhirPathExecution('Patient', null, []),
+        new FhirPathExecution('Procedure', null, []),
+        new FhirPathExecution('Questionnaire', null, []),
       ]);
     });
 
     it('should restrict types with each successive ArcTree', () => {
       const rewriter = new FhirSparql(FhirShEx);
-      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text-required.srq'), 'utf-8'));
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text-var.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
       expect(arcTrees[0].getBgp().triples.length).toEqual(8);
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
       expect(obsPaths).toEqual([new FhirPathExecution('Questionnaire', null, [])]);
+    });
+
+    it('should accept valid value set values', () => {
+      const rewriter = new FhirSparql(FhirShEx);
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text-valid.srq'), 'utf-8'));
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      expect(arcTrees[0].getBgp().triples.length).toEqual(8);
+      expect(connectingVariables).toEqual(new Map([]))
+      expect(referents).toEqual(new Set());
+      const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
+      expect(obsPaths).toEqual([new FhirPathExecution('Questionnaire', null, [])]);
+    });
+
+    xit('should reject invalid value set values', () => {
+      // per ArcTreeFitsInShapeExpr:
+      // Weakness: currently accepts if any {con,dis}junect accepts. Should accept only of all conjuncts that mention X accept X.
+      const rewriter = new FhirSparql(FhirShEx);
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text-invalid.srq'), 'utf-8'));
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      expect(arcTrees[0].getBgp().triples.length).toEqual(8);
+      expect(connectingVariables).toEqual(new Map([]))
+      expect(referents).toEqual(new Set());
+      const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
+      expect(obsPaths).toEqual([]);
     });
   });
 });

@@ -602,7 +602,6 @@
               "valueExpr": {
                 "type": "ShapeAnd",
                 "shapeExprs": [
-                  "code",
                   {
                     "type": "Shape",
                     "expression": {
@@ -610,7 +609,8 @@
                       "predicate": "http://hl7.org/fhir/v",
                       "valueExpr": "http://hl7.org/fhir/ValueSet/publication-status"
                     }
-                  }
+                  },
+                  "code"
                 ]
               }
             },

@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@shexjs/parser": "^1.0.0-alpha.26",
+    "@shexjs/validator": "^1.0.0-alpha.26",
     "@shexjs/visitor": "^1.0.0-alpha.25",
     "sparqljs": "^3.7.1"
   },
