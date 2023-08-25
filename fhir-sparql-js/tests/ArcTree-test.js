@@ -21,19 +21,19 @@ describe('ArcTree', () => {
   });
 
   it(`should construct and render ArcTrees`, () => {
-    const b1_code_b2 = {
+    const b1_code_b2 = Triple.blessSparqlJs({
       subject: {termType: 'BlankNode', value: 'b1'},
       predicate: {termType: 'NamedNode', value: 'http://hl7.org/fhir/code'},
       object: {termType: 'BlankNode', value: 'b2'}
-    };
-    const b2_v_a = {
+    });
+    const b2_v_a = Triple.blessSparqlJs({
       subject: {termType: 'BlankNode', value: 'b2'},
       predicate: {termType: 'NamedNode', value: 'http://hl7.org/fhir/v'},
       object: {termType: 'Literal', value: 'a'}
-    };
+    });
     const root = new ArcTree(null, [
-      new ArcTree(Triple.blessSparqlJs(b1_code_b2), [
-        new ArcTree(Triple.blessSparqlJs(b2_v_a), [])
+      new ArcTree(b1_code_b2, [
+        new ArcTree(b2_v_a, [])
       ])
     ]);
     expect(root.toString()).toEqual(`<root> [

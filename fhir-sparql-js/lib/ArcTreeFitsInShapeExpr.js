@@ -11,7 +11,7 @@ const NoMatch = Term.blessSparqlJs({termType: 'NamedNode', value: 'should://neve
  * Note that only *some* children of a ShapeAnd or EachOf must account for the ArcTree.
  * strategy: look for any children or extends, even Nots, than can match arcTree.
  *
- * Weakness: currently accepts if any {con,dis}junect accepts. Should accept only of all conjuncts that mention X accept X.
+ * Weakness: currently accepts if any {con,dis}junct accepts. Should accept only if all conjuncts that mention X accept X.
  */
 class ArcTreeFitsInShapeExpr extends ShExVisitor {
   constructor (shex, ...ctor_args) {
@@ -22,15 +22,15 @@ class ArcTreeFitsInShapeExpr extends ShExVisitor {
 
   visitShapeDecl(decl, arcTree, ...args) {
     let testedShapeExprs = this.tested.get(arcTree);
-    if (!testedShapeExprs || true) {
+    if (!testedShapeExprs) {
       testedShapeExprs = new Map();
       this.tested.set(arcTree, testedShapeExprs);
     }
 
-    let shapeExprResults = testedShapeExprs.get(arcTree);
-    if (!shapeExprResults || true) {
+    let shapeExprResults = testedShapeExprs.get(decl);
+    if (!shapeExprResults) {
       shapeExprResults = this.visitShapeExpr(decl.shapeExpr, arcTree, ...args);
-      testedShapeExprs.set(arcTree, shapeExprResults);
+      testedShapeExprs.set(decl, shapeExprResults);
     }
 
     return shapeExprResults;
@@ -38,6 +38,8 @@ class ArcTreeFitsInShapeExpr extends ShExVisitor {
 
   visitShapeRef(reference, arcTree, ...args) {
     const shapeDecl = this.shex.shapes.find(decl => decl.id === reference);
+    if (!shapeDecl)
+      throw Error(`Shape ${reference} not found in ${this.shex.shapes.map(decl => decl.id).join(', ')}`);
     return this.visitShapeDecl(shapeDecl, arcTree, ...args);
   }
 

@@ -478,7 +478,7 @@ describe('FhirSparql', () => {
 
     xit('should reject invalid value set values', () => {
       // per ArcTreeFitsInShapeExpr:
-      // Weakness: currently accepts if any {con,dis}junect accepts. Should accept only of all conjuncts that mention X accept X.
+      // Weakness: currently accepts if any {con,dis}junct accepts. Should accept only if all conjuncts that mention X accept X.
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text-invalid.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);

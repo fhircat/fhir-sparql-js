@@ -1,6 +1,6 @@
 /* istanbul ignore file */
 
-const {Ns, Rdf, Fhir, FirstRest} = require('./Namespaces');
+const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('./Namespaces');
 const SparqlJs = require('sparqljs');
 const SparqlParser = new SparqlJs.Parser();
 
@@ -59,9 +59,9 @@ class Term {
     switch (sparqlJsTerm.termType) {
     case 'NamedNode': return new NamedNode(sparqlJsTerm.value);
     case 'BlankNode': return new BlankNode(sparqlJsTerm.value);
-    case 'Literal': return new Literal(sparqlJsTerm.value, sparqlJsTerm.language,
-                                       sparqlJsTerm.datatype ? Term.blessSparqlJs(sparqlJsTerm.datatype) : undefined
-                                      );
+    case 'Literal':
+      const datatype = sparqlJsTerm.datatype ? Term.blessSparqlJs(sparqlJsTerm.datatype) : new NamedNode(Xsd.string);
+      return new Literal(sparqlJsTerm.value, sparqlJsTerm.language, datatype);
     case 'Variable': return new Variable(sparqlJsTerm.value);
     default: throw Error(`unknown SparqlJs term type in ${JSON.stringify(sparqlJsTerm)}`);
     }
@@ -81,7 +81,7 @@ class Literal   extends Term {
     return '"' + this.value + '"' +
       (this.language
        ? '@' + this.language
-       : this.datatype
+       : this.datatype && this.datatype.value !== Xsd.string
        ? '^^' + this.datatype.toString()
        : '');
   }
