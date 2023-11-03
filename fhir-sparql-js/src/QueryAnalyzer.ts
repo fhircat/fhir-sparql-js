@@ -1,4 +1,4 @@
-const {Visitor: ShExVisitor} = require('../lib/ShExVisitor');
+import {ShExVisitor} from './ShExVisitor';
 import {Ns} from './Namespaces';
 import {RdfUtils, SparqlQuery, Triple, TTerm} from './RdfUtils';
 import {ArcTree, PosArcTree} from './ArcTree'
@@ -7,6 +7,8 @@ import * as ShExJ from 'shexj';
 export class PredicateToShapeDecls extends ShExVisitor {
   predicateToShapeDecls: Map<string, ShExJ.ShapeDecl[]>;
   resourceTypeToShapeDeclIds: Map<string, string[]>;
+  curDecl: ShExJ.ShapeDecl | null;
+
   constructor (...ctor_args: any[]) {
     super(...ctor_args);
     this.predicateToShapeDecls = new Map(); // not used

@@ -1,0 +1,85 @@
+{
+  "baseIndentSize": 0,
+  "indentSize": 2,
+  "tabSize": 8,
+  "indentStyle": 2,
+  "newLineCharacter": "\n",
+  "include": [ "src" ],
+  "compilerOptions": {
+    "outDir": "./dist",
+
+    /* Basic Options */
+    // "incremental": true,
+    "target": "esnext",   /* 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019', 'ES2020', or 'ESNEXT'. */
+    "module": "commonjs", /* 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', 'es2020', or 'ESNext'. */
+
+    /* Strict Type-Checking Options */
+    "strict": true,
+    // "noImplicitAny": true,
+    // "strictNullChecks": true,
+    // "strictFunctionTypes": true,
+    // "strictBindCallApply": true,
+    // "strictPropertyInitialization": true,
+    // "noImplicitThis": true,
+    // "alwaysStrict": true,
+
+    /* Additional Checks */
+    "noUnusedLocals": false,
+    // "noUnusedParameters": true,
+    // "noImplicitReturns": true,
+    // "noFallthroughCasesInSwitch": true,
+    // "noUncheckedIndexedAccess": true,
+
+    /* Module Resolution Options */
+    // "moduleResolution": "node",
+    // "baseUrl": "./",
+    // "paths": {},
+    // "rootDirs": [],
+    // "typeRoots": [],
+    // "types": [],
+    // "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    // "preserveSymlinks": true,
+    // "allowUmdGlobalAccess": true,
+
+    /* Source Map Options */
+    // "sourceRoot": "",
+    // "mapRoot": "",
+    // "inlineSourceMap": true,
+    // "inlineSources": true,
+
+    /* Experimental Options */
+    // "experimentalDecorators": true,
+    // "emitDecoratorMetadata": true,
+
+    /* Advanced Options */
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // "noImplicitThis": true,
+    // "preserveConstEnums": true,
+    // "lib": [ ],
+    // "target": "es2020",
+    // "module": "commonjs",
+    // "moduleResolution": "node",
+    // "allowJs": false,
+    // "esModuleInterop": true,
+    // "emitDecoratorMetadata": true,
+    // "experimentalDecorators": true,
+    // "downlevelIteration": true,
+    // "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
+    "declarationMap": true,
+    // "noImplicitAny": true,
+    "declaration": true,
+    // "noFallthroughCasesInSwitch": true,
+    // "noImplicitReturns": true,
+    // "stripInternal": true,
+    // "pretty": true,
+    // "strictNullChecks": true,
+    // "noUnusedLocals": false,
+    // "noUnusedParameters": false
+
+  }
+}
+

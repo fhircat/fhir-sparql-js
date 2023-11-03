@@ -1,12 +1,13 @@
 /* istanbul ignore file */
 import * as ShExJ from 'shexj';
 
-class ShExVisitor {
+export class ShExVisitor {
   ctor_args: any[];
   constructor (...ctor_args: any[]) {
     this.ctor_args = ctor_args;
 
     // A lot of ShExVisitor's functions are the same. This creates them.
+    /*
     const reusedMethods: Record<string, string[]> = {
       '_visitValue': [
         "visit@context", "visitBase", "visitInclude", "visitStart",
@@ -17,10 +18,7 @@ class ShExVisitor {
         "visitMininclusive", "visitMinexclusive", "visitMaxinclusive", "visitMaxexclusive",
         "visitTotaldigits", "visitFractiondigits",
       ],
-      '_visitShapeExprList': [ "visitRestricts", "visitExtends", ],
       '_visitList': [ "visitExtra", "visitAnnotations", ],
-      '_visitGroup': [ "visitOneOf", "visitEachOf", ],
-      '_visitShapeGroup': [ "visitShapeAnd", "visitShapeOr", ]
     };
     for (const reuseMe in reusedMethods) {
       const toFill = reusedMethods[reuseMe];
@@ -29,6 +27,7 @@ class ShExVisitor {
           (this as Record<string, any>)[needed] = (this as Record<string, any>)[reuseMe];
         }
     }
+    */
   }
 
   static isTerm (t: ShExJ.valueSetValue): t is ShExJ.objectValue {
@@ -134,38 +133,37 @@ class ShExVisitor {
     case "ShapeNot": return this.visitShapeNot(expr, ...args);
     case "ShapeExternal": return this.visitShapeExternal(expr, ...args);
     default:
-      throw Error("unexpected shapeExpr type: " + expr.type);
+      throw Error("unexpected shapeExpr type: " + (expr as any).type);
     }
   }
 
-  visitValueExpr (expr, ...args: any[]) {
-    return this.visitShapeExpr(expr, ...args); // call potentially overloaded visitShapeExpr
-  }
+  // visitValueExpr (expr: ShExJ.shapeExprOrRef, ...args: any[]):any {
+  //   return this.visitShapeExpr(expr, ...args); // call potentially overloaded visitShapeExpr
+  // }
 
   // _visitShapeGroup: visit a grouping expression (shapeAnd, shapeOr)
-  _visitShapeGroup (expr, ...args: any[]) {
+  _visitShapeGroup (expr: ShExJ.ShapeAnd | ShExJ.ShapeOr, ...args: any[]): any {
     this._testUnknownAttributes(expr, ["shapeExprs"], expr.type, this.visitShapeNot)
-    const r = { type: expr.type };
-    if ("id" in expr)
-      r.id = expr.id;
+    const r = { type: expr.type } as ShExJ.ShapeAnd | ShExJ.ShapeOr;
     r.shapeExprs = expr.shapeExprs.map((nested) => {
       return this.visitShapeExpr(nested, ...args);
     });
     return r;
   }
 
+  visitShapeAnd (expr: ShExJ.ShapeAnd, ...args: any[]): any { return this._visitShapeGroup(expr, ...args); }
+  visitShapeOr (expr: ShExJ.ShapeOr, ...args: any[]): any { return this._visitShapeGroup(expr, ...args); }
+
   // _visitShapeNot: visit negated shape
-  visitShapeNot (expr, ...args: any[]) {
+  visitShapeNot (expr: ShExJ.ShapeNot, ...args: any[]): any {
     this._testUnknownAttributes(expr, ["shapeExpr"], "ShapeNot", this.visitShapeNot)
-    const r = { type: expr.type };
-    if ("id" in expr)
-      r.id = expr.id;
+    const r = { type: expr.type } as ShExJ.ShapeNot;
     r.shapeExpr = this.visitShapeExpr(expr.shapeExpr, ...args);
     return r;
   }
 
   // ### `visitNodeConstraint` deep-copies the structure of a shape
-  visitShape (shape, ...args: any[]) {
+  visitShape (shape: ShExJ.Shape, ...args: any[]): any {
     const ret = { type: "Shape" };
     this._expect(shape, "type", "Shape");
 
@@ -176,18 +174,21 @@ class ShExVisitor {
     return ret;
   }
 
-  _visitShapeExprList (ext, ...args: any[]) {
+  _visitShapeExprList (ext: /* ShExJ.Restricts | */ShExJ.shapeExpr[], ...args: any[]) {
     return ext.map((t) => {
       return this.visitShapeExpr(t, ...args);
     });
   }
 
-  // ### `visitNodeConstraint` deep-copies the structure of a shape
-  visitNodeConstraint (shape, ...args: any[]) {
-    const ret = { type: "NodeConstraint" };
-    this._expect(shape, "type", "NodeConstraint");
+  // visitRestricts (restricts: ShExJ.Restricts, ...args: any[]): any { return this._visitShapeExprList(restricts, ...args); }
+  visitExtends (ext: ShExJ.shapeExpr[], ...args: any[]): any { return this._visitShapeExprList(ext, ...args); }
 
-    this._maybeSet(shape, ret, "NodeConstraint",
+  // ### `visitNodeConstraint` deep-copies the structure of a shape
+  visitNodeConstraint (nodeConstraint: ShExJ.NodeConstraint, ...args: any[]): any {
+    const ret = { type: "NodeConstraint" };
+    this._expect(nodeConstraint, "type", "NodeConstraint");
+
+    this._maybeSet(nodeConstraint, ret, "NodeConstraint",
                    [ "nodeKind", "datatype", "pattern", "flags", "length",
                      "reference", "minlength", "maxlength",
                      "mininclusive", "minexclusive", "maxinclusive", "maxexclusive",
@@ -195,27 +196,24 @@ class ShExVisitor {
     return ret;
   }
 
-  visitShapeRef (reference, ...args: any[]) {
-    if (typeof reference !== "string") {
-      let ex = Exception("visitShapeRef expected a string, not " + JSON.stringify(reference));
-      console.warn(ex);
-      throw ex;
-    }
+  visitShapeRef (reference: ShExJ.shapeDeclRef, ...args: any[]): any {
+    if (typeof reference !== "string")
+      throw Error("visitShapeRef expected a string, not " + JSON.stringify(reference));
     return reference;
   }
 
-  visitShapeExternal (expr, ...args: any[]) {
-    this._testUnknownAttributes(expr, ["id"], "ShapeExternal", this.visitShapeNot)
-    return Object.assign("id" in expr ? { id: expr.id } : {}, { type: "ShapeExternal" });
+  visitShapeExternal (expr: ShExJ.ShapeExternal, ...args: any[]): any {
+    this._testUnknownAttributes(expr, [], "ShapeExternal", this.visitShapeNot)
+    return { type: "ShapeExternal" };
   }
 
   // _visitGroup: visit a grouping expression (someOf or eachOf)
-  _visitGroup (expr, type, ...args: any[]) {
+  _visitGroup (expr: ShExJ.OneOf | ShExJ.EachOf, ...args: any[]): any {
     const r = Object.assign(
       // pre-declare an id so it sorts to the top
       "id" in expr ? { id: null } : { },
       { type: expr.type }
-    );
+    ) as ShExJ.OneOf | ShExJ.EachOf;
     r.expressions = expr.expressions.map((nested) => {
       return this.visitExpression(nested, ...args);
     });
@@ -223,7 +221,10 @@ class ShExVisitor {
                           ["id", "min", "max", "annotations", "semActs"], ["expressions"], ...args);
   }
 
-  visitTripleConstraint (expr, ...args: any[]) {
+  visitOneOf (expr: ShExJ.OneOf, ...args: any[]): any { return this._visitGroup(expr, ...args); }
+  visitEachOf (expr: ShExJ.EachOf, ...args: any[]): any { return this._visitGroup(expr, ...args); }
+
+  visitTripleConstraint (expr: ShExJ.TripleConstraint, ...args: any[]): any {
     return this._maybeSet(expr,
                           Object.assign(
                             // pre-declare an id so it sorts to the top
@@ -235,7 +236,7 @@ class ShExVisitor {
                            "min", "max", "annotations", "semActs"], null, ...args)
   }
 
-  visitTripleExpr (expr, ...args: any[]) {
+  visitTripleExpr (expr: ShExJ.tripleExprOrRef, ...args: any[]): any {
     if (typeof expr === "string")
       return this.visitInclusion(expr);
     switch (expr.type) {
@@ -243,15 +244,15 @@ class ShExVisitor {
     case "OneOf": return this.visitOneOf(expr, ...args);
     case "EachOf": return this.visitEachOf(expr, ...args);
     default:
-      throw Error("unexpected expression type: " + expr.type);
+      throw Error("unexpected expression type: " + (expr as any).type);
     }
   }
 
-  visitExpression (expr, ...args: any[]) {
+  visitExpression (expr: ShExJ.tripleExprOrRef, ...args: any[]): any {
     return this.visitTripleExpr(expr, ...args); // call potentially overloaded visitTripleExpr
   }
 
-  visitValues (values: ShExJ.valueSetValue[], ...args: any[]) {
+  visitValues (values: ShExJ.valueSetValue[], ...args: any[]): any {
     return values.map((t) => {
       return ShExVisitor.isTerm(t) || t.type === "Language" ?
         t :
@@ -259,7 +260,7 @@ class ShExVisitor {
     });
   }
 
-  visitStemRange (t, ...args: any[]) {
+  visitStemRange (t: ShExJ.IriStem | ShExJ.IriStemRange | ShExJ.LiteralStem | ShExJ.LiteralStemRange | ShExJ.LanguageStem | ShExJ.LanguageStemRange, ...args: any[]): any {
     // this._expect(t, "type", "IriStemRange");
     if (!("type" in t))
       this.runtimeError(Error("expected "+JSON.stringify(t)+" to have a 'type' attribute."));
@@ -273,15 +274,15 @@ class ShExVisitor {
     } else {
       stem = { type: t.type, stem: t.stem };
     }
-    if (t.exclusions) {
-      stem.exclusions = t.exclusions.map((c) => {
+    if ((t as ShExJ.IriStemRange | ShExJ.LiteralStemRange | ShExJ.LanguageStemRange).exclusions) {
+      (stem as any).exclusions = (t as ShExJ.IriStemRange | ShExJ.LiteralStemRange | ShExJ.LanguageStemRange).exclusions.map((c) => {
         return this.visitExclusion(c, ...args);
       });
     }
     return stem;
   }
 
-  visitExclusion (c, ...args: any[]) {
+  visitExclusion (c: ShExJ.iriRangeExclusion | ShExJ.literalRangeExclusion | ShExJ.languageRangeExclusion, ...args: any[]): any {
     if (!ShExVisitor.isTerm(c)) {
       // this._expect(c, "type", "IriStem");
       if (!("type" in c))
@@ -295,44 +296,78 @@ class ShExVisitor {
     }
   }
 
-  visitInclusion (inclusion, ...args: any[]) {
-    if (typeof inclusion !== "string") {
-      let ex = Exception("visitInclusion expected a string, not " + JSON.stringify(inclusion));
-      console.warn(ex);
-      throw ex;
-    }
+  visitInclusion (inclusion: ShExJ.tripleExprRef, ...args: any[]): any {
+    if (typeof inclusion !== "string")
+      throw Error("visitInclusion expected a string, not " + JSON.stringify(inclusion));
     return inclusion;
   }
 
-  _maybeSet (obj, ret, context, members, ignore, ...args: any[]) {
+  /** internal generic handler for visiting ShExJ structure members
+   * treats members as keys on object
+   */
+  _maybeSet (obj: object, ret: object, context: string, members: string[], ignore: string[] | null, ...args: any[]) {
     this._testUnknownAttributes(obj, ignore ? members.concat(ignore) : members, context, this._maybeSet)
     members.forEach((member) => {
       const methodName = "visit" + member.charAt(0).toUpperCase() + member.slice(1);
       if (member in obj) {
-        const f = this[methodName];
+        const f = (this as any)[methodName];
         if (typeof f !== "function") {
           throw Error(methodName + " not found in Visitor");
         }
-        const t = f.call(this, obj[member], ...args);
+        const t = f.call(this, (obj as any)[member], ...args);
         if (t !== undefined) {
-          ret[member] = t;
+          (ret as any)[member] = t;
         }
       }
     });
     return ret;
   }
 
-  _visitValue (v, ...args: any[]) {
+  _visitValue (v: string, ...args: any[]): any {
     return v;
   }
 
-  _visitList (l, ...args: any[]) {
+  // "visit@context",
+  visitBase (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitInclude (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitStart (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitAbstract (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitClosed (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitInverse (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitPredicate (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitName (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitId (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitCode (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitMin (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitMax (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitType (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitNodeKind (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitDatatype (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitPattern (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitFlags (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitLength (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitMinlength (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitMaxlength (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitMininclusive (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitMinexclusive (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitMaxinclusive (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitMaxexclusive (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitTotaldigits (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+  visitFractiondigits (x: string, ...args: any[]): any { return this._visitValue(x, ...args); }
+
+  _visitList (l: ShExJ.IRIREF[] | ShExJ.Annotation[], ...args: any[]) {
     return l.slice();
   }
 
-  _testUnknownAttributes (obj, expected, context, captureFrame) {
+  visitExtra (extra: ShExJ.IRIREF[]) { return this._visitList(extra); }
+  visitAnnotations (annotations: ShExJ.Annotation[]) { return this._visitList(annotations); }
+
+  _testUnknownAttributes (obj: object, expected: string[], context: string, captureFrame: Function) {
     const unknownMembers = Object.keys(obj).reduce(function (ret, k) {
-      return k !== "type" && expected.indexOf(k) === -1 ? ret.concat(k) : ret;
+      return k !== "type" && expected.indexOf(k) === -1
+        //@ts-ignore
+        ? ret.concat(k)
+        : ret;
     }, []);
     if (unknownMembers.length > 0) {
       const e = Error("unknown propert" + (unknownMembers.length > 1 ? "ies" : "y") + ": " +
@@ -345,7 +380,7 @@ class ShExVisitor {
     }
   }
 
-  _expect (o, p, v) {
+  _expect (o: any, p: string, v: any) {
     if (!(p in o))
       this.runtimeError(Error("expected "+JSON.stringify(o)+" to have a ."+p));
     if (arguments.length > 2 && o[p] !== v)
@@ -356,7 +391,7 @@ class ShExVisitor {
 // The ShEx Vistor is here to minimize deps for ShExValidator.
 /** create indexes for schema
  */
-function index (schema) {
+export function index (schema: ShExJ.Schema) {
   let index = {
     shapeExprs: {},
     tripleExprs: {}
@@ -366,6 +401,7 @@ function index (schema) {
   let oldVisitExpression = v.visitTripleExpr;
   v.visitTripleExpr = function (expression, ...args: any[]) {
     if (typeof expression === "object" && "id" in expression)
+      //@ts-ignore
       index.tripleExprs[expression.id] = expression;
     return oldVisitExpression.call(v, expression, ...args);
   };
@@ -373,6 +409,7 @@ function index (schema) {
   let oldVisitShapeDecl = v.visitShapeDecl;
   v.visitShapeDecl = function (shapeExpr, ...args: any[]) {
     if (typeof shapeExpr === "object" && "id" in shapeExpr)
+      //@ts-ignore
       index.shapeExprs[shapeExpr.id] = shapeExpr;
     return oldVisitShapeDecl.call(v, shapeExpr, ...args);
   };
@@ -380,10 +417,3 @@ function index (schema) {
   v.visitSchema(schema);
   return index;
 }
-
-if (typeof require !== 'undefined' && typeof exports !== 'undefined')
-  module.exports = {
-    Visitor: ShExVisitor,
-    index: index,
-  };
-
