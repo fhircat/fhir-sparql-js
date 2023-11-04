@@ -3,7 +3,7 @@ const Path = require('path');
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 
-const {RdfUtils, Bgp, SparqlQuery} = require('../lib/RdfUtils');
+const {RdfUtils, Bgp, SparqlQuery} = require('../dist/RdfUtils');
 const {QueryAnalyzer, PredicateToShapeDecls} = require('../dist/QueryAnalyzer');
 const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../dist/Namespaces');
 

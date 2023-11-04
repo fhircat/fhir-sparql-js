@@ -3,9 +3,9 @@ const Path = require('path');
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 
-const {Triple} = require('../lib/RdfUtils');
+const {Triple} = require('../dist/RdfUtils');
 const {ArcTree} = require('../dist/ArcTree.js');
-const {ArcTreeFitsInShapeExpr} = require('../lib/ArcTreeFitsInShapeExpr');
+const {ArcTreeFitsInShapeExpr} = require('../dist/ArcTreeFitsInShapeExpr');
 const {FirstRest} = require('../dist/Namespaces');
 
 const Ns = {
@@ -29,6 +29,11 @@ describe('ArcTreeFitsInShapeExpr-test', () => {
   describe('ArcTreeFitsInShapeExpr', () => {
     it('should accept valid value set values', () => {
       expect(!ArcTrees.b1_p1_v1_b1_p1_v3.out.find(child => !new ArcTreeFitsInShapeExpr(Schemas.S1).visitShapeRef(`${Ns.s}S1`, child))).toBe(true);
+    });
+    it('should throw on no shapes', () => {
+      expect(() => {
+        ArcTrees.b1_p1_v1_b1_p1_v3.out.find(child => !new ArcTreeFitsInShapeExpr(Schemas.S0));
+      }).toThrow("construct ArcTreeFitsInShapeExpr with a ShEx schema with shapes");
     });
     it('should throw on bad reference', () => {
       expect(() => {
@@ -82,6 +87,7 @@ const Triples = {
 };
 
 const Schemas = {
+  'S0': { type: "Schema" },
   'S1': ShExParser.parse(`
 PREFIX : <${Ns.s}>
 PREFIX v: <${Ns.v}>

@@ -3,7 +3,7 @@ const Path = require('path');
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 
-const {RdfUtils, Term, SparqlQuery} = require('../lib/RdfUtils');
+const {RdfUtils, Term, SparqlQuery} = require('../dist/RdfUtils');
 
 const ShExParser = require("@shexjs/parser").construct();
 const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));
@@ -30,7 +30,7 @@ XX  ?obs <http://hl7.org/fhir/code> ?code .
 XX  ?code <http://hl7.org/fhir/coding> ?codeList .
 XX  ?codeList [object Object] ?codeElt .
 XX  ?codeElt <http://hl7.org/fhir/code> ?codeCode .
-XX  ?codeCode <http://hl7.org/fhir/v> "789-8"^^<http://www.w3.org/2001/XMLSchema#string> .
+XX  ?codeCode <http://hl7.org/fhir/v> "789-8" .
 XX  ?codeElt <http://hl7.org/fhir/system> ?codingSystem .
 XX  ?codingSystem <http://hl7.org/fhir/v> "http://loinc.org"^^<http://www.w3.org/2001/XMLSchema#anyURI> .
 XX  ?obs <http://hl7.org/fhir/subject> ?subjectRef .

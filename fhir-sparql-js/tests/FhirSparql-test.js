@@ -3,7 +3,7 @@ const Path = require('path');
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 
-const {RdfUtils, Bgp, SparqlQuery} = require('../lib/RdfUtils');
+const {RdfUtils, Bgp, SparqlQuery} = require('../dist/RdfUtils');
 const {ArcTree} = require('../dist/ArcTree.js');
 const {FhirSparql, ConnectingVariables, FhirPathExecution, Rule_CodeWithSystem} = require('../dist/FhirSparql');
 const {QueryAnalyzer, PredicateToShapeDecl} = require('../dist/QueryAnalyzer');
@@ -32,7 +32,7 @@ describe('FhirSparql', () => {
     ?code <http://hl7.org/fhir/coding> ?codeList . [
       ?codeList [object Object] ?codeElt . [
         ?codeElt <http://hl7.org/fhir/code> ?codeCode . [
-          ?codeCode <http://hl7.org/fhir/v> "789-8"^^<http://www.w3.org/2001/XMLSchema#string> .
+          ?codeCode <http://hl7.org/fhir/v> "789-8" .
         ]
         ?codeElt <http://hl7.org/fhir/system> ?codingSystem . [
           ?codingSystem <http://hl7.org/fhir/v> "http://loinc.org"^^<http://www.w3.org/2001/XMLSchema#anyURI> .

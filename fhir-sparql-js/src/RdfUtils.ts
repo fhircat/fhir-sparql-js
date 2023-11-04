@@ -190,6 +190,9 @@ export class SparqlQuery implements SparqlJs.SelectQuery {
   where: SparqlJs.BgpPattern[];
   constructor (query: SparqlJs.Query) {
     // query.where[0].triples = query.where[0].triples.map(t => Triple.blessSparqlJs(t));
+    this.prefixes = query.prefixes;
+    //@ts-ignore
+    this.variables = query.variables;
     this.where = query.where!.map(bgp => Bgp.blessSparqlJs(bgp as BgpPattern));
   }
 

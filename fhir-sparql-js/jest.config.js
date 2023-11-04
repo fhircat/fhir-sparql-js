@@ -4,8 +4,11 @@ module.exports = {
     // },
     testRegex: "(/tests/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
     // testRegex: "__tests__/parseAndPrint-test.ts$",
-    testPathIgnorePatterns: ["/dist/", "/node_modules/"],
-    coveragePathIgnorePatterns: [ "dist" ],
+    // testPathIgnorePatterns: ["/dist/", "/node_modules/"],
+    // coveragePathIgnorePatterns: [ "dist" ],
     moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
     collectCoverage: true,
+    collectCoverageFrom: [
+        "dist/**/{!(ShExVisitor),}.js"
+    ]
 };

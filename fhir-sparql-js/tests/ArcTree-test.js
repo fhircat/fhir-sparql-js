@@ -3,7 +3,7 @@
 // const Tests = __dirname;
 // const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 
-const {Triple} = require('../lib/RdfUtils');
+const {Triple} = require('../dist/RdfUtils');
 const {ArcTree} = require('../dist/ArcTree');
 
 // const ShExParser = require("@shexjs/parser").construct();

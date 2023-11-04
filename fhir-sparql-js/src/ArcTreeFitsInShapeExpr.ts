@@ -1,5 +1,5 @@
 import {ShExVisitor} from './ShExVisitor';
-const {Term} = require('../lib/RdfUtils');
+const {Term} = require('../dist/RdfUtils');
 import {ArcTree} from './ArcTree';
 import * as ShExJ from 'shexj';
 import {shapeExprTest, Recursion, SemActFailure} from "@shexjs/term/shexv";
@@ -38,8 +38,7 @@ export class ArcTreeFitsInShapeExpr extends ShExVisitor {
     let shapeExprResults = testedShapeExprs.get(decl);
     if (!shapeExprResults) {
       shapeExprResults = this.visitShapeExpr(decl.shapeExpr, arcTree, ...args);
-      if (shapeExprResults === undefined) throw Error('allow tested to take undefined');
-      testedShapeExprs.set(decl, shapeExprResults);
+      testedShapeExprs.set(decl, shapeExprResults!); // not sure how this could be undefined
     }
 
     return shapeExprResults;
