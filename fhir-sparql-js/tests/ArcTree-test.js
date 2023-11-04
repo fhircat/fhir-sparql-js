@@ -4,7 +4,7 @@
 // const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 
 const {Triple} = require('../lib/RdfUtils');
-const {ArcTree} = require('../lib/ArcTree');
+const {ArcTree} = require('../dist/ArcTree');
 
 // const ShExParser = require("@shexjs/parser").construct();
 // const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));

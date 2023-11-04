@@ -1,6 +1,11 @@
-const {Visitor: ShExVisitor} = require('./ShExVisitor');
+import {ShExVisitor} from './ShExVisitor';
 const {Term} = require('../lib/RdfUtils');
-const {ArcTree} = require('../lib/ArcTree');
+import {ArcTree} from './ArcTree';
+import * as ShExJ from 'shexj';
+import {shapeExprTest, Recursion, SemActFailure} from "@shexjs/term/shexv";
+import * as SparqlJs from "sparqljs";
+import type {Term as RdfJsTerm} from 'rdf-js';
+
 const {ShExValidator} = require("@shexjs/validator");
 const NoMatch = Term.blessSparqlJs({termType: 'NamedNode', value: 'should://never/match'});
 
@@ -12,14 +17,18 @@ const NoMatch = Term.blessSparqlJs({termType: 'NamedNode', value: 'should://neve
  *
  * Weakness: currently accepts if any {con,dis}junct accepts. Should accept only if all conjuncts that mention X accept X.
  */
-class ArcTreeFitsInShapeExpr extends ShExVisitor {
-  constructor (shex, ...ctor_args) {
+export class ArcTreeFitsInShapeExpr extends ShExVisitor {
+  shex: ShExJ.Schema;
+  tested: Map<ArcTree, Map<ShExJ.ShapeDecl, shapeExprTest> >;
+  constructor (shex: ShExJ.Schema, ...ctor_args: any[]) {
+    if (!shex.shapes)
+      throw Error('construct ArcTreeFitsInShapeExpr with a ShEx schema with shapes');
     super(...ctor_args);
     this.shex = shex;
     this.tested = new Map(); // straightforward results cache
   }
 
-  visitShapeDecl(decl, arcTree, ...args) {
+  visitShapeDecl(decl: ShExJ.ShapeDecl, arcTree: ArcTree, ...args: any[]) {
     let testedShapeExprs = this.tested.get(arcTree);
     if (!testedShapeExprs) {
       testedShapeExprs = new Map();
@@ -29,32 +38,33 @@ class ArcTreeFitsInShapeExpr extends ShExVisitor {
     let shapeExprResults = testedShapeExprs.get(decl);
     if (!shapeExprResults) {
       shapeExprResults = this.visitShapeExpr(decl.shapeExpr, arcTree, ...args);
+      if (shapeExprResults === undefined) throw Error('allow tested to take undefined');
       testedShapeExprs.set(decl, shapeExprResults);
     }
 
     return shapeExprResults;
   }
 
-  visitShapeRef(reference, arcTree, ...args) {
-    const shapeDecl = this.shex.shapes.find(decl => decl.id === reference);
+  visitShapeRef(reference: ShExJ.shapeDeclRef, arcTree: ArcTree, ...args: any[]) {
+    const shapeDecl = this.shex.shapes!.find(decl => decl.id === reference);
     if (!shapeDecl)
-      throw Error(`Shape ${reference} not found in ${this.shex.shapes.map(decl => decl.id).join(', ')}`);
+      throw Error(`Shape ${reference} not found in ${this.shex.shapes!.map(decl => decl.id).join(', ')}`);
     return this.visitShapeDecl(shapeDecl, arcTree, ...args);
   }
 
-  visitShapeAnd (expr, arcTree, ...args) {
+  visitShapeAnd (expr: ShExJ.ShapeAnd, arcTree: ArcTree, ...args: any[]) {
     return !!expr.shapeExprs.find(nested => this.visitShapeExpr(nested, arcTree, ...args));
   }
 
-  visitShapeOr (expr, arcTree, ...args) {
+  visitShapeOr (expr: ShExJ.ShapeOr, arcTree: ArcTree, ...args: any[]) {
     return !!expr.shapeExprs.find(nested => this.visitShapeExpr(nested, arcTree, ...args));
   }
 
-  visitShapeNot (expr, arcTree, ...args) {
+  visitShapeNot (expr: ShExJ.ShapeNot, arcTree: ArcTree, ...args: any[]) {
     return this.visitShapeExpr(expr.shapeExpr, arcTree, ...args);
   }
 
-  visitShape (shape, arcTree, ...args) {
+  visitShape (shape: ShExJ.Shape, arcTree: ArcTree, ...args: any[]) {
     if (shape.extends)
       for (const ext of shape.extends)
         if (this.visitShapeExpr(ext, arcTree, ...args))
@@ -62,40 +72,40 @@ class ArcTreeFitsInShapeExpr extends ShExVisitor {
     return shape.expression ? this.visitTripleExpr(shape.expression, arcTree, shape.closed, ...args) : true;
   }
 
-  visitNodeConstraint (nc, arcTree, closed, ...args) { // don't bother visiting NodeConstraints
+  visitNodeConstraint (nc: ShExJ.NodeConstraint, arcTree: ArcTree, closed: Boolean, ...args: any[]) { // don't bother visiting NodeConstraints
     let focus = arcTree.tp.subject;
     if (["BlankNode", "Variable"].indexOf(focus.termType) !== -1)
       return true; // in SPARQL context, vars and bnodes match anything
     // Otherwise, perform regular NodeConstraint validation on arcTree.subject.
     // horrible js hack for efficiency requires intimate knowledge of internals:
-    const res = ShExValidator.prototype.validateNodeConstraint.call({evaluateShapeExprSemActs: (ncRet, nc, focus, label) => []}, focus, nc, {label: "asdf"});
+    const res = ShExValidator.prototype.validateNodeConstraint.call({evaluateShapeExprSemActs: (ncRet: shapeExprTest, nc: ShExJ.NodeConstraint, focus: RdfJsTerm, label: ShExJ.Shape) => []}, focus, nc, {label: "asdf"});
     // less horrible hack uses published API:
     // const validator = new ShExValidator(this.shex, undefined, undefined);
     // const res = validator.validateNodeConstraint(focus, nc, {label: "asdf"});
     return !res.errors;
   }
 
-  visitEachOf (expr, arcTree, closed, ...args) {
+  visitEachOf (expr: ShExJ.EachOf, arcTree: ArcTree, closed: Boolean, ...args: any[]) {
     return !!expr.expressions.find(nested => this.visitTripleExpr(nested, arcTree, closed, ...args));
   }
 
-  visitOneOf (expr, arcTree, closed, ...args) {
+  visitOneOf (expr: ShExJ.OneOf, arcTree: ArcTree, closed: Boolean, ...args: any[]) {
     return !!expr.expressions.find(nested => this.visitTripleExpr(nested, arcTree, closed, ...args));
   }
 
-  visitTripleConstraint(expr, arcTree, _closed, ...args) {
+  visitTripleConstraint(expr: ShExJ.TripleConstraint, arcTree:ArcTree, _closed: Boolean, ...args: any[]) {
     // TODO: !closed
     // TODO: shape paths
     // hack: special case (rdf:first/rdf:rest)*/rdf:first
-    let p = arcTree.tp.predicate;
+    let p = arcTree.tp.predicate as SparqlJs.PropertyPath; // might be SparqlJs.IriTerm
     if (p.type === "path" && p.pathType === "/") {
-      const t = p.items.find(item => item.pathType !== "*"); // skip past '*'s
+      const t = p.items.find(item => (item as SparqlJs.PropertyPath).pathType !== "*"); // skip past '*'s
       if (t)
-        p = t;
+        p = t as SparqlJs.PropertyPath;
       else
         throw Error(`need support for ${JSON.stringify(p)}`);
     }
-    if (expr.predicate !== p.value) // TODO: expr.min === 0
+    if (expr.predicate !== (p as unknown as SparqlJs.IriTerm).value) // TODO: expr.min === 0
       return false;
     if (!expr.valueExpr)
       return arcTree.out.length === 0;
@@ -103,15 +113,12 @@ class ArcTreeFitsInShapeExpr extends ShExVisitor {
       // valueExpr could have NodeConstraints or Shapes with min card of 0.
       // Make an unmatchable Triple. This is kind of a hack to avoid creating a union type.
       return this.visitShapeExpr(expr.valueExpr, new ArcTree({
-        subject: arcTree.tp.object,
-        predicate: NoMatch,
-        object: NoMatch
+        //@ts-ignore
+        subject: arcTree.tp.object, predicate: NoMatch, object: NoMatch
       }, []), ...args);
     }
     return !arcTree.out.find(childArcTree => {
-      return !this.visitShapeExpr(expr.valueExpr, childArcTree, ...args);
+      return !this.visitShapeExpr(expr.valueExpr!, childArcTree, ...args);
     });
   }
 }
-
-module.exports = {ArcTreeFitsInShapeExpr};

@@ -19,7 +19,7 @@
   "devDependencies": {
     "@types/jest": "^29.5.4",
     "@types/node": "^20.5.7",
-    "@types/sparqljs": "^3.1.4",
+    "@types/sparqljs": "^3.1.7",
     "jest": "^29.5.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"

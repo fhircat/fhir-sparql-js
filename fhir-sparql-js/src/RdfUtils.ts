@@ -19,10 +19,18 @@ export class RdfUtils {
   /** find triples matching (s, p, o)
    * could move to Bgp, but is always invokes on a List
    */
-  static pmatch (l: P, r: P) {
-    return RdfUtils.isPath(l) || RdfUtils.isPath(r)
-        ? JSON.stringify(l) === JSON.stringify(r)
+  static pmatch (l: P, r: P): boolean {
+    return RdfUtils.isPath(l) && RdfUtils.isPath(r)
+        ? RdfUtils.pathEquals(l, r)
+        : RdfUtils.isPath(l) || RdfUtils.isPath(r)
+        ? false
         : l.equals(r);
+  }
+
+  static pathEquals (l: SparqlJs.PropertyPath, r: SparqlJs.PropertyPath): boolean {
+    return l.type === r.type && l.pathType === r.pathType && !l.items.find(
+        (il, iNo) => !RdfUtils.pmatch(il, r.items[iNo])
+    );
   }
 
   static isPath (t: TTerm): t is SparqlJs.PropertyPath {

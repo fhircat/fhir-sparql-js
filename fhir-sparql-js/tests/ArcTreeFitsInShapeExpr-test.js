@@ -4,9 +4,9 @@ const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 
 const {Triple} = require('../lib/RdfUtils');
-const {ArcTree} = require('../lib/ArcTree.js');
+const {ArcTree} = require('../dist/ArcTree.js');
 const {ArcTreeFitsInShapeExpr} = require('../lib/ArcTreeFitsInShapeExpr');
-const {FirstRest} = require('../lib/Namespaces');
+const {FirstRest} = require('../dist/Namespaces');
 
 const Ns = {
   's': 'http://a.example/schema#',

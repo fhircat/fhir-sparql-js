@@ -4,10 +4,10 @@ const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 
 const {RdfUtils, Bgp, SparqlQuery} = require('../lib/RdfUtils');
-const {ArcTree} = require('../lib/ArcTree.js');
-const {FhirSparql, ConnectingVariables, FhirPathExecution, Rule_CodeWithSystem} = require('../lib/FhirSparql');
-const {QueryAnalyzer, PredicateToShapeDecl} = require('../lib/QueryAnalyzer');
-const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../lib/Namespaces');
+const {ArcTree} = require('../dist/ArcTree.js');
+const {FhirSparql, ConnectingVariables, FhirPathExecution, Rule_CodeWithSystem} = require('../dist/FhirSparql');
+const {QueryAnalyzer, PredicateToShapeDecl} = require('../dist/QueryAnalyzer');
+const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../dist/Namespaces');
 
 const HapiServerAddr = 'http://localhost:8080/hapi/fhir/';
 

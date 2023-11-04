@@ -4,8 +4,8 @@ const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 
 const {RdfUtils, Bgp, SparqlQuery} = require('../lib/RdfUtils');
-const {QueryAnalyzer, PredicateToShapeDecls} = require('../lib/QueryAnalyzer');
-const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../lib/Namespaces');
+const {QueryAnalyzer, PredicateToShapeDecls} = require('../dist/QueryAnalyzer');
+const {Ns, Rdf, Xsd, Fhir, FirstRest} = require('../dist/Namespaces');
 
 const ShExParser = require("@shexjs/parser").construct();
 const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));
