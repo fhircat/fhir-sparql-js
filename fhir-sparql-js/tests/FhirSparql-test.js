@@ -75,7 +75,7 @@ describe('FhirSparql', () => {
         'Observation', // type
         null, // version
         [ // paths
-          { name: 'code', value: '789-8|http://loinc.org' }
+          { name: 'code', value: 'http://loinc.org|789-8' }
         ]
       )]);
 
@@ -133,7 +133,7 @@ describe('FhirSparql', () => {
         'Observation', // type
         null, // version
         [ // paths
-          { name: 'code', value: '789-8|http://loinc.org' }
+          { name: 'code', value: 'http://loinc.org|789-8' }
         ]
       )]);
 
@@ -180,7 +180,7 @@ describe('FhirSparql', () => {
         'Observation', // type
         null, // version
         [ // paths
-          { name: 'code', value: '789-8|http://loinc.org' }
+          { name: 'code', value: 'http://loinc.org|789-8' }
         ]
       )]);
 
@@ -227,7 +227,7 @@ describe('FhirSparql', () => {
         'Observation', // type
         null, // version
         [ // paths
-          { name: 'code', value: '789-8|http://loinc.org' }
+          { name: 'code', value: 'http://loinc.org|789-8' }
         ]
       )]);
 
@@ -268,7 +268,7 @@ describe('FhirSparql', () => {
         'Observation', // type
         null, // version
         [ // paths
-          { name: 'code', value: '789-8|http://loinc.org' }
+          { name: 'code', value: 'http://loinc.org|789-8' }
         ]
       )]);
 
@@ -333,7 +333,7 @@ describe('FhirSparql', () => {
         },
         {
           "name": "code",
-          "value": "789-8|http://loinc.org"
+          "value": "http://loinc.org|789-8"
         }
       ])]);
     });
@@ -369,14 +369,14 @@ describe('FhirSparql', () => {
           'Observation', // type
           null, // version
           [ // paths
-            { name: 'code', value: '789-8|http://loinc.org' }
+            { name: 'code', value: 'http://loinc.org|789-8' }
           ]
         ),
         new FhirPathExecution(
           'Procedure', // type
           null, // version
           [ // paths
-            { name: 'code', value: '789-8|http://loinc.org' }
+            { name: 'code', value: 'http://loinc.org|789-8' }
           ]
         ),
       ]);
@@ -410,7 +410,7 @@ describe('FhirSparql', () => {
           'Observation', // type
           null, // version
           [ // paths
-            { name: 'code', value: '789-8|http://loinc.org' }
+            { name: 'code', value: 'http://loinc.org|789-8' }
           ]
         )]);
       const procPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {});
@@ -419,14 +419,14 @@ describe('FhirSparql', () => {
           'Procedure', // type
           null, // version
           [ // paths
-            { name: 'code', value: '789-8|http://loinc.org' }
+            { name: 'code', value: 'http://loinc.org|789-8' }
           ]
         )]);
 
       // generate FHIR Paths for the first Patient ArcTree
       const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {
       });
-      expect(patPaths1).toEqual([new FhirPathExecution('Observation', null, [ { name: 'code', value: '789-8|http://loinc.org' } ])]);
+      expect(patPaths1).toEqual([new FhirPathExecution('Observation', null, [ { name: 'code', value: 'http://loinc.org|789-8' } ])]);
 
       // generate FHIR Paths for the second Patient ArcTree
       const patPaths2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
@@ -434,7 +434,7 @@ describe('FhirSparql', () => {
       });
       expect(patPaths2).toEqual([new FhirPathExecution('Procedure', null, [
         { name: 'subject', value: 'http://localhost:8080/hapi/fhir/Patient/2' },
-        { name: 'code', value: '789-8|http://loinc.org' },
+        { name: 'code', value: 'http://loinc.org|789-8' },
       ])]);
     });
 
