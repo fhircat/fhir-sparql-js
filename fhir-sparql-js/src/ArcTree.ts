@@ -1,5 +1,5 @@
 import {RdfUtils, Bgp, Triple, Term, POS, TTerm} from './RdfUtils';
-import {Ns, Rdf, Fhir, FirstRest} from './Namespaces';
+import {Rdf} from './Namespaces';
 import * as SparqlJs from "sparqljs";
 
 export class PosArcTree {

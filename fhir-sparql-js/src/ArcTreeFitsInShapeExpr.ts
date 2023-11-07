@@ -1,12 +1,13 @@
 import {ShExVisitor} from './ShExVisitor';
-const {Term} = require('../dist/RdfUtils');
+import {Term} from './RdfUtils';
 import {ArcTree} from './ArcTree';
 import * as ShExJ from 'shexj';
-import {shapeExprTest, Recursion, SemActFailure} from "@shexjs/term/shexv";
+import {shapeExprTest} from "@shexjs/term/shexv";
 import * as SparqlJs from "sparqljs";
 import type {Term as RdfJsTerm} from 'rdf-js';
 
-const {ShExValidator} = require("@shexjs/validator");
+import {ShExValidator, ShapeExprValidationContext} from "@shexjs/validator";
+//@ts-ignore
 const NoMatch = Term.blessSparqlJs({termType: 'NamedNode', value: 'should://never/match'});
 
 /**
@@ -77,11 +78,11 @@ export class ArcTreeFitsInShapeExpr extends ShExVisitor {
       return true; // in SPARQL context, vars and bnodes match anything
     // Otherwise, perform regular NodeConstraint validation on arcTree.subject.
     // horrible js hack for efficiency requires intimate knowledge of internals:
-    const res = ShExValidator.prototype.validateNodeConstraint.call({evaluateShapeExprSemActs: (ncRet: shapeExprTest, nc: ShExJ.NodeConstraint, focus: RdfJsTerm, label: ShExJ.Shape) => []}, focus, nc, {label: "asdf"});
+    const res = ShExValidator.prototype.validateNodeConstraint.call({evaluateShapeExprSemActs: (ncRet: shapeExprTest, nc: ShExJ.NodeConstraint, focus: RdfJsTerm, label: ShExJ.Shape) => []}, focus, nc, new ShapeExprValidationContext(null, "asdf"));
     // less horrible hack uses published API:
     // const validator = new ShExValidator(this.shex, undefined, undefined);
     // const res = validator.validateNodeConstraint(focus, nc, {label: "asdf"});
-    return !res.errors;
+    return !(res as any).errors;
   }
 
   visitEachOf (expr: ShExJ.EachOf, arcTree: ArcTree, closed: Boolean, ...args: any[]) {

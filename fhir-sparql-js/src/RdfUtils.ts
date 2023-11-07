@@ -1,8 +1,8 @@
 /* istanbul ignore file */
 
-import {Ns, Rdf, Xsd, Fhir, FirstRest} from './Namespaces';
+import {Xsd} from './Namespaces';
 import * as SparqlJs from 'sparqljs';
-import {BgpPattern, IriTerm, Pattern, Query, Wildcard} from "sparqljs";
+import {BgpPattern, IriTerm, Pattern, Query} from "sparqljs";
 // import {Triple, IriTerm, BlankTerm, VariableTerm, QuadTerm} from
 const SparqlParser = new SparqlJs.Parser();
 
@@ -193,7 +193,31 @@ export class SparqlQuery implements SparqlJs.SelectQuery {
     this.prefixes = query.prefixes;
     //@ts-ignore
     this.variables = query.variables;
-    this.where = query.where!.map(bgp => Bgp.blessSparqlJs(bgp as BgpPattern));
+    /* This isn't *really* the BGPs; it's flattened (without checking for
+       reassignment in the projection or in BINDs, e.g.
+       SELECT ?obs ?patient ?birthdate {
+         { SELECT (?subject AS ?patient) ?name  {
+           ?obs fhir:subject [ fhir:link ?subject ] }
+         ?patient fhir:status [ fhir:v ?isActive ] ;
+           fhir:birthDate [ fhir:v ?bdate ] .
+         BIND (?bdate AS ?birthdate)
+       }
+       This will require restructuring to remain compatible with Jena.
+     */
+    this.where = this.findBgps(query).map(bgp => Bgp.blessSparqlJs(bgp as BgpPattern));
+  }
+
+  findBgps (q: SparqlJs.Query): Array<SparqlJs.BgpPattern> {
+    if (q.type !== 'query')
+      throw Error(`Expected type: "query"; got ${JSON.stringify(q)}`);
+    return q.where!.reduce<SparqlJs.BgpPattern[]>((acc, elt) => {
+      if (elt.type === 'group')
+        return acc.concat(this.findBgps(elt.patterns[0] as SparqlJs.Query));
+      if (elt.type === 'bgp')
+        return acc.concat([elt]);
+      console.log(`skipping ${elt.type}`);
+      return acc;
+    }, []);
   }
 
   getQuery () { return this; }

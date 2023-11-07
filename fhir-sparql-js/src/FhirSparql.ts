@@ -1,12 +1,12 @@
 import {QueryAnalyzer} from './QueryAnalyzer';
-import {Ns, Rdf, Fhir, FirstRest} from './Namespaces';
+import {Ns, Rdf} from './Namespaces';
 import {RdfUtils, SparqlQuery, TTerm, SparqlSolution, Meta} from './RdfUtils';
 import {ArcTree, PosArcTree} from './ArcTree';
 import * as ShExJ from 'shexj';
 import * as SparqlJs from "sparqljs";
-const {ArcTreeFitsInShapeExpr} = require('./ArcTreeFitsInShapeExpr');
+import {ArcTreeFitsInShapeExpr} from './ArcTreeFitsInShapeExpr';
 
-class ConnectingVariables {
+export class ConnectingVariables {
   static toString (cvs: Map<string, PosArcTree[]>) {
     const lines = [];
     for (const [variable, trees] of cvs) {
@@ -40,7 +40,7 @@ const Rule_Id = new Rule('id', '[] fhir:id [ fhir:v ?v1 ]')
 
 const Rule_Subject = new Rule('subject', '[] fhir:subject [ fhir:reference ?v1 ]')
 
-const Rule_CodeWithSystem = new Rule(
+export const Rule_CodeWithSystem = new Rule( // exported for tests/FhirSparq-test
   'code',
   `
 [] fhir:code [
@@ -128,7 +128,7 @@ class QueryParam {
   }
 }
 
-class FhirPathExecution {
+export class FhirPathExecution {
   constructor (
       public type: string,
       public version: string | null,
@@ -217,7 +217,7 @@ const RuleChoice_Id = new RuleChoice([Rule_Id]); // gets removed if id supplied 
 const ResourceToPaths = {
   "EveryResource": [RuleChoice_Id],
   "Observation": [new RuleChoice([Rule_Subject]), new RuleChoice([Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
-  "Patient": [new RuleChoice([Rule_Given])], // new RuleChoice([Rule_NameFamily]), new RuleChoice([Rule_NameGiven])
+  "Patient": [new RuleChoice([Rule_Given]), new RuleChoice([Rule_Family])], // new RuleChoice([Rule_NameFamily]), new RuleChoice([Rule_NameGiven])
   "Procedure": [new RuleChoice([Rule_Subject]), new RuleChoice([Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
   "Questionnaire": [],
 }
@@ -233,8 +233,8 @@ const ResourceTypeRegexp = new RegExp(
             '^https?://.*?/([A-Z][a-z]+)/([^/|]+)(?:\\|(.*))?$'
 );
 
-class FhirSparql extends QueryAnalyzer {
-  tester: typeof ArcTreeFitsInShapeExpr;
+export class FhirSparql extends QueryAnalyzer {
+  tester: ArcTreeFitsInShapeExpr;
   constructor (shex: ShExJ.Schema) {
     super(shex);
     this.tester = new ArcTreeFitsInShapeExpr(shex);
@@ -248,7 +248,6 @@ class FhirSparql extends QueryAnalyzer {
 
     const prefilledRules: QueryParam[] = [];
     const allResourceRules = ResourceToPaths.EveryResource.slice();
-    const completedRules = [];
     let candidateTypes = null; // initialized soon
 
     // There must be at least one Triple in the arcTree or it wouldn't exist.
@@ -268,7 +267,7 @@ class FhirSparql extends QueryAnalyzer {
       // parse the URL according to FHIR Protocol
       const match = resourceUrl.match(ResourceTypeRegexp);
       if (!match)
-        throw Error(`subject node ${resourceUrl} didn't match FHIR protocol`);
+        throw Error(`subject node ${resourceUrl} didn\'t match FHIR protocol`);
       resourceType = match[1];
       resourceId = match[2];
       resourceVersion = match[3] || null;
@@ -322,4 +321,4 @@ class FhirSparql extends QueryAnalyzer {
   }
 }
 
-module.exports = {FhirSparql, ConnectingVariables, ArcTree, FhirPathExecution, Rule_CodeWithSystem};
+// module.exports = {FhirSparql, ConnectingVariables, ArcTree, FhirPathExecution, Rule_CodeWithSystem};
