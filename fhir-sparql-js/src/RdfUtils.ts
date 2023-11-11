@@ -2,9 +2,10 @@
 
 import {Xsd} from './Namespaces';
 import * as SparqlJs from 'sparqljs';
-import {BgpPattern, IriTerm, Pattern, Query} from "sparqljs";
+import {BgpPattern, IriTerm, Pattern, Query, Wildcard} from 'sparqljs';
 // import {Triple, IriTerm, BlankTerm, VariableTerm, QuadTerm} from
 const SparqlParser = new SparqlJs.Parser();
+const SparqlGenerator = new SparqlJs.Generator();
 
 type S = SparqlJs.IriTerm | SparqlJs.BlankTerm | SparqlJs.VariableTerm;
 type P = SparqlJs.IriTerm | SparqlJs.VariableTerm | SparqlJs.PropertyPath;
@@ -225,6 +226,17 @@ export class SparqlQuery implements SparqlJs.SelectQuery {
 
   static parse (text: string) {
     return new SparqlQuery(SparqlParser.parse(text) as Query);
+  }
+
+  static selectStar (triples: Triple[]) {
+    const where: Pattern[] = [{type: "bgp", triples}];
+    return SparqlGenerator.stringify({
+      "type": 'query',
+      "prefixes": {},
+      "queryType": 'SELECT',
+      "variables": [ new Wildcard() ],
+      where,
+    }) as string;
   }
 }
 
