@@ -1,0 +1,78 @@
+PREFIX fhir: <http://hl7.org/fhir/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?obsId ?patient ?birthDate ?smokingAssessmentDate
+ ?packYears
+# ?smokingYears
+# ?packsPerDay
+ ?dateQuit
+ ?patientAge {
+
+  {
+    SELECT ?obsId ?patient ?smokingAssessmentDate
+ ?packYears
+# ?smokingYears
+# ?packsPerDay
+ ?dateQuit
+ {
+
+      # Observations with code of Tobacco smoking status
+      ?obs a fhir:Observation;
+        fhir:nodeRole fhir:treeRoot;
+        fhir:id [ fhir:v ?obsId ];
+        fhir:status [ fhir:v "final" ];
+        fhir:code [
+          fhir:coding [ rdf:rest*/rdf:first [
+            a <http://loinc.org/rdf#72166-2>;
+          ] ];
+        ];
+        fhir:subject [ fhir:link ?patient ];
+        fhir:effective [ fhir:v ?smokingAssessmentDate ].
+
+      # Pack years
+      ?obs fhir:component [ rdf:rest*/rdf:first [
+        fhir:code [ fhir:coding [ rdf:rest*/rdf:first [
+          a <http://snomed.info/id/401201003>
+        ] ] ];
+        fhir:value [
+          fhir:value [ fhir:v ?packYears ];
+          fhir:unit [ fhir:v "{PackYears}" ];
+          fhir:system [ fhir:v "http://unitsofmeasure.org"^^xsd:anyURI ];
+          fhir:code [ fhir:v "{PackYears}" ]
+        ];
+      ] ] .
+
+      # Date quit
+      OPTIONAL {
+        ?obs fhir:component [ rdf:rest*/rdf:first [
+          fhir:code [ fhir:coding [ rdf:rest*/rdf:first [
+            a <http://loinc.org/rdf#74010-0>
+          ] ] ];
+          fhir:value [ fhir:v ?dateQuit ];
+        ] ].
+      }
+
+    }
+    ORDER BY DESC(?smokingAssessmentDate)
+    LIMIT 1
+  }
+
+  # Assessment within last year
+  BIND( day(NOW()) - day(?smokingAssessmentDate)
+        + 365.25/12*(month(NOW()) - month(?smokingAssessmentDate)
+        + 12*(year(NOW()) - year(?smokingAssessmentDate)))
+       AS ?smokingAssessmentAge)
+  FILTER ( ?smokingAssessmentAge < 365.25 )
+
+  # Patient in age range
+  ?patient fhir:birthDate [ fhir:v ?birthDate ] .
+  BIND( (day(NOW()) - day(?birthDate)
+         + 365.25/12*(month(NOW()) - month(?birthDate)
+         + 12*(year(NOW()) - year(?birthDate)))
+        )/365.25
+       AS ?patientAge)
+  FILTER (?patientAge > 50 && ?patientAge < 100)
+
+  # ... Diagnosis, Service, ServiceRequest
+}
