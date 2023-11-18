@@ -96,7 +96,7 @@ export class ArcTreeFitsInShapeExpr extends ShExVisitor {
   visitTripleConstraint(expr: ShExJ.TripleConstraint, arcTree:ArcTree, _closed: Boolean, ...args: any[]) {
     // TODO: !closed
     // TODO: shape paths
-    // hack: special case (rdf:first/rdf:rest)*/rdf:first
+    // hack: special case rdf:rest*/rdf:first
     let p = arcTree.tp.predicate as SparqlJs.PropertyPath; // might be SparqlJs.IriTerm
     if (p.type === "path" && p.pathType === "/") {
       const t = p.items.find(item => (item as SparqlJs.PropertyPath).pathType !== "*"); // skip past '*'s

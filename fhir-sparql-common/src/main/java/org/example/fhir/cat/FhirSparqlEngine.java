@@ -86,7 +86,7 @@ public class FhirSparqlEngine extends QueryEngineMain {
 														new ArcTree(
 																TriplePattern.createVarPredicateVar("coding", "http://hl7.org/fhir/code", "codeCode"),
 																Arrays.asList(
-																		new ArcTree(TriplePattern.createVarPredicateLiteral("codeCode", "http://hl7.org/fhir/v", "789-8"))
+																		new ArcTree(TriplePattern.createVarPredicateLiteral("codeCode", "http://hl7.org/fhir/v", "72166-2"))
 																)
 														),
 														new ArcTree(

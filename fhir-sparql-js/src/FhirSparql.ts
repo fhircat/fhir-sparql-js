@@ -6,6 +6,12 @@ import * as ShExJ from 'shexj';
 import * as SparqlJs from "sparqljs";
 import {ArcTreeFitsInShapeExpr} from './ArcTreeFitsInShapeExpr';
 
+const SystemBases = {
+  'http://terminology.hl7.org/CodeSystem/observation-category': 'http://terminology.hl7.org/CodeSystem/observation-category/',
+  'http://loinc.org': 'http://loinc.org/rdf#',
+  'http://snomed.info/sct': 'http://snomed.info/id/',
+}
+
 export class ConnectingVariables {
   static toString (cvs: Map<string, PosArcTree[]>) {
     const lines = [];
@@ -36,16 +42,39 @@ class Rule {
   }
 }
 
+  function parseCodingType (t: string): string | null {
+    for (const [system, namespace] of Object.entries(SystemBases)) {
+      if (t.startsWith(namespace)) {
+        const code = t.substring(namespace.length);
+        return system + '|' + code;
+      }
+    }
+    return null;
+  }
+
 const Rule_Id = new Rule('id', '[] fhir:id [ fhir:v ?v1 ]')
 
 const Rule_Subject = new Rule('subject', '[] fhir:subject [ fhir:reference ?v1 ]')
+
+export const Rule_CodeFromType = new Rule( // exported for tests/FhirSparq-test
+  'code',
+  `
+[] fhir:code [
+  fhir:coding [
+    rdf:rest*/rdf:first [
+      a ?v1
+    ]
+  ]
+]`,
+  (values) => parseCodingType(values[0])!
+);
 
 export const Rule_CodeWithSystem = new Rule( // exported for tests/FhirSparq-test
   'code',
   `
 [] fhir:code [
   fhir:coding [
-    (rdf:first/rdf:rest)*/rdf:first [
+    rdf:rest*/rdf:first [
       fhir:code [ fhir:v ?v1 ] ;
       fhir:system [ fhir:v ?v2 ]
     ]
@@ -59,7 +88,7 @@ const Rule_CodeWithOutSystem = new Rule(
   `
 [] fhir:code [
     fhir:coding [
-       (rdf:first/rdf:rest)*/rdf:first [
+       rdf:rest*/rdf:first [
         fhir:code [
           fhir:v ?v1
         ]
@@ -148,8 +177,12 @@ class RuleChoice {
     for (let choiceNo = 0; choiceNo < this.choices.length; ++choiceNo) {
       const choice = this.choices[choiceNo];
       const values = this.parallelWalk(arcTrees, choice.arcTree, choiceNo, sparqlSolution);
-      if (values !== null)
-        return new QueryParam (choice.fhirQuery, choice.arg(values.map(v => (v as SparqlJs.IriTerm).value)));
+      if (values !== null) {
+        const mappedValue = choice.arg(values.map(v => (v as SparqlJs.IriTerm).value));
+        if (mappedValue) {
+          return new QueryParam (choice.fhirQuery, mappedValue);
+        }
+      }
     }
     return null;
   }
@@ -216,9 +249,9 @@ const RuleChoice_Id = new RuleChoice([Rule_Id]); // gets removed if id supplied 
 
 const ResourceToPaths = {
   "EveryResource": [RuleChoice_Id],
-  "Observation": [new RuleChoice([Rule_Subject]), new RuleChoice([Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
+  "Observation": [new RuleChoice([Rule_Subject]), new RuleChoice([Rule_CodeFromType, Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
   "Patient": [new RuleChoice([Rule_Given]), new RuleChoice([Rule_Family])], // new RuleChoice([Rule_NameFamily]), new RuleChoice([Rule_NameGiven])
-  "Procedure": [new RuleChoice([Rule_Subject]), new RuleChoice([Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
+  "Procedure": [new RuleChoice([Rule_Subject]), new RuleChoice([Rule_CodeFromType, Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
   "Questionnaire": [],
 }
 

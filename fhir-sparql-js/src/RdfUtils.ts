@@ -132,6 +132,13 @@ export class Path implements SparqlJs.PropertyPath {
       // pathType, items
   ) {
   }
+  toString (): string {
+    return this.items[0].toString() + this.pathType + (
+      this.items.length === 1
+        ? ''
+        : this.items[1].toString()
+    );
+  }
   equals (r: Path) {
     if (this.type !== r.type) return false;
     if (this.pathType !== r.pathType) return false;
@@ -216,7 +223,7 @@ export class SparqlQuery implements SparqlJs.SelectQuery {
         return acc.concat(this.findBgps(elt.patterns[0] as SparqlJs.Query));
       if (elt.type === 'bgp')
         return acc.concat([elt]);
-      console.log(`skipping ${elt.type}`);
+      // console.log(`skipping ${elt.type}`);
       return acc;
     }, []);
   }
@@ -228,8 +235,8 @@ export class SparqlQuery implements SparqlJs.SelectQuery {
     return new SparqlQuery(SparqlParser.parse(text) as Query);
   }
 
-  static selectStar (triples: Triple[]) {
-    const where: Pattern[] = [{type: "bgp", triples}];
+  static selectStar (bgp: BgpPattern) {
+    const where: Pattern[] = [bgp];
     return SparqlGenerator.stringify({
       "type": 'query',
       "prefixes": {},

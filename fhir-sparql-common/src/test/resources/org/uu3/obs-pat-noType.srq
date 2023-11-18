@@ -10,9 +10,9 @@ SELECT ?obs ?patId WHERE {
   #   code
   ?obs fhir:code ?code .					#  1
     ?code fhir:coding ?codeList .				#  2
-      ?codeList (rdf:first/rdf:rest)*/rdf:first ?codeElt .	#  3
+      ?codeList rdf:rest*/rdf:first ?codeElt .			#  3
         ?codeElt fhir:code ?codeCode .				#  4
-          ?codeCode fhir:v "789-8" .				#  5
+          ?codeCode fhir:v "72166-2" .				#  5
         ?codeElt fhir:system ?codingSystem .			#  6
           ?codingSystem fhir:v "http://loinc.org"^^xsd:anyURI .	#  7
 

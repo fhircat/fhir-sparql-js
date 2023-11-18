@@ -7,7 +7,7 @@ SELECT ?resource ?text WHERE {
   ?resource
     fhir:status [ fhir:v "active999" ] ;
     fhir:item [
-      (rdf:first/rdf:rest)*/rdf:first [
+      rdf:rest*/rdf:first [
         fhir:text [ fhir:v ?text ] ;
         fhir:required [ fhir:v true ] ;
       ]

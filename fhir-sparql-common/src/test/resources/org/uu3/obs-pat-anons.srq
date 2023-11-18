@@ -13,8 +13,8 @@ SELECT ?obs ?patId WHERE {
     #   code
     fhir:code [							#  1
       fhir:coding [						#  2
-        (rdf:first/rdf:rest)*/rdf:first [			#  3
-          fhir:code [ fhir:v "789-8" ] ;			#  4/5
+        rdf:rest*/rdf:first [					#  3
+          fhir:code [ fhir:v "72166-2" ] ;			#  4/5
           fhir:system [ fhir:v "http://loinc.org"^^xsd:anyURI ]	#  6/7
         ]
       ]

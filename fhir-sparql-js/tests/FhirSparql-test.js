@@ -30,9 +30,9 @@ describe('FhirSparql', () => {
   ?obs <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Observation> .
   ?obs <http://hl7.org/fhir/code> ?code . [
     ?code <http://hl7.org/fhir/coding> ?codeList . [
-      ?codeList [object Object] ?codeElt . [
+      ?codeList <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>*/<http://www.w3.org/1999/02/22-rdf-syntax-ns#first> ?codeElt . [
         ?codeElt <http://hl7.org/fhir/code> ?codeCode . [
-          ?codeCode <http://hl7.org/fhir/v> "789-8" .
+          ?codeCode <http://hl7.org/fhir/v> "72166-2" .
         ]
         ?codeElt <http://hl7.org/fhir/system> ?codingSystem . [
           ?codingSystem <http://hl7.org/fhir/v> "http://loinc.org"^^<http://www.w3.org/2001/XMLSchema#anyURI> .
@@ -75,7 +75,7 @@ describe('FhirSparql', () => {
         'Observation', // type
         null, // version
         [ // paths
-          { name: 'code', value: 'http://loinc.org|789-8' }
+          { name: 'code', value: 'http://loinc.org|72166-2' }
         ]
       )]);
 
@@ -133,7 +133,7 @@ describe('FhirSparql', () => {
         'Observation', // type
         null, // version
         [ // paths
-          { name: 'code', value: 'http://loinc.org|789-8' }
+          { name: 'code', value: 'http://loinc.org|72166-2' }
         ]
       )]);
 
@@ -180,7 +180,7 @@ describe('FhirSparql', () => {
         'Observation', // type
         null, // version
         [ // paths
-          { name: 'code', value: 'http://loinc.org|789-8' }
+          { name: 'code', value: 'http://loinc.org|72166-2' }
         ]
       )]);
 
@@ -227,7 +227,7 @@ describe('FhirSparql', () => {
         'Observation', // type
         null, // version
         [ // paths
-          { name: 'code', value: 'http://loinc.org|789-8' }
+          { name: 'code', value: 'http://loinc.org|72166-2' }
         ]
       )]);
 
@@ -268,7 +268,7 @@ describe('FhirSparql', () => {
         'Observation', // type
         null, // version
         [ // paths
-          { name: 'code', value: 'http://loinc.org|789-8' }
+          { name: 'code', value: 'http://loinc.org|72166-2' }
         ]
       )]);
 
@@ -302,7 +302,7 @@ describe('FhirSparql', () => {
         'Observation', // type
         null, // version
         [ // paths
-          { name: 'code', value: '789-8' }
+          { name: 'code', value: '72166-2' }
         ]
       )]);
     });
@@ -333,7 +333,7 @@ describe('FhirSparql', () => {
         },
         {
           "name": "code",
-          "value": "http://loinc.org|789-8"
+          "value": "http://loinc.org|72166-2"
         }
       ])]);
     });
@@ -369,14 +369,14 @@ describe('FhirSparql', () => {
           'Observation', // type
           null, // version
           [ // paths
-            { name: 'code', value: 'http://loinc.org|789-8' }
+            { name: 'code', value: 'http://loinc.org|72166-2' }
           ]
         ),
         new FhirPathExecution(
           'Procedure', // type
           null, // version
           [ // paths
-            { name: 'code', value: 'http://loinc.org|789-8' }
+            { name: 'code', value: 'http://loinc.org|72166-2' }
           ]
         ),
       ]);
@@ -410,7 +410,7 @@ describe('FhirSparql', () => {
           'Observation', // type
           null, // version
           [ // paths
-            { name: 'code', value: 'http://loinc.org|789-8' }
+            { name: 'code', value: 'http://loinc.org|72166-2' }
           ]
         )]);
       const procPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {});
@@ -419,14 +419,14 @@ describe('FhirSparql', () => {
           'Procedure', // type
           null, // version
           [ // paths
-            { name: 'code', value: 'http://loinc.org|789-8' }
+            { name: 'code', value: 'http://loinc.org|72166-2' }
           ]
         )]);
 
       // generate FHIR Paths for the first Patient ArcTree
       const patPaths1 = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {
       });
-      expect(patPaths1).toEqual([new FhirPathExecution('Observation', null, [ { name: 'code', value: 'http://loinc.org|789-8' } ])]);
+      expect(patPaths1).toEqual([new FhirPathExecution('Observation', null, [ { name: 'code', value: 'http://loinc.org|72166-2' } ])]);
 
       // generate FHIR Paths for the second Patient ArcTree
       const patPaths2 = rewriter.opBgpToFhirPathExecutions(arcTrees[1], referents, {
@@ -434,7 +434,7 @@ describe('FhirSparql', () => {
       });
       expect(patPaths2).toEqual([new FhirPathExecution('Procedure', null, [
         { name: 'subject', value: 'http://localhost:8080/hapi/fhir/Patient/2' },
-        { name: 'code', value: 'http://loinc.org|789-8' },
+        { name: 'code', value: 'http://loinc.org|72166-2' },
       ])]);
     });
 
@@ -517,10 +517,10 @@ const Triples = {
     subject: { termType: 'Variable', value: 'codeElt' },
     predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/code' },
     object: { termType: 'Variable', value: 'codeCode' } },
-  codeCode_v_789_8: {
+  codeCode_v_72166_2: {
     subject: { termType: 'Variable', value: 'codeCode' },
     predicate: Fhir.v,
-    object: { termType: 'Literal', value: '789-8', language: '', datatype: Xsd.string } },
+    object: { termType: 'Literal', value: '72166-2', language: '', datatype: Xsd.string } },
   codeElt_sytem_codingSystem: {
     subject: { termType: 'Variable', value: 'codeElt' },
     predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/system' },
@@ -557,7 +557,7 @@ const ArcTree_obs_noType = {tp: null, out: [
     {tp: Triples.code_coding_codeList, out: [
       {tp: Triples.codeList_FirstRest_codeElt, out: [
         {tp: Triples.codeElt_code_codeCode, out: [
-          {tp: Triples.codeCode_v_789_8, out: []}
+          {tp: Triples.codeCode_v_72166_2, out: []}
         ]},
         {tp: Triples.codeElt_sytem_codingSystem, out: [
           {tp: Triples.codingSystem_v_snomed, out: []}
@@ -594,7 +594,7 @@ const BGP_obs_noType = Bgp.blessSparqlJs({type: 'bgp', triples: [
   Triples.code_coding_codeList,
   Triples.codeList_FirstRest_codeElt,
   Triples.codeElt_code_codeCode,
-  Triples.codeCode_v_789_8,
+  Triples.codeCode_v_72166_2,
   Triples.codeElt_sytem_codingSystem,
   Triples.codingSystem_v_snomed,
   Triples.obs_subject_subjectRef,

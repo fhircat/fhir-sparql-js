@@ -27,10 +27,7 @@ export const FirstRest = { type: "path", pathType: "/", items: [
   { type: "path",
     pathType: "*",
     items: [
-      { type: "path", pathType: "/", items: [
-        { termType: "NamedNode", value: Rdf.first.value },
-        { termType: "NamedNode", value: Rdf.rest.value }
-      ]}
+      { termType: "NamedNode", value: Rdf.rest.value }
     ]},
   { termType: "NamedNode", value: Rdf.first.value }
 ]};

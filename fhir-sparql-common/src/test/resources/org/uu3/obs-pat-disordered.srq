@@ -9,8 +9,8 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 SELECT ?obs ?patId WHERE {				#    | goal |
   ?subject fhir:id ?patIdElt .				#  0 |   11 |
   ?codeElt fhir:code ?codeCode .			#  1 |    4 |
-  ?codeCode fhir:v "789-8" .				#  2 |    5 |
-  ?codeList (rdf:first/rdf:rest)*/rdf:first ?codeElt .	#  3 |    3 |
+  ?codeCode fhir:v "72166-2" .				#  2 |    5 |
+  ?codeList rdf:rest*/rdf:first ?codeElt .		#  3 |    3 |
   ?codeElt fhir:system ?codingSystem .			#  4 |    6 |
   ?codingSystem fhir:v "http://loinc.org"^^xsd:anyURI .	#  5 |    7 |
   ?subject a fhir:Patient .				#  6 |   10 |

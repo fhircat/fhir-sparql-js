@@ -28,9 +28,9 @@ describe('RdfUtils', () => {
 XX  ?obs <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Observation> .
 XX  ?obs <http://hl7.org/fhir/code> ?code .
 XX  ?code <http://hl7.org/fhir/coding> ?codeList .
-XX  ?codeList [object Object] ?codeElt .
+XX  ?codeList <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>*/<http://www.w3.org/1999/02/22-rdf-syntax-ns#first> ?codeElt .
 XX  ?codeElt <http://hl7.org/fhir/code> ?codeCode .
-XX  ?codeCode <http://hl7.org/fhir/v> "789-8" .
+XX  ?codeCode <http://hl7.org/fhir/v> "72166-2" .
 XX  ?codeElt <http://hl7.org/fhir/system> ?codingSystem .
 XX  ?codingSystem <http://hl7.org/fhir/v> "http://loinc.org"^^<http://www.w3.org/2001/XMLSchema#anyURI> .
 XX  ?obs <http://hl7.org/fhir/subject> ?subjectRef .
@@ -51,7 +51,7 @@ XX  ?patIdElt <http://hl7.org/fhir/v> ?patId .
     it('should fail some equals', () => {
       const p0 = SparqlQuery.parse(`
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-ASK WHERE {?codeList (rdf:first/rdf:rest)*/rdf:first ?codeElt}
+ASK WHERE {?codeList rdf:rest*/rdf:first ?codeElt}
 `).getWhere()[0].triples[0];
       const p1 = SparqlQuery.parse(`
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

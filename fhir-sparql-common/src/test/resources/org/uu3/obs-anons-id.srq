@@ -8,7 +8,7 @@ SELECT ?codeCode WHERE {
     a fhir:Observation ;
     fhir:code [
       fhir:coding [
-        (rdf:first/rdf:rest)*/rdf:first [
+        rdf:rest*/rdf:first [
           fhir:code [
             fhir:v ?code
           ] ;
