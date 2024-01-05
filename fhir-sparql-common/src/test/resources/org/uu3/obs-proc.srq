@@ -7,7 +7,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT ?obs ?proc WHERE {
-  # Obs
+  # Observation
   ?obs a fhir:Observation ;					#  0
 
     #   code
@@ -23,7 +23,7 @@ SELECT ?obs ?proc WHERE {
   #   subject
     fhir:subject [ fhir:reference ?subject ] .			#  8/9
 
-  # Obs
+  # Procedure
   ?proc a fhir:Procedure ;					#  0
 
     #   code
