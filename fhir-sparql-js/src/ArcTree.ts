@@ -1,5 +1,5 @@
 import {RdfUtils, Bgp, Triple, Term, POS, TTerm} from './RdfUtils';
-import {Rdf} from './Namespaces';
+import {Rdf, Fhir} from './Namespaces';
 import * as SparqlJs from "sparqljs";
 
 export class PosArcTree {
@@ -22,10 +22,13 @@ export class ArcTree {
   static constructArcTree (triplePatterns: Triple[], forArc: Triple | null, node: TTerm, treeVars: Map<string, PosArcTree[]>, referents: Set<string>): ArcTree {
     // ArcTree's don't cross references (or canonical or ...?).
     if (forArc && (forArc.predicate as SparqlJs.IriTerm).value === 'http://hl7.org/fhir/reference') {
-      const object = forArc.object;
+      const ts:SparqlJs.Triple[] = ArcTree.sortArcs(RdfUtils.stealMatching(triplePatterns, forArc.object as SparqlJs.IriTerm | SparqlJs.BlankTerm | SparqlJs.VariableTerm, null, null)); // !! make P=Term.blessSparqlJs(Fhir.v)
+      // console.assert(ts.length !== 1, 'reference should have 1 fhir:v');
+      if (ts.length !== 1) throw Error(`reference ${forArc.object} should have 1 fhir:v`);
+      const object = ts[0].object;
       if (object.termType === 'Variable' && !referents.has(object.value))
         referents.add(object.value); // mark as referent
-      return new ArcTree(forArc, []);
+      return new ArcTree(forArc, [new ArcTree(Triple.blessSparqlJs(ts[0]), [])]);
     }
 
     // Canonical order to match order in FhirQuery rule bodies

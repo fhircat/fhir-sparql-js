@@ -54,7 +54,7 @@ class Rule {
 
 const Rule_Id = new Rule('id', '[] fhir:id [ fhir:v ?v1 ]')
 
-const Rule_Subject = new Rule('subject', '[] fhir:subject [ fhir:reference ?v1 ]')
+const Rule_Subject = new Rule('subject', '[] fhir:subject [ fhir:reference [ fhir:v ?v1 ] ]')
 
 export const Rule_CodeFromType = new Rule( // exported for tests/FhirSparq-test
   'code',
@@ -285,22 +285,26 @@ export class FhirSparql extends QueryAnalyzer {
 
     // There must be at least one Triple in the arcTree or it wouldn't exist.
     const rootTriple = arcTree.out[0].tp;
-
     switch (rootTriple.subject.termType) {
     case 'NamedNode':
       resourceUrl = rootTriple.subject.value;
       break;
     case 'Variable':
       // If the root node was the object of a FHIR reference
+      console.log(arcTree.toString(), rootTriple.subject.termType, rootTriple.subject.value, sparqlSolution, referents);
       if (referents.has(rootTriple.subject.value) && sparqlSolution[rootTriple.subject.value])
         resourceUrl = (sparqlSolution[rootTriple.subject.value] as SparqlJs.IriTerm).value;
     }
 
     if (resourceUrl !== null) {
       // parse the URL according to FHIR Protocol
-      const match = resourceUrl.match(ResourceTypeRegexp);
-      if (!match)
-        throw Error(`subject node ${resourceUrl} didn\'t match FHIR protocol`);
+      let match = resourceUrl.match(ResourceTypeRegexp); // !!! HORRIBLE HACK
+      if (!match) {
+        match = ('http://localhost/hapi/fhir/' + resourceUrl).match(ResourceTypeRegexp);
+        if (!match) {
+          throw Error(`subject node ${resourceUrl} didn\'t match FHIR protocol`);
+        }
+      }
       resourceType = match[1];
       resourceId = match[2];
       resourceVersion = match[3] || null;

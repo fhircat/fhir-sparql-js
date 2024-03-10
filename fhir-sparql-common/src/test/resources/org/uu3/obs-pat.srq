@@ -6,7 +6,7 @@ PREFIX sct: <http://snomed.info/id/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-SELECT ?obs ?patId WHERE {
+SELECT ?obs ?patId ?subject WHERE {
   # Obs
   ?obs a fhir:Observation .					#  0
                                                 	
@@ -21,12 +21,13 @@ SELECT ?obs ?patId WHERE {
                                                 	
   #   subject                                   	
   ?obs fhir:subject ?subjectRef .				#  8
-    ?subjectRef fhir:reference ?subject .			#  9
+    ?subjectRef fhir:reference ?subjBNode .			#  9
+      ?subjBNode fhir:v ?subject .				# 10
                                                 	
   # Patient                                     	
-  ?subject a fhir:Patient .					# 10
+  ?subject a fhir:Patient .					# 11
                                                 	
   #   id                                        	
-  ?subject fhir:id ?patIdElt .					# 11
-    ?patIdElt fhir:v ?patId .					# 12
+  ?subject fhir:id ?patIdElt .					# 12
+    ?patIdElt fhir:v ?patId .					# 13
 }

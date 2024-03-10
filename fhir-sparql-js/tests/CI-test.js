@@ -1,4 +1,4 @@
-const File = require('fs');
+const Fs = require('fs');
 const Path = require('path');
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
@@ -16,7 +16,21 @@ const {FhirJsonToTurtle} = require('../FhirJsonToTurtle');
 const HapiServerAddr = 'http://localhost:8080/hapi/fhir/';
 
 const ShExParser = require("@shexjs/parser").construct();
-const FhirShEx = ShExParser.parse(File.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));
+const FhirShEx = ShExParser.parse(Fs.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));
+
+if (true) {
+  fetch = (url, parms) => {
+    const filename = Path.join(__dirname, 'cannedResponses', url.pathname, url.search);
+    try {
+      console.log("filename:", filename);
+      const body = Fs.readFileSync(filename, 'utf-8');
+      return {ok: true, text: () => Promise.resolve(body) };
+    } catch (e) {
+      e.message += ' on ' + filename;
+      throw e;
+    }
+  };
+}
 
 describe('FhirSparql', () => {
   describe('Rule', () => {
@@ -37,18 +51,18 @@ describe('FhirSparql', () => {
       }
 
       const rewriter = new FhirSparql(FhirShEx);
-      // const queryStr = File.readFileSync(Path.join(Resources, 'trimmed-use-case-query.srq'), 'utf-8');
-      const queryStr = File.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8');
+      // const queryStr = Fs.readFileSync(Path.join(Resources, 'trimmed-use-case-query.srq'), 'utf-8');
+      const queryStr = Fs.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8');
       const iQuery = SparqlQuery.parse(queryStr, parserOpts);
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
-      console.log(new Date(), {arcTrees, connectingVariables, referents});
+      // console.log(new Date(), {arcTrees, connectingVariables, referents});
 
       const sources = [];
       let results = [{}];
       for (const arcTree of arcTrees) {
-        console.log(arcTree.toString());
+
         const newResults = [];
-        for (const result of results) {
+        for (const result of results) {debugger
           // opBgpToFhirPathExecutions returns disjuncts
           const fhirPathExecutions = rewriter.opBgpToFhirPathExecutions(arcTree, referents, result);
           for (const fhirPathExecution of fhirPathExecutions) {
@@ -59,10 +73,11 @@ describe('FhirSparql', () => {
               searchUrl.searchParams.set(name, value);
 
             // const urlStr = HapiServerAddr + fhirPathExecution.type + paths;
+
             const resp = await fetch(searchUrl, { headers: { Accept: 'application/json+fhir' } });
             const body = await resp.text();
             if (!resp.ok)
-              throw Error(`Unable to fetch ${urlStr} at <${url}>:\n${body}`);
+              throw Error(`Got ${resp.status} response to query for a ${fhirPathExecution.type} with [${fhirPathExecution.paths.map(p => p.name + ':' + p.value).join(', ')}] at FHIR endpoint <${HapiServerAddr}>:\n${body}`);
             const bundle = JSON.parse(body);
             console.log(`<${decodeURIComponent(searchUrl.href)}> => ${bundle.entry.map((e, i) => `\n  ${i}: <${e.fullUrl}>`).join('')}`);
             /*
@@ -84,18 +99,18 @@ describe('FhirSparql', () => {
               // const xlator = new FhirJsonToTurtle();
               // const ttl = xlator.prettyPrint(resource);
               const url = new URL(fullUrl);
-              const ttl = new FhirJsonToTurtle().prettyPrint(resource);
+              const ttl = new FhirJsonToTurtle().prettyPrint(resource); // console.log(ttl);
               const db = parseTurtle(fullUrl, ttl, 'Turtle');
               const src = { url, body: ttl, db };
               sources.push(src);
-              const queryStr = SparqlQuery.selectStar(arcTree.getBgp());
+              const queryStr = SparqlQuery.selectStar(arcTree.getBgp()); console.log('queryStr:', queryStr);
               const bindings = await executeQuery([db], queryStr);
               Array.prototype.push.apply(newResults, bindings);
             }
           }
         }
         results = newResults;
-        console.log(results);
+        // console.log(results);
       }
     });
   });
