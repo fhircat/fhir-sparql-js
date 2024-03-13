@@ -1,6 +1,6 @@
 import {QueryAnalyzer} from './QueryAnalyzer';
 import {Ns, Rdf} from './Namespaces';
-import {RdfUtils, SparqlQuery, TTerm, SparqlSolution, Meta} from './RdfUtils';
+import {RdfUtils, SparqlQuery, TTerm, Term, SparqlSolution, Meta, renderResultSet} from './RdfUtils';
 import {ArcTree, PosArcTree} from './ArcTree';
 import * as ShExJ from 'shexj';
 import * as SparqlJs from "sparqljs";
@@ -285,13 +285,13 @@ export class FhirSparql extends QueryAnalyzer {
 
     // There must be at least one Triple in the arcTree or it wouldn't exist.
     const rootTriple = arcTree.out[0].tp;
+    // console.log(rootTriple.subject.termType, rootTriple.subject.value, renderResultSet([sparqlSolution])[0], referents);
     switch (rootTriple.subject.termType) {
     case 'NamedNode':
       resourceUrl = rootTriple.subject.value;
       break;
     case 'Variable':
       // If the root node was the object of a FHIR reference
-      console.log(arcTree.toString(), rootTriple.subject.termType, rootTriple.subject.value, sparqlSolution, referents);
       if (referents.has(rootTriple.subject.value) && sparqlSolution[rootTriple.subject.value])
         resourceUrl = (sparqlSolution[rootTriple.subject.value] as SparqlJs.IriTerm).value;
     }

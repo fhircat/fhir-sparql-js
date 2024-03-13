@@ -24,7 +24,7 @@ export class ArcTree {
     if (forArc && (forArc.predicate as SparqlJs.IriTerm).value === 'http://hl7.org/fhir/reference') {
       const ts:SparqlJs.Triple[] = ArcTree.sortArcs(RdfUtils.stealMatching(triplePatterns, forArc.object as SparqlJs.IriTerm | SparqlJs.BlankTerm | SparqlJs.VariableTerm, null, null)); // !! make P=Term.blessSparqlJs(Fhir.v)
       // console.assert(ts.length !== 1, 'reference should have 1 fhir:v');
-      if (ts.length !== 1) throw Error(`reference ${forArc.object} should have 1 fhir:v`);
+      if (ts.length !== 1) throw Error(`reference ${forArc.object} should have 1 fhir:v, got ${ts}`);
       const object = ts[0].object;
       if (object.termType === 'Variable' && !referents.has(object.value))
         referents.add(object.value); // mark as referent

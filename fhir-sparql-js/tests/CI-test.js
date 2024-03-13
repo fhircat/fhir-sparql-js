@@ -3,7 +3,7 @@ const Path = require('path');
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 
-const {RdfUtils, Bgp, SparqlQuery} = require('../dist/RdfUtils');
+const {RdfUtils, Bgp, SparqlQuery, renderResultSet} = require('../dist/RdfUtils');
 const {ArcTree} = require('../dist/ArcTree.js');
 const {FhirSparql, ConnectingVariables, FhirPathExecution, Rule_CodeWithSystem} = require('../dist/FhirSparql');
 const {QueryAnalyzer, PredicateToShapeDecl} = require('../dist/QueryAnalyzer');
@@ -55,14 +55,14 @@ describe('FhirSparql', () => {
       const queryStr = Fs.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8');
       const iQuery = SparqlQuery.parse(queryStr, parserOpts);
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
-      // console.log(new Date(), {arcTrees, connectingVariables, referents});
+      console.log({arcTrees: arcTrees.map((t, i) => `[${i}]: ` + String(t)), connectingVariables, referents});
 
       const sources = [];
       let results = [{}];
       for (const arcTree of arcTrees) {
-
+        console.log('arcTrees[' + arcTrees.indexOf(arcTree) + ']');
         const newResults = [];
-        for (const result of results) {debugger
+        for (const result of results) {
           // opBgpToFhirPathExecutions returns disjuncts
           const fhirPathExecutions = rewriter.opBgpToFhirPathExecutions(arcTree, referents, result);
           for (const fhirPathExecution of fhirPathExecutions) {
@@ -80,38 +80,25 @@ describe('FhirSparql', () => {
               throw Error(`Got ${resp.status} response to query for a ${fhirPathExecution.type} with [${fhirPathExecution.paths.map(p => p.name + ':' + p.value).join(', ')}] at FHIR endpoint <${HapiServerAddr}>:\n${body}`);
             const bundle = JSON.parse(body);
             console.log(`<${decodeURIComponent(searchUrl.href)}> => ${bundle.entry.map((e, i) => `\n  ${i}: <${e.fullUrl}>`).join('')}`);
-            /*
-              {
-              "resourceType": "Bundle", "id": "5183b131-5b14-47e3-84c6-2e0d398e10d3",
-              "meta": { "lastUpdated": "2023-11-07T16:38:22.656+00:00" }, "type": "searchset",
-              "link": [
-              { "relation": "self", "url": "./fhir/Observation?code=http%3A%2F%2Floinc.org%7C72166-2" },
-              { "relation": "next", "url": "./fhir?_getpages=518...0d3&_getpagesoffset=20&_count=20&_pretty=true&_bundletype=searchset" }
-              ],
-              "entry": [ {
-              "fullUrl": "./fhir/Observation/58157",
-              "resource": {
-              "resourceType": "Observation",
-              "id": "58157",
-              ... } } ] }
-            */
+
             for (const {fullUrl, resource} of bundle.entry) {
               // const xlator = new FhirJsonToTurtle();
               // const ttl = xlator.prettyPrint(resource);
               const url = new URL(fullUrl);
-              const ttl = new FhirJsonToTurtle().prettyPrint(resource); // console.log(ttl);
+              const ttl = new FhirJsonToTurtle().prettyPrint(resource);// console.log(ttl);
               const db = parseTurtle(fullUrl, ttl, 'Turtle');
               const src = { url, body: ttl, db };
               sources.push(src);
               const queryStr = SparqlQuery.selectStar(arcTree.getBgp()); console.log('queryStr:', queryStr);
-              const bindings = await executeQuery([db], queryStr);
-              Array.prototype.push.apply(newResults, bindings);
+              const bindings = await executeQuery([db], queryStr);console.log('bindings:', renderResultSet(bindings).join(''))
+              const newResult = bindings.map(r => Object.assign(r, result));console.log("HERE",newResult);
+              Array.prototype.push.apply(newResults, newResult);
             }
           }
         }
         results = newResults;
-        // console.log(results);
       }
+      console.log(renderResultSet(results).join("\n"));
     });
   });
 });

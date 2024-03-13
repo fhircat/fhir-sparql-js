@@ -256,3 +256,14 @@ export interface Meta {
   base: string;
   prefixes: {[prefix: string]: string};
 }
+
+export function renderResultSet (sparqlSolutions: SparqlSolution[]): string[] {
+  return sparqlSolutions.map(
+    (sparqlSolution): string => '{'
+      + Object.keys(sparqlSolution).map(
+        b =>
+          `\n  ?${b} => ${Term.blessSparqlJs(sparqlSolution[b])}`
+      ).join('')
+      + '\n}'
+  );
+}
