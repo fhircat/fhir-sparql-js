@@ -285,7 +285,7 @@ export class FhirSparql extends QueryAnalyzer {
 
     // There must be at least one Triple in the arcTree or it wouldn't exist.
     const rootTriple = arcTree.out[0].tp;
-    // console.log(rootTriple.subject.termType, rootTriple.subject.value, renderResultSet([sparqlSolution])[0], referents);
+
     switch (rootTriple.subject.termType) {
     case 'NamedNode':
       resourceUrl = rootTriple.subject.value;

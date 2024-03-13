@@ -22,7 +22,7 @@ if (true) {
   fetch = (url, parms) => {
     const filename = Path.join(__dirname, 'cannedResponses', url.pathname, url.search);
     try {
-      console.log("filename:", filename);
+      console.log(`GET <${url.href}>`);
       const body = Fs.readFileSync(filename, 'utf-8');
       return {ok: true, text: () => Promise.resolve(body) };
     } catch (e) {
@@ -91,7 +91,7 @@ describe('FhirSparql', () => {
               sources.push(src);
               const queryStr = SparqlQuery.selectStar(arcTree.getBgp()); console.log('queryStr:', queryStr);
               const bindings = await executeQuery([db], queryStr);console.log('bindings:', renderResultSet(bindings).join(''))
-              const newResult = bindings.map(r => Object.assign(r, result));console.log("HERE",newResult);
+              const newResult = bindings.map(r => Object.assign(r, result));
               Array.prototype.push.apply(newResults, newResult);
             }
           }
