@@ -24,6 +24,24 @@ const ResourceIndex = JsYaml.load(Fs.readFileSync(Path.join(CannedRespDir, 'inde
 const ShExParser = require("@shexjs/parser").construct();
 const FhirShEx = ShExParser.parse(Fs.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));
 
+/*
+const winston = require('winston');
+
+const logFormat = winston.format.printf(function(info) {
+  return `${info.timestamp}-${info.level}: ${JSON.stringify(info.message, null, 4)}`;
+});
+
+const logger = winston.createLogger({
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.combine(winston.format.timestamp(),
+                                     winston.format.colorize(),
+                                     logFormat)
+    })
+  ]
+});
+*/
+
 function handleFhirApiReq (url) {
   if (!url.pathname.startsWith(HapiServerPath))
     throw Error(`only hanndling FHIR queries on ${HapiServerPath}`);
@@ -44,7 +62,7 @@ function handleFhirApiReq (url) {
     }
   } else {
 
-    // HapiServerPath '/Observation' ?search
+    // HapiServerPath '/Observation' ?search...
     const resourceBase = new URL(resourceType + '/', url);
     const resourceDir = Path.join(CannedRespDir, resourceType);
     let candidates = Fs.readdirSync(resourceDir).map(fn => fn.substring(0, fn.lastIndexOf('.')) || fn);
