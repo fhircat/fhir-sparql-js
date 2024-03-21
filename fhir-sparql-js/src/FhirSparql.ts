@@ -56,7 +56,7 @@ const Rule_Id = new Rule('id', '[] fhir:id [ fhir:v ?v1 ]')
 
 const Rule_Subject = new Rule('subject', '[] fhir:subject [ fhir:reference [ fhir:link ?v1 ] ]')
 
-export const Rule_CodeFromType = new Rule( // exported for tests/FhirSparq-test
+const Rule_CodeFromType = new Rule( // exported for tests/FhirSparq-test
   'code',
   `
 [] fhir:code [

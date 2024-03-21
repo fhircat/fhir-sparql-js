@@ -1,0 +1,16 @@
+PREFIX fhir: <http://hl7.org/fhir/>
+PREFIX sct: <http://snomed.info/id/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?codeCode WHERE {
+  ?obs
+    a fhir:Observation ;
+    fhir:code [
+      fhir:coding [
+        rdf:rest*/rdf:first [
+          a <http://loinc.org/rdf#72166-2>
+        ]
+      ]
+    ]
+}
