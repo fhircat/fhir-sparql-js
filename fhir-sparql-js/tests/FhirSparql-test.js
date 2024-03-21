@@ -341,6 +341,16 @@ describe('FhirSparql', () => {
       } ])]);
     });
 
+    it('should ignore unknown type arc', () => {
+      const rewriter = new FhirSparql(FhirShEx);
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-code-unknown-type.srq'), 'utf-8'));
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      expect(connectingVariables).toEqual(new Map([]))
+      expect(referents).toEqual(new Set());
+      const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
+      expect(obsPaths).toEqual([new FhirPathExecution('Observation', null, [])]);
+    });
+
     it('should inject multiple literal values', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-fixed-pat.srq'), 'utf-8'));
