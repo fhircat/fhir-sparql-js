@@ -28,5 +28,6 @@ SELECT ?obs ?patId WHERE {
 
   #   subject
   ?obs fhir:subject ?subjectRef .				#  8
-    ?subjectRef fhir:reference ?subject .			#  9
+    ?subjectRef fhir:reference ?subjectBNode .			#  9
+      ?subjectBNode fhir:link ?subject .			# 10
 }

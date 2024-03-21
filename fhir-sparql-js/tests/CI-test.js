@@ -120,7 +120,7 @@ if (true) {
   });
 }
 
-describe('FhirSparql', () => {
+describe('CI', () => {
   describe('Rule', () => {
     it('should serialize Rule_CodeWithSystem', () => {
       expect(Rule_CodeWithSystem.toString()).toEqual("TODO");

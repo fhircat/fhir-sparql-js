@@ -7,17 +7,18 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT ?obs ?patId WHERE {				#    | goal |
-  ?subject fhir:id ?patIdElt .				#  0 |   11 |
+  ?subject fhir:id ?patIdElt .				#  0 |   12 |
   ?codeElt fhir:code ?codeCode .			#  1 |    4 |
   ?codeCode fhir:v "72166-2" .				#  2 |    5 |
   ?codeList rdf:rest*/rdf:first ?codeElt .		#  3 |    3 |
   ?codeElt fhir:system ?codingSystem .			#  4 |    6 |
   ?codingSystem fhir:v "http://loinc.org"^^xsd:anyURI .	#  5 |    7 |
-  ?subject a fhir:Patient .				#  6 |   10 |
+  ?subject a fhir:Patient .				#  6 |   11 |
   ?obs a fhir:Observation .				#  7 |    0 |
-  ?patIdElt fhir:v ?patId .				#  8 |   12 |
-  ?obs fhir:code ?code .				#  9 |    1 |
-  ?subjectRef fhir:reference ?subject .			# 10 |    9 |
-  ?code fhir:coding ?codeList .				# 11 |    2 |
-  ?obs fhir:subject ?subjectRef .			# 12 |    8 |
+  ?patIdElt fhir:v ?patId .				#  8 |   13 |
+  ?subjectBNode fhir:link ?subject .			#  9 |   10 |
+  ?obs fhir:code ?code .				# 10 |    1 |
+  ?subjectRef fhir:reference ?subjectBNode .		# 11 |    9 |
+  ?code fhir:coding ?codeList .				# 12 |    2 |
+  ?obs fhir:subject ?subjectRef .			# 13 |    8 |
 }

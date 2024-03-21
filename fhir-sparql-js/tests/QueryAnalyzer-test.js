@@ -43,9 +43,9 @@ ASK {?obs fhir:subject ?subjectRef . ?subjectRef fhir:reference ?obs}`
       expect(new QueryAnalyzer(FhirShEx).getArcTrees(SparqlQuery.parse(
         `PREFIX fhir: <http://hl7.org/fhir/>
 ASK {?obs fhir:triggeredBy
-  [ fhir:reference ?trigger ; fhir:type [ fhir:v "reflex" ] ],
-  [ fhir:reference ?trigger ; fhir:type [ fhir:v "repeat" ] ],
-  [ fhir:reference ?trigger ; fhir:type [ fhir:v "re-run" ] ]
+  [ fhir:reference [ fhir:link ?trigger ] ; fhir:type [ fhir:v "reflex" ] ],
+  [ fhir:reference [ fhir:link ?trigger ] ; fhir:type [ fhir:v "repeat" ] ],
+  [ fhir:reference [ fhir:link ?trigger ] ; fhir:type [ fhir:v "re-run" ] ]
 }`
       )).arcTrees[0].out.length).toBe(3);
     });
@@ -55,13 +55,13 @@ ASK {?obs fhir:triggeredBy
         `PREFIX fhir: <http://hl7.org/fhir/>
 ASK {
   ?obs fhir:triggeredBy
-    [ fhir:reference ?trigger1 ; fhir:type [ fhir:v "reflex" ] ],
-    [ fhir:reference ?trigger2 ; fhir:type [ fhir:v "repeat" ] ],
-    [ fhir:reference ?trigger3 ; fhir:type [ fhir:v "re-run" ] ].
+    [ fhir:reference [ fhir:link ?trigger1 ] ; fhir:type [ fhir:v "reflex" ] ],
+    [ fhir:reference [ fhir:link ?trigger2 ] ; fhir:type [ fhir:v "repeat" ] ],
+    [ fhir:reference [ fhir:link ?trigger3 ] ; fhir:type [ fhir:v "re-run" ] ].
   ?trigger1 fhir:triggeredBy
-    [ fhir:reference ?trigger3 ; fhir:type [ fhir:v "reflex" ] ] .
+    [ fhir:reference [ fhir:link ?trigger3 ] ; fhir:type [ fhir:v "reflex" ] ] .
   ?trigger2 fhir:triggeredBy
-    [ fhir:reference ?trigger3 ; fhir:type [ fhir:v "reflex" ] ] .
+    [ fhir:reference [ fhir:link ?trigger3 ] ; fhir:type [ fhir:v "reflex" ] ] .
 }`
       )).arcTrees.length).toBe(3);
     });

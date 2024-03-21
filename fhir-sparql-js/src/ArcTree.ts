@@ -26,9 +26,17 @@ export class ArcTree {
       // console.assert(ts.length !== 1, 'reference should have 1 fhir:v');
       if (ts.length !== 1) throw Error(`reference ${forArc.object} should have 1 fhir:v, got ${ts}`);
       const object = ts[0].object;
-      if (object.termType === 'Variable' && !referents.has(object.value))
-        referents.add(object.value); // mark as referent
-      return new ArcTree(forArc, [new ArcTree(Triple.blessSparqlJs(ts[0]), [])]);
+      const arcTree = new ArcTree(forArc, [new ArcTree(Triple.blessSparqlJs(ts[0]), [])]);
+      if (object.termType === 'Variable') {
+        if (!treeVars.has(object.value)) {
+          treeVars.set(object.value, []);
+        };
+        treeVars.get(object.value)!.push(new PosArcTree('object' as POS, arcTree));
+        if (!referents.has(object.value)) {
+          referents.add(object.value); // mark as referent
+        }
+      }
+      return arcTree;
     }
 
     // Canonical order to match order in FhirQuery rule bodies

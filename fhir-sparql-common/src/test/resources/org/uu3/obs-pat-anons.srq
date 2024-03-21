@@ -21,7 +21,7 @@ SELECT ?obs ?patId WHERE {
     ] ;
 
   #   subject
-    fhir:subject [ fhir:reference ?subject ] .			#  8/9
+    fhir:subject [ fhir:reference [ fhir:link ?subject ] ] .	#  8/9/10
 
   # Patient
   ?subject a fhir:Patient ;					# 10

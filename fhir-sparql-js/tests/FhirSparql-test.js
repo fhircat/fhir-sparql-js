@@ -41,7 +41,9 @@ describe('FhirSparql', () => {
     ]
   ]
   ?obs <http://hl7.org/fhir/subject> ?subjectRef . [
-    ?subjectRef <http://hl7.org/fhir/reference> ?subject .
+    ?subjectRef <http://hl7.org/fhir/reference> ?subjectBNode . [
+      ?subjectBNode <http://hl7.org/fhir/link> ?subject .
+    ]
   ]
 ]
 <root> [
@@ -60,7 +62,9 @@ describe('FhirSparql', () => {
       // connectingVariables
       expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
       expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
- 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
+ 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subjectBNode . [
+  ?subjectBNode <http://hl7.org/fhir/link> ?subject .
+] }
  1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
  2: subject of { ?subject <http://hl7.org/fhir/id> ?patIdElt . [
   ?patIdElt <http://hl7.org/fhir/v> ?patId .
@@ -118,7 +122,9 @@ describe('FhirSparql', () => {
       // connectingVariables
       expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
       expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
- 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
+ 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subjectBNode . [
+  ?subjectBNode <http://hl7.org/fhir/link> ?subject .
+] }
  1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
  2: subject of { ?subject <http://hl7.org/fhir/id> ?patIdElt . [
   ?patIdElt <http://hl7.org/fhir/v> ?patId .
@@ -165,7 +171,9 @@ describe('FhirSparql', () => {
       // connectingVariables
       expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
       expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
- 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
+ 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subjectBNode . [
+  ?subjectBNode <http://hl7.org/fhir/link> ?subject .
+] }
  1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
  2: subject of { ?subject <http://hl7.org/fhir/id> ?patIdElt . [
   ?patIdElt <http://hl7.org/fhir/v> ?patId .
@@ -212,7 +220,9 @@ describe('FhirSparql', () => {
       // connectingVariables
       expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
       expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
- 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
+ 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subjectBNode . [
+  ?subjectBNode <http://hl7.org/fhir/link> ?subject .
+] }
  1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
  2: subject of { ?subject <http://hl7.org/fhir/id> ?patIdElt . [
   ?patIdElt <http://hl7.org/fhir/v> ?patId .
@@ -322,7 +332,7 @@ describe('FhirSparql', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-fixed-pat.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
-      expect(arcTrees[0].getBgp().triples.length).toEqual(10);
+      expect(arcTrees[0].getBgp().triples.length).toEqual(11);
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
       const obsPaths = rewriter.opBgpToFhirPathExecutions(arcTrees[0], referents, {});
@@ -353,7 +363,9 @@ describe('FhirSparql', () => {
       // connectingVariables
       expect(Object.fromEntries(connectingVariables)).toEqual(ConnectingVariables_obs_pat_mid);
       expect(ConnectingVariables.toString(connectingVariables)).toEqual(`subject
- 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subject . }
+ 0: object of { ?subjectRef <http://hl7.org/fhir/reference> ?subjectBNode . [
+  ?subjectBNode <http://hl7.org/fhir/link> ?subject .
+] }
  1: subject of { ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> . }
  2: subject of { ?subject <http://hl7.org/fhir/id> ?patIdElt . [
   ?patIdElt <http://hl7.org/fhir/v> ?patId .
@@ -533,9 +545,13 @@ const Triples = {
     subject: { termType: 'Variable', value: 'obs' },
     predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/subject' },
     object: { termType: 'Variable', value: 'subjectRef' } },
-  subjectRef_reference_subject: {
+  subjectRef_reference_subjectBNode: {
     subject: { termType: 'Variable', value: 'subjectRef' },
     predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/reference' },
+    object: { termType: 'Variable', value: 'subjectBNode' } },
+  subjectBNode_link_subject: {
+    subject: { termType: 'Variable', value: 'subjectBNode' },
+    predicate: { termType: 'NamedNode', value: 'http://hl7.org/fhir/link' },
     object: { termType: 'Variable', value: 'subject' } },
   subject_a_Patient: {
     subject: { termType: 'Variable', value: 'subject' },
@@ -566,7 +582,9 @@ const ArcTree_obs_noType = {tp: null, out: [
     ]}
   ]},
   {tp: Triples.obs_subject_subjectRef, out: [
-    {tp: Triples.subjectRef_reference_subject, out: []}
+    {tp: Triples.subjectRef_reference_subjectBNode, out: [
+      {tp: Triples.subjectBNode_link_subject, out: []}
+    ]}
   ]}
 ]};
 const ArcTree_obs = {tp: null, out: [
@@ -598,7 +616,8 @@ const BGP_obs_noType = Bgp.blessSparqlJs({type: 'bgp', triples: [
   Triples.codeElt_sytem_codingSystem,
   Triples.codingSystem_v_snomed,
   Triples.obs_subject_subjectRef,
-  Triples.subjectRef_reference_subject,
+  Triples.subjectRef_reference_subjectBNode,
+  Triples.subjectBNode_link_subject,
 ]});
 const BGP_obs = Bgp.blessSparqlJs({type: 'bgp', triples: [
   Triples.obs_A_Observation,

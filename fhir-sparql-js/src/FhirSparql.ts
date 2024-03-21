@@ -54,7 +54,7 @@ class Rule {
 
 const Rule_Id = new Rule('id', '[] fhir:id [ fhir:v ?v1 ]')
 
-const Rule_Subject = new Rule('subject', '[] fhir:subject [ fhir:reference [ fhir:v ?v1 ] ]')
+const Rule_Subject = new Rule('subject', '[] fhir:subject [ fhir:reference [ fhir:link ?v1 ] ]')
 
 export const Rule_CodeFromType = new Rule( // exported for tests/FhirSparq-test
   'code',
@@ -300,7 +300,6 @@ export class FhirSparql extends QueryAnalyzer {
       // parse the URL according to FHIR Protocol
       let match = resourceUrl.match(ResourceTypeRegexp); // !!! HORRIBLE HACK
       if (!match) {
-        match = ('http://localhost/hapi/fhir/' + resourceUrl).match(ResourceTypeRegexp);
         if (!match) {
           throw Error(`subject node ${resourceUrl} didn\'t match FHIR protocol`);
         }

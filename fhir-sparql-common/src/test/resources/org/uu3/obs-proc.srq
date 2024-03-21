@@ -21,7 +21,7 @@ SELECT ?obs ?proc WHERE {
     ] ;
 
   #   subject
-    fhir:subject [ fhir:reference ?subject ] .			#  8/9
+    fhir:subject [ fhir:reference [ fhir:link ?subject ] ] .	#  8/9/10
 
   # Procedure
   ?proc a fhir:Procedure ;					#  0
@@ -37,5 +37,5 @@ SELECT ?obs ?proc WHERE {
     ] ;
 
   #   subject
-    fhir:subject [ fhir:reference ?subject ] .			#  8/9
+    fhir:subject [ fhir:reference [ fhir:link ?subject ] ] .	#  8/9/10
 }

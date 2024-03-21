@@ -34,7 +34,8 @@ XX  ?codeCode <http://hl7.org/fhir/v> "72166-2" .
 XX  ?codeElt <http://hl7.org/fhir/system> ?codingSystem .
 XX  ?codingSystem <http://hl7.org/fhir/v> "http://loinc.org"^^<http://www.w3.org/2001/XMLSchema#anyURI> .
 XX  ?obs <http://hl7.org/fhir/subject> ?subjectRef .
-XX  ?subjectRef <http://hl7.org/fhir/reference> ?subject .
+XX  ?subjectRef <http://hl7.org/fhir/reference> ?subjectBNode .
+XX  ?subjectBNode <http://hl7.org/fhir/link> ?subject .
 XX  ?subject <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Patient> .
 XX  ?subject <http://hl7.org/fhir/id> ?patIdElt .
 XX  ?patIdElt <http://hl7.org/fhir/v> ?patId .

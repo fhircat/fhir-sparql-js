@@ -21,7 +21,8 @@
        {"subject":{"termType":"Variable","value":"codeElt"},"predicate":{"termType":"NamedNode","value":"http://hl7.org/fhir/system"},"object":{"termType":"Variable","value":"codingSystem"}},
        {"subject":{"termType":"Variable","value":"codingSystem"},"predicate":{"termType":"NamedNode","value":"http://hl7.org/fhir/v"},"object":{"termType":"Literal","value":"http://loinc.org","language":"","datatype":{"termType":"NamedNode","value":"http://www.w3.org/2001/XMLSchema#anyURI"}}},
        {"subject":{"termType":"Variable","value":"obs"},"predicate":{"termType":"NamedNode","value":"http://hl7.org/fhir/subject"},"object":{"termType":"Variable","value":"subjectRef"}},
-       {"subject":{"termType":"Variable","value":"subjectRef"},"predicate":{"termType":"NamedNode","value":"http://hl7.org/fhir/reference"},"object":{"termType":"Variable","value":"subject"}},
+       {"subject":{"termType":"Variable","value":"subjectRef"},"predicate":{"termType":"NamedNode","value":"http://hl7.org/fhir/reference"},"object":{"termType":"Variable","value":"subjectBNode"}},
+       {"subject":{"termType":"Variable","value":"subjectBNode"},"predicate":{"termType":"NamedNode","value":"http://hl7.org/fhir/link"},"object":{"termType":"Variable","value":"subject"}},
        {"subject":{"termType":"Variable","value":"subject"},"predicate":{"termType":"NamedNode","value":"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"},"object":{"termType":"NamedNode","value":"http://hl7.org/fhir/Patient"}},
        {"subject":{"termType":"Variable","value":"subject"},"predicate":{"termType":"NamedNode","value":"http://hl7.org/fhir/id"},"object":{"termType":"Variable","value":"patIdElt"}},
        {"subject":{"termType":"Variable","value":"patIdElt"},"predicate":{"termType":"NamedNode","value":"http://hl7.org/fhir/v"},"object":{"termType":"Variable","value":"patId"}}]
