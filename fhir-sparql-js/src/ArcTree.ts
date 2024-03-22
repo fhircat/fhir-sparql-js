@@ -20,31 +20,16 @@ export class ArcTree {
    * Index variables in the same pass for efficiency.
    */
   static constructArcTree (triplePatterns: Triple[], forArc: Triple | null, node: TTerm, treeVars: Map<string, PosArcTree[]>, referents: Set<string>): ArcTree {
-    // ArcTree's don't cross references (or canonical or ...?).
-    if (forArc && (forArc.predicate as SparqlJs.IriTerm).value === 'http://hl7.org/fhir/reference') {
-      const ts:SparqlJs.Triple[] = ArcTree.sortArcs(RdfUtils.stealMatching(triplePatterns, forArc.object as SparqlJs.IriTerm | SparqlJs.BlankTerm | SparqlJs.VariableTerm, null, null)); // !! make P=Term.blessSparqlJs(Fhir.v)
-      // console.assert(ts.length !== 1, 'reference should have 1 fhir:v');
-      if (ts.length !== 1) throw Error(`reference ${forArc.object} should have 1 fhir:v, got ${ts}`);
-      const object = ts[0].object;
-      const arcTree = new ArcTree(forArc, [new ArcTree(Triple.blessSparqlJs(ts[0]), [])]);
-      if (object.termType === 'Variable') {
-        if (!treeVars.has(object.value)) {
-          treeVars.set(object.value, []);
-        };
-        treeVars.get(object.value)!.push(new PosArcTree('object' as POS, arcTree));
-        if (!referents.has(object.value)) {
-          referents.add(object.value); // mark as referent
-        }
-      }
-      return arcTree;
-    }
-
     // Canonical order to match order in FhirQuery rule bodies
-    // @ts-ignore
-    const arcsOut = ArcTree.sortArcs(RdfUtils.stealMatching(triplePatterns, node, null, null));
+    const arcsOut = ArcTree.sortArcs(RdfUtils.stealMatching(triplePatterns, node as SparqlJs.IriTerm | SparqlJs.BlankTerm | SparqlJs.VariableTerm, null, null));
 
     const out = arcsOut.map(triplePattern => {
-      const arcTree = ArcTree.constructArcTree(triplePatterns, triplePattern as Triple, triplePattern.object as TTerm, treeVars, referents);
+      const arcTree = forArc
+        // Skip this check because fhir:link's semantics matter more than its appearance in reference or canonical:
+        // && ['reference', 'canonical'].find(p => (forArc!.predicate as SparqlJs.IriTerm).value === 'http://hl7.org/fhir/' + p)
+        && (triplePattern.predicate as SparqlJs.IriTerm).value === 'http://hl7.org/fhir/link'
+        ? new ArcTree(Triple.blessSparqlJs(triplePattern), []) // don't recurse on fhir:links
+        : ArcTree.constructArcTree(triplePatterns, triplePattern as Triple, triplePattern.object as TTerm, treeVars, referents);
 
       // Index the variables that connect the trees.
       (['subject', 'object']).forEach(pos => {
@@ -57,6 +42,13 @@ export class ArcTree {
           treeVars.get(v.value)!.push(new PosArcTree(pos as POS, arcTree));
         }
       });
+
+      // If it's a variable and the object of a fhir:link, it's a referent.
+      if ((triplePattern.predicate as SparqlJs.IriTerm).value === 'http://hl7.org/fhir/link'
+          && triplePattern.object.termType === 'Variable'
+          && !referents.has(triplePattern.object.value)) {
+        referents.add(triplePattern.object.value);
+      }
 
       return arcTree;
     });
