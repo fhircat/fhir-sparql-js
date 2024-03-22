@@ -10,7 +10,7 @@ SELECT ?obs ?proc WHERE {
   # Observation
   ?obs a fhir:Observation ;					#  0
 
-    #   code
+    # Observation.code
     fhir:code [							#  1
       fhir:coding [						#  2
         rdf:rest*/rdf:first [					#  3
@@ -20,13 +20,13 @@ SELECT ?obs ?proc WHERE {
       ]
     ] ;
 
-  #   subject
-    fhir:subject [ fhir:reference [ fhir:link ?subject ] ] .	#  8/9/10
+      # Observation.subject
+    fhir:subject [ fhir:reference [ fhir:link ?patRsrc ] ] .	#  8/9/10
 
   # Procedure
   ?proc a fhir:Procedure ;					#  0
 
-    #   code
+    # Procedure.code
     fhir:code [							#  1
       fhir:coding [						#  2
         rdf:rest*/rdf:first [					#  3
@@ -36,6 +36,6 @@ SELECT ?obs ?proc WHERE {
       ]
     ] ;
 
-  #   subject
-    fhir:subject [ fhir:reference [ fhir:link ?subject ] ] .	#  8/9/10
+    # Procedure.subject   
+    fhir:subject [ fhir:reference [ fhir:link ?patRsrc ] ] .	#  8/9/10
 }

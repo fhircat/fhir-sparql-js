@@ -7,10 +7,10 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT ?obs ?patId WHERE {
-  # Obs
+  # Observation
   ?obs a fhir:Observation ;					#  0
 
-    #   code
+    # Observation.code
     fhir:code [							#  1
       fhir:coding [						#  2
         rdf:rest*/rdf:first [					#  3
@@ -20,12 +20,12 @@ SELECT ?obs ?patId WHERE {
       ]
     ] ;
 
-  #   subject
-    fhir:subject [ fhir:reference [ fhir:link ?subject ] ] .	#  8/9/10
+    # Observation.subject
+    fhir:subject [ fhir:reference [ fhir:link ?patRsrc ] ] .	#  8/9/10
 
   # Patient
-  ?subject a fhir:Patient ;					# 10
+  ?patRsrc a fhir:Patient ;					# 10
 
-    #   id
+    # Patient.id
     fhir:id [ fhir:v ?patId ] .					# 11/12
 }
