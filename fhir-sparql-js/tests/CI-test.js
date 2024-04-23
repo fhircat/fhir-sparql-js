@@ -14,110 +14,43 @@ const {QueryEngine} = require('@comunica/query-sparql-rdfjs');
 
 const {FhirJsonToTurtle} = require('../FhirJsonToTurtle');
 
-const Host = 'localhost';
-const Port = 8080;
-const HapiServerPath = `/hapi/fhir/`;
-const HapiServerAddr = `http://${Host}:${Port}${HapiServerPath}`;
-const CannedRespDir = Path.join(Resources, 'fhirServerResources');
-const ResourceIndex = JsYaml.load(Fs.readFileSync(Path.join(CannedRespDir, 'index.yaml'), 'utf8'));
-
 const ShExParser = require("@shexjs/parser").construct();
 const FhirShEx = ShExParser.parse(Fs.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));
 
-/*
-const winston = require('winston');
+let FhirServerAddr = process.env.FHIR_SERVER_ADDR;
+if (!FhirServerAddr) {
+  // use canned FHIR server
+  const host = 'localhost';
+  const port = 8080;
+  const serverPath = `/hapi/fhir/`; // conveient for HAPI default setup
+  FhirServerAddr = `http://${host}:${port}${serverPath}`;
 
-const logFormat = winston.format.printf(function(info) {
-  return `${info.timestamp}-${info.level}: ${JSON.stringify(info.message, null, 4)}`;
-});
+  const cannedRespDir = Path.join(Resources, 'fhirServerResources');
+  const resourceIndex = JsYaml.load(Fs.readFileSync(Path.join(cannedRespDir, 'index.yaml'), 'utf8'));
 
-const logger = winston.createLogger({
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(winston.format.timestamp(),
-                                     winston.format.colorize(),
-                                     logFormat)
-    })
-  ]
-});
-*/
+  // Create a server.
+  const {MinimalFhirServer} = require('../util/MinimalFhirServer.js');
+  const fhirServer = new MinimalFhirServer(host, port, serverPath, cannedRespDir, resourceIndex);
 
-function handleFhirApiReq (url) {
-  if (!url.pathname.startsWith(HapiServerPath))
-    throw Error(`only hanndling FHIR queries on ${HapiServerPath}`);
-  const resourcePath = url.pathname.substring(HapiServerPath.length);
-  const [resourceType, resourceName] = resourcePath.split('/');
-
-  if (resourceName) {
-
-    // HapiServerPath '/Observation/123'
-    const filename = Path.join(CannedRespDir, resourceType);
-    try {
-      console.log(`GET <${url.href}>`);
-      const body = Fs.readFileSync(filename, 'utf-8');
-      return body;
-    } catch (e) {
-      e.message += ' on ' + filename;
-      throw e;
+  if (true) {
+    // Either make `fetch` call the server's handler directly
+    // (makes debugging a lot easier)
+    fetch = (url, parms) => {
+      const body = fhirServer.handleFhirApiReq(url);
+      return {ok: true, text: () => Promise.resolve(body) };
     }
+    console.log(`fetch is hard-wired to handle calls to http://${host}:${port}`);
   } else {
-
-    // HapiServerPath '/Observation' ?search...
-    const resourceBase = new URL(resourceType + '/', url);
-    const resourceDir = Path.join(CannedRespDir, resourceType);
-    let candidates = Fs.readdirSync(resourceDir).map(fn => fn.substring(0, fn.lastIndexOf('.')) || fn);
-    const index = ResourceIndex[resourceType];
-    for (const [attr, value] of Array.from(url.searchParams.entries())) {
-      const hits = ((ResourceIndex[resourceType] || [])[attr] || [])[value];
-      if (hits !== undefined) {
-        for (let i = 0; i < candidates.length; ++i) {
-          if (hits.indexOf(candidates[i]) === -1) {
-            candidates.splice(i--, 1);
-          }
-        }
-      }
-    }
-
-    // write bundle
-    const resp = {
-      type: 'Bundle',
-      entry: candidates.map(filename => createEntry(resourceBase, resourceDir, filename))
-    };
-    return JSON.stringify(resp, null, 2);
-  }
-};
-
-function createEntry (resourceBase, resourceDir, filename) {
-  const fullUrl = new URL(filename, resourceBase).href;
-  const resource = JSON.parse(Fs.readFileSync(Path.join(resourceDir, filename + '.json'), 'utf-8'));
-  return { fullUrl, resource }
-}
-
-
-if (true) {
-  fetch = (url, parms) => {
-    const body = handleFhirApiReq(url);
-    return {ok: true, text: () => Promise.resolve(body) };
-  }
-} else {
-  const requestListener = function (req, res) {
-    const url = new URL(`http://${Host}:${Port}${req.url}`);
-    const body = handleFhirApiReq(url);
-    res.writeHead(200);
-    res.end(body);
-  };
-
-  let FakeServer = null;
-  beforeAll(() => {
-    FakeServer = require('http').createServer(requestListener);
-    FakeServer.listen(Port, Host, () => {
-      console.log(`Server is running on http://${Host}:${Port}`);
+    // Or use the server in the regular way.
+    beforeAll(async () => {
+      await fhirServer.start();
+      console.log(`Server is running on http://${host}:${port}`);
     });
-  });
 
-  afterAll(() => {
-    FakeServer.close();
-  });
+    afterAll(() => {
+      fhirServer.stop();
+    });
+  }
 }
 
 describe('CI', () => {
@@ -127,7 +60,7 @@ describe('CI', () => {
     });
   });
 
-  describe('FhirSparql', () => {
+  describe('FhirSparql/', () => {
     it('should handle Obs-Patient ref', async () => {
       const parserOpts = {
         prefixes: undefined,
@@ -139,9 +72,9 @@ describe('CI', () => {
       }
 
       const rewriter = new FhirSparql(FhirShEx);
-      // const queryStr = Fs.readFileSync(Path.join(Resources, 'trimmed-use-case-query.srq'), 'utf-8');
-      const queryStr = Fs.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8');
-      const iQuery = SparqlQuery.parse(queryStr, parserOpts);
+      // const sparqlQuery = Fs.readFileSync(Path.join(Resources, 'trimmed-use-case-query.srq'), 'utf-8');
+      const sparqlQuery = Fs.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8');
+      const iQuery = SparqlQuery.parse(sparqlQuery, parserOpts);
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
       console.log({arcTrees: arcTrees.map((t, i) => `[${i}]: ` + String(t)), connectingVariables, referents});
 
@@ -156,16 +89,16 @@ describe('CI', () => {
           for (const fhirPathExecution of fhirPathExecutions) {
             // {name: 'code', value: 'http://loinc.org|72166-2'} -> code=http%3A%2F%2Floinc.org%7C72166-2
             // const paths = fhirPathExecution.paths.map(qp => encodeURIComponent(qp.name) + '=' + encodeURIComponent(qp.value)).join('&') || '';
-            const searchUrl = new URL(fhirPathExecution.type, HapiServerAddr);
+            const searchUrl = new URL(fhirPathExecution.type, FhirServerAddr);
             for (const {name, value} of fhirPathExecution.paths)
               searchUrl.searchParams.set(name, value);
 
-            // const urlStr = HapiServerAddr + fhirPathExecution.type + paths;
+            // const urlStr = FhirServerAddr + fhirPathExecution.type + paths;
 
             const resp = await fetch(searchUrl, { headers: { Accept: 'application/json+fhir' } });
             const body = await resp.text();
             if (!resp.ok)
-              throw Error(`Got ${resp.status} response to query for a ${fhirPathExecution.type} with [${fhirPathExecution.paths.map(p => p.name + ':' + p.value).join(', ')}] at FHIR endpoint <${HapiServerAddr}>:\n${body}`);
+              throw Error(`Got ${resp.status} response to query for a ${fhirPathExecution.type} with [${fhirPathExecution.paths.map(p => p.name + ':' + p.value).join(', ')}] at FHIR endpoint <${FhirServerAddr}>:\n${body}`);
             const bundle = JSON.parse(body);
             console.log(`<${decodeURIComponent(searchUrl.href)}> => ${bundle.entry.map((e, i) => `\n  ${i}: <${e.fullUrl}>`).join('')}`);
 

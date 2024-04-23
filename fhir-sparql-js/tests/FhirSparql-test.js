@@ -598,7 +598,7 @@ const ArcTree_patRsrc = {tp: null, out: [
 // ConnectingVariables
 const ConnectingVariables_obs_pat_mid = {
   patRsrc: [
-    {pos: 'object', arcTree: ArcTree_obs.out[2].out[0].out[0]}, // ArcTree_obs ArcTree with tp=Triples.subjectRef_reference_subject
+    {pos: 'object', arcTree: ArcTree_obs.out[2].out[0].out[0]}, // ArcTree_obs ArcTree with tp=Triples.subjectBNode_link_subject
     {pos: 'subject', arcTree: ArcTree_patRsrc.out[0]}, // ArcTree_patRsrc ArcTree with tp=Triples.patRsrc_a_Patient
     {pos: 'subject', arcTree: ArcTree_patRsrc.out[1]}, // ArcTree_patRsrc ArcTree with tp=Triples.patRsrc_id_patIdElt
   ]
