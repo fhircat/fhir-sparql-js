@@ -44,7 +44,7 @@ class MinimalFhirServer {
   }
 
   handleFhirApiReq (url) {
-    this.log.info(`handling request for ${url}`);
+    this.log.debug(`handling request for ${url}`);
     if (!url.pathname.startsWith(this.fhirRoot))
       throw Error(`expected FHIR query for ${url.pathname} to start with ${this.fhirRoot}`);
 

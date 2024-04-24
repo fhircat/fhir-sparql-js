@@ -1,10 +1,12 @@
 /**
-   environment variables:
-     FHIR_SERVER_ADDR: address of already-running FHIR server, e.g. http://localhost:8080/hapi/fhir/
 
    logging:
      fhir-sparql-js uses bunyan for logging so you can pipe stdout through the bunyan CLI:
-       ./node_modules/.bin/jest tests/CI-test.js | ./node_modules/.bin/bunyan
+       LOGLEVEL=trace ./node_modules/.bin/jest tests/CI-test.js | ./node_modules/.bin/bunyan
+
+   environment variables:
+     LOGLEVEL: (trace|debug|info|warn|error|fatal) [info]
+     FHIR_SERVER_ADDR: address of already-running FHIR server, e.g. http://localhost:8080/hapi/fhir/
  */
 const Fs = require('fs');
 const Path = require('path');
@@ -19,7 +21,7 @@ const ShExParser = require("@shexjs/parser").construct();
 const FhirShEx = ShExParser.parse(Fs.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));
 
 const Bunyan = require('bunyan');
-const log = Bunyan.createLogger({name: 'CD-test', level: 'trace'});
+const log = Bunyan.createLogger({name: 'CD-test', level: process.env.LOGLEVEL || 'info'});
 
 let FhirServerAddr = process.env.FHIR_SERVER_ADDR;
 if (!FhirServerAddr) {
@@ -43,12 +45,12 @@ if (!FhirServerAddr) {
       const body = fhirServer.handleFhirApiReq(url);
       return {ok: true, text: () => Promise.resolve(body) };
     }
-    log.info(`fetch is hard-wired to handle calls to http://${host}:${port}`);
+    log.debug(`fetch is hard-wired to handle calls to http://${host}:${port}`);
   } else {
     // Or use the server in the regular way.
     beforeAll(async () => {
       await fhirServer.start();
-      log.info(`Server is running on http://${host}:${port}`);
+      log.debug(`Server is running on http://${host}:${port}`);
     });
 
     afterAll(() => {
@@ -69,7 +71,8 @@ describe('CI', () => {
       const sparqlQuery = Fs.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8');
       const rewriter = new FhirSparql(FhirShEx);
       const results = await rewriter.executeFhirQuery(FhirServerAddr, sparqlQuery, log);
-      log.info("query results:", renderResultSet(results).join("\n"));
+      log.debug("query results:", renderResultSet(results).join("\n"));
+      expect(results.length).toEqual(2);
     });
   });
 });

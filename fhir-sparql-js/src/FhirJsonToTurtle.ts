@@ -168,7 +168,7 @@ export class FhirJsonToTurtle {
           ret.push(`${leader}fhir:OBSOLETE_link <../${value}>;`)
         }
         let valueStr = null;
-        const typed = FhirJsonToTurtle.TypedAttributes[property] || overloadedType === null ? undefined : FhirJsonToTurtle.AllDatatypes[overloadedType];
+        const typed = FhirJsonToTurtle.TypedAttributes[property] || (overloadedType === null ? undefined : FhirJsonToTurtle.AllDatatypes[overloadedType]);
         if (typed) {
           const dt = typed.microparse
                 ? typed.microparse(value)
