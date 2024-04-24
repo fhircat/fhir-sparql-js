@@ -1,10 +1,16 @@
-import {QueryAnalyzer} from './QueryAnalyzer';
+import {QueryAnalyzer, PredicateToShapeDecls} from './QueryAnalyzer';
 import {Ns, Rdf} from './Namespaces';
-import {RdfUtils, SparqlQuery, TTerm, Term, SparqlSolution, Meta, renderResultSet} from './RdfUtils';
+import {RdfUtils, SparqlQuery, TTerm, SparqlSolution, Meta, renderResultSet} from './RdfUtils';
 import {ArcTree, PosArcTree} from './ArcTree';
 import * as ShExJ from 'shexj';
 import * as SparqlJs from "sparqljs";
 import {ArcTreeFitsInShapeExpr} from './ArcTreeFitsInShapeExpr';
+import type { IDataSource } from '@comunica/types';
+
+import * as N3 from 'n3';
+import {QueryEngine} from '@comunica/query-sparql-rdfjs';
+
+import {FhirJsonToTurtle} from './FhirJsonToTurtle';
 
 const SystemBases = {
   'http://terminology.hl7.org/CodeSystem/observation-category': 'http://terminology.hl7.org/CodeSystem/observation-category/',
@@ -266,6 +272,8 @@ const ResourceTypeRegexp = new RegExp(
             '^https?://.*?/([A-Z][a-z]+)/([^/|]+)(?:\\|(.*))?$'
 );
 
+declare type DataFormats = 'Turtle' | 'JSON';
+
 export class FhirSparql extends QueryAnalyzer {
   tester: ArcTreeFitsInShapeExpr;
   constructor (shex: ShExJ.Schema) {
@@ -356,8 +364,85 @@ export class FhirSparql extends QueryAnalyzer {
     })
   }
 
-  executeQuery (fhirEndpoint: string, sparqlQuery: string): SparqlSolution[] {
-    return [];
+  async executeFhirQuery (fhirEndpoint: string, sparqlQuery: string, log: any): Promise<Array<SparqlSolution>> {
+    const parserOpts = { // TODO: where were these actually used
+      prefixes: undefined,
+      baseIRI: 'http://localhost/some/path/and/file.txt',
+      factory: N3.DataFactory,
+      skipValidation: false,
+      skipUngroupedVariableCheck: false,
+      pathOnly: false,
+    }
+
+    // const sparqlQuery = Fs.readFileSync(Path.join(Resources, 'trimmed-use-case-query.srq'), 'utf-8');
+    const iQuery = SparqlQuery.parse(sparqlQuery, parserOpts);
+    const {arcTrees, connectingVariables, referents} = this.getArcTrees(iQuery);
+    log.trace({arcTrees: arcTrees.map((t, i) => `\n[${i}]: ` + t).join("\n--"), connectingVariables, referents});
+
+    const sources = [];
+    let results = [{}];
+    for (const arcTree of arcTrees) {
+      log.trace('procesing arcTrees[' + arcTrees.indexOf(arcTree) + ']');
+      const newResults: Array<SparqlSolution> = [];
+      for (const result of results) {
+        // opBgpToFhirPathExecutions returns disjuncts
+        const fhirPathExecutions = this.opBgpToFhirPathExecutions(arcTree, referents, result);
+        for (const fhirPathExecution of fhirPathExecutions) {
+          // {name: 'code', value: 'http://loinc.org|72166-2'} -> code=http%3A%2F%2Floinc.org%7C72166-2
+          // const paths = fhirPathExecution.paths.map(qp => encodeURIComponent(qp.name) + '=' + encodeURIComponent(qp.value)).join('&') || '';
+          const searchUrl = new URL(fhirPathExecution.type, fhirEndpoint);
+          for (const {name, value} of fhirPathExecution.paths)
+            searchUrl.searchParams.set(name, value);
+
+          // const urlStr = fhirEndpoint + fhirPathExecution.type + paths;
+
+          const resp = await fetch(searchUrl, { headers: { Accept: 'application/json+fhir' } });
+          const body = await resp.text();
+          if (!resp.ok)
+            throw Error(`Got ${resp.status} response to query for a ${fhirPathExecution.type} with [${fhirPathExecution.paths.map(p => p.name + ':' + p.value).join(', ')}] at FHIR endpoint <${fhirEndpoint}>:\n${body}`);
+          const bundle = JSON.parse(body);
+          log.trace(`<${decodeURIComponent(searchUrl.href)}> => ${bundle.entry.map((e: {[key: string]: any}, i: number) => `\n  ${i}: <${e.fullUrl}>`).join('')}`);
+
+          for (const {fullUrl, resource} of bundle.entry) {
+            // const xlator = new FhirJsonToTurtle();
+            // const ttl = xlator.prettyPrint(resource);
+            const url = new URL(fullUrl);
+            const ttl = new FhirJsonToTurtle().prettyPrint(resource);// console.log(ttl);
+            const db = parseTurtle(fullUrl, ttl, 'Turtle');
+            const src = { url, body: ttl, db };
+            sources.push(src);
+            const queryStr = SparqlQuery.selectStar(arcTree.getBgp()); log.trace('queryStr:', queryStr);
+            const bindings = await executeQuery([db], queryStr);log.trace('bindings:', renderResultSet(bindings).join(''))
+            const newResult = bindings.map(r => Object.assign(r, result));
+            Array.prototype.push.apply(newResults, newResult);
+          }
+        }
+      }
+      results = newResults;
+    }
+    return results;
+
+    function parseTurtle (baseIRI: string, text: string, dataFormat: DataFormats = 'Turtle') {
+      if (dataFormat === 'JSON')
+        text = new FhirJsonToTurtle().prettyPrint(JSON.parse(text));
+
+      const db = new N3.Store();
+      const parser = new N3.Parser({baseIRI})
+      db.addQuads(parser.parse(text));
+      return db;
+    }
+
+    async function executeQuery (sources: [IDataSource, ...Array<IDataSource>], query: string) {
+      const myEngine = new QueryEngine();
+      const typedStream = await myEngine.queryBindings(query, {sources});
+      const asArray = await typedStream.toArray();
+      const rows = asArray.map(
+        // @ts-ignore
+        b => Object.fromEntries(b.entries)
+      );
+      // console.log('Query result rows:', rows);
+      return rows;
+    }
   }
 }
 

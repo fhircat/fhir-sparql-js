@@ -4,7 +4,6 @@ import {Xsd} from './Namespaces';
 import * as SparqlJs from 'sparqljs';
 import {BgpPattern, IriTerm, Pattern, Query, Wildcard} from 'sparqljs';
 // import {Triple, IriTerm, BlankTerm, VariableTerm, QuadTerm} from
-const SparqlParser = new SparqlJs.Parser();
 const SparqlGenerator = new SparqlJs.Generator();
 
 type S = SparqlJs.IriTerm | SparqlJs.BlankTerm | SparqlJs.VariableTerm;
@@ -231,7 +230,8 @@ export class SparqlQuery implements SparqlJs.SelectQuery {
   getQuery () { return this; }
   getWhere () { return this.where; };
 
-  static parse (text: string) {
+  static parse (text: string, opts?: any) {
+    const SparqlParser = new SparqlJs.Parser(opts);
     return new SparqlQuery(SparqlParser.parse(text) as Query);
   }
 

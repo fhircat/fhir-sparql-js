@@ -2,10 +2,14 @@
  * TODO: move to its own module
  */
 
-class FhirJsonToTurtle {
+declare type TypeRepresentation = { label: string; microparse?: (x: string) => string; };
+declare type TypeReprMap = {[key: string]: TypeRepresentation};
 
-  static parseDateType (x) {
+export class FhirJsonToTurtle {
+
+  static parseDateType (x: string): string {
     const m = x.match(/([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1])(T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\.[0-9]{1,9})?)?)?(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00)?)?)?/);
+    if (!m) throw new Error(`Couldn\'t parse date from "${x}"`);
     return m[4]
       ? 'dateTime'
       : m[3]
@@ -15,7 +19,7 @@ class FhirJsonToTurtle {
       : 'gYear'
   }
 
-  static PrimitiveTypes = {
+  static PrimitiveTypes: TypeReprMap = {
     AnyURI  : { label: 'anyURI'},
 
     Base64Binary: { label: 'base64Binary' },
@@ -40,7 +44,7 @@ class FhirJsonToTurtle {
     Uuid: { label: 'uuid' },
   };
 
-  static ComplexTypes = {
+  static ComplexTypes: TypeReprMap = {
     Address: { label: 'Address' },
     Age: { label: 'Age' },
     Annotation: { label: 'Annotation' },
@@ -66,18 +70,18 @@ class FhirJsonToTurtle {
     Timing: { label: 'Timing' },
   };
 
-  static SpecialTypes = {
+  static SpecialTypes: TypeReprMap = {
     Dosage: { label: 'Dosage' },
     Meta: { label: 'Meta' },
   }
 
-  static AllDatatypes = {
+  static AllDatatypes: TypeReprMap = {
     ...FhirJsonToTurtle.PrimitiveTypes,
     ...FhirJsonToTurtle.ComplexTypes,
     ...FhirJsonToTurtle.SpecialTypes,
   }
 
-  static TypedAttributes = {
+  static TypedAttributes: TypeReprMap = {
     lastUpdated: FhirJsonToTurtle.PrimitiveTypes.DateTime,
     // effectiveDateTime: FhirJsonToTurtle.PrimitiveTypes.DateTime,
     issued: FhirJsonToTurtle.PrimitiveTypes.DateTime,
@@ -97,21 +101,22 @@ class FhirJsonToTurtle {
     xsd: 'http://www.w3.org/2001/XMLSchema#',
   }
 
-  static SystemBases = {
+  static SystemBases: {[key: string]: string} = {
     'http://terminology.hl7.org/CodeSystem/observation-category': 'http://terminology.hl7.org/CodeSystem/observation-category/',
     'http://loinc.org': 'http://loinc.org/rdf#',
     'http://snomed.info/sct': 'http://snomed.info/id/',
   }
 
-  prettyPrint (resource) {
+  prettyPrint (resource: {[key: string]: any}): string { // TODO: type FHIR Resources
     const root = resource.id
           ? `<${resource.id}>`
           : '[]';
     const namespacePrefixes = new Set(['fhir', 'xsd']);
 
     // PREFIXes
-    const out = [];
+    const out: Array<string> = [];
     for (const p of namespacePrefixes) {
+      // @ts-ignore
       out.push(`PREFIX ${p}: <${FhirJsonToTurtle.Ns[p]}>`)
     }
     out.push('');
@@ -121,9 +126,9 @@ class FhirJsonToTurtle {
     out.push(`${root} a fhir:${resource.resourceType};`)
     out.push(`  fhir:nodeRole fhir:treeRoot;`)
 
-    const types = [];
-    Array.prototype.push.apply(out, this.visit('  ', resource, skips, true, types))
-    if (Object.keys(types.length)) {
+    const types: {[key: string]: string} = {};
+    Array.prototype.push.apply(out, this.visit('  ', resource, skips, true, types));
+    if (Object.keys(types).length) {
       out.push('');
       out.push('# Triples not in FHIR Resource:');
       Array.prototype.push.apply(out, Object.values(types))
@@ -132,7 +137,7 @@ class FhirJsonToTurtle {
     return out.map(l => l + '\n').join('');
   }
 
-  visit (leader, obj, skips, outer, types) {
+  visit (leader: string, obj: {[key: string]: any}, skips: Set<string>, outer: boolean, types: {[key: string]: string}) {
     const ret = [];
     const entries = Object.entries(obj);
     for (let entryNo = 0; entryNo < entries.length; ++entryNo) {
@@ -163,7 +168,7 @@ class FhirJsonToTurtle {
           ret.push(`${leader}fhir:OBSOLETE_link <../${value}>;`)
         }
         let valueStr = null;
-        const typed = FhirJsonToTurtle.TypedAttributes[property] || FhirJsonToTurtle.AllDatatypes[overloadedType];
+        const typed = FhirJsonToTurtle.TypedAttributes[property] || overloadedType === null ? undefined : FhirJsonToTurtle.AllDatatypes[overloadedType];
         if (typed) {
           const dt = typed.microparse
                 ? typed.microparse(value)
@@ -213,10 +218,7 @@ class FhirJsonToTurtle {
     return ret;
   }
 
-  quote (str) {
+  quote (str: string): string {
     return '"' + str.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/\"/g, '\\"') + '"';
   }
 }
-
-if (typeof module !== undefined)
-  module.exports = {FhirJsonToTurtle};
