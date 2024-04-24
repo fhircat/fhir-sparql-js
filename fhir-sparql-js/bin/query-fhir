@@ -1,0 +1,90 @@
+#!/usr/bin/env node
+
+/*
+canned-server -u <server root URL> -r <canned response path>
+Run canned FHIR server listing to server root URL
+*/
+
+const Fs = require('fs');
+const Path = require('path');
+const Bunyan = require('bunyan');
+
+const {renderResultSet} = require('../dist/RdfUtils');
+const {FhirSparql} = require('../dist/FhirSparql');
+const ShExParser = require("@shexjs/parser").construct();
+
+const DebugLevels = [
+      'trace',
+      'debug',
+      'info',
+      'warn',
+      'error',
+      'fatal',
+]
+const CommandLineOptions = [
+  { name: "verbose",       alias: "v", type: Boolean, description: "print extra information" },
+  { name: "debug",         alias: "d", type: String , description: "debug level: "+DebugLevels.join('|')},
+  { name: "fhirSchema",    alias: "c", type: String , description: "FHIR ShExC schema" },
+  { name: "fhirEndpoint",  alias: "f", type: String , description: "FHIR endpoint" },
+  { name: "queryFilePath", alias: "q", type: String , description: "SPARQL query" },
+];
+
+const ExitCode = {
+  help: -1,
+  bad_argument: -2,
+  ok: 0,
+};
+
+main();
+
+const served = [];
+
+async function main () {
+
+  let cmds;
+  try {
+    cmds = require("command-line-args")(CommandLineOptions);
+  } catch (e) {
+    abort(e.message, ExitCode.bad_argument);
+  }
+
+  // construct logger
+  if (cmds.debug && DebugLevels.indexOf(cmds.debug) === -1)
+    abort(`debug level ${cmds.debug} must be one of ${DebugLevels.join(', ')}`, ExitCode.bad_argument);
+  const log = Bunyan.createLogger({
+    name: 'canned-server',
+    level: cmds.debug || 'warn',
+    streams: [
+      // log INFO and above to stdout
+      { level: cmds.debug || 'warn', stream: process.stdout },
+      // log ERROR and above to a file
+      { level: 'error', path: './error.log' }
+    ],
+  });
+
+  if (cmds.help)
+    abort("", ExitCode.help);
+
+  const fhirShEx = ShExParser.parse(Fs.readFileSync(cmds.fhirSchema, 'utf-8'));
+
+  log.trace('queryFilePath:', cmds.queryFilePath);
+  const sparqlQuery = Fs.readFileSync(cmds.queryFilePath, 'utf-8');
+  const rewriter = new FhirSparql(fhirShEx);
+  const results = await rewriter.executeFhirQuery(cmds.fhirEndpoint, sparqlQuery, log);
+  console.log(renderResultSet(results).join("\n"));
+}
+
+function abort (msg, exitCode) {
+  const output = exitCode === ExitCode.help ? console.log : console.error;
+  output(msg);
+  output(require('command-line-usage')([
+    { header: 'query-fhir',
+      content: 'Execute SPARQL query over data at FHIR endpoint' },
+    { header: 'Synopsis',
+      content: "query-fhir -f <FHIR endpoint> -q <SPARQL query file path>" },
+    { header: 'Options',
+      optionList: CommandLineOptions },
+    { content: "Project home: " + require('chalk').underline("https://github.com/fhircat/fhir-sparql-js") },
+  ]));
+  process.exit(exitCode);
+}

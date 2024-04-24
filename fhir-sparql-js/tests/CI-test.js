@@ -68,7 +68,9 @@ describe('CI', () => {
 
   describe('FhirSparql/', () => {
     it('should handle Obs-Patient ref', async () => {
-      const sparqlQuery = Fs.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8');
+      const queryFilePath = Path.join(Resources, 'obs-pat.srq');
+      log.trace('queryFilePath:', queryFilePath);
+      const sparqlQuery = Fs.readFileSync(queryFilePath, 'utf-8');
       const rewriter = new FhirSparql(FhirShEx);
       const results = await rewriter.executeFhirQuery(FhirServerAddr, sparqlQuery, log);
       log.debug("query results:", renderResultSet(results).join("\n"));
