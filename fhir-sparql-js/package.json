@@ -16,6 +16,9 @@
     "@shexjs/validator": "^1.0.0-alpha.29",
     "@shexjs/visitor": "^1.0.0-alpha.25",
     "@types/n3": "^1.16.3",
+    "bunyan": "^1.8.15",
+    "command-line-args": "^5.2.1",
+    "command-line-usage": "^7.0.1",
     "js-yaml": "^4.1.0",
     "sparqljs": "^3.7.1"
   },

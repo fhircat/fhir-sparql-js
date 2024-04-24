@@ -1,3 +1,11 @@
+/**
+   environment variables:
+     FHIR_SERVER_ADDR: address of already-running FHIR server, e.g. http://localhost:8080/hapi/fhir/
+
+   logging:
+     fhir-sparql-js uses bunyan for logging so you can pipe stdout through the bunyan CLI:
+       ./node_modules/.bin/jest tests/CI-test.js | ./node_modules/.bin/bunyan
+ */
 const Fs = require('fs');
 const Path = require('path');
 const JsYaml = require('js-yaml');
@@ -17,6 +25,9 @@ const {FhirJsonToTurtle} = require('../FhirJsonToTurtle');
 const ShExParser = require("@shexjs/parser").construct();
 const FhirShEx = ShExParser.parse(Fs.readFileSync(Path.join(Resources, 'ShEx-mini-terse.shex'), 'utf-8'));
 
+const Bunyan = require('bunyan');
+const log = Bunyan.createLogger({name: 'CD-test', level: 'trace'});
+
 let FhirServerAddr = process.env.FHIR_SERVER_ADDR;
 if (!FhirServerAddr) {
   // use canned FHIR server
@@ -30,7 +41,7 @@ if (!FhirServerAddr) {
 
   // Create a server.
   const {MinimalFhirServer} = require('../util/MinimalFhirServer.js');
-  const fhirServer = new MinimalFhirServer(host, port, serverPath, cannedRespDir, resourceIndex);
+  const fhirServer = new MinimalFhirServer(host, port, serverPath, cannedRespDir, resourceIndex, log);
 
   if (true) {
     // Either make `fetch` call the server's handler directly
@@ -39,12 +50,12 @@ if (!FhirServerAddr) {
       const body = fhirServer.handleFhirApiReq(url);
       return {ok: true, text: () => Promise.resolve(body) };
     }
-    console.log(`fetch is hard-wired to handle calls to http://${host}:${port}`);
+    log.info(`fetch is hard-wired to handle calls to http://${host}:${port}`);
   } else {
     // Or use the server in the regular way.
     beforeAll(async () => {
       await fhirServer.start();
-      console.log(`Server is running on http://${host}:${port}`);
+      log.info(`Server is running on http://${host}:${port}`);
     });
 
     afterAll(() => {
@@ -76,12 +87,12 @@ describe('CI', () => {
       const sparqlQuery = Fs.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8');
       const iQuery = SparqlQuery.parse(sparqlQuery, parserOpts);
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
-      console.log({arcTrees: arcTrees.map((t, i) => `[${i}]: ` + String(t)), connectingVariables, referents});
+      log.trace({arcTrees: arcTrees.map((t, i) => `\n[${i}]: ` + t).join("\n--"), connectingVariables, referents});
 
       const sources = [];
       let results = [{}];
       for (const arcTree of arcTrees) {
-        console.log('arcTrees[' + arcTrees.indexOf(arcTree) + ']');
+        log.trace('procesing arcTrees[' + arcTrees.indexOf(arcTree) + ']');
         const newResults = [];
         for (const result of results) {
           // opBgpToFhirPathExecutions returns disjuncts
@@ -100,7 +111,7 @@ describe('CI', () => {
             if (!resp.ok)
               throw Error(`Got ${resp.status} response to query for a ${fhirPathExecution.type} with [${fhirPathExecution.paths.map(p => p.name + ':' + p.value).join(', ')}] at FHIR endpoint <${FhirServerAddr}>:\n${body}`);
             const bundle = JSON.parse(body);
-            console.log(`<${decodeURIComponent(searchUrl.href)}> => ${bundle.entry.map((e, i) => `\n  ${i}: <${e.fullUrl}>`).join('')}`);
+            log.trace(`<${decodeURIComponent(searchUrl.href)}> => ${bundle.entry.map((e, i) => `\n  ${i}: <${e.fullUrl}>`).join('')}`);
 
             for (const {fullUrl, resource} of bundle.entry) {
               // const xlator = new FhirJsonToTurtle();
@@ -110,8 +121,8 @@ describe('CI', () => {
               const db = parseTurtle(fullUrl, ttl, 'Turtle');
               const src = { url, body: ttl, db };
               sources.push(src);
-              const queryStr = SparqlQuery.selectStar(arcTree.getBgp()); console.log('queryStr:', queryStr);
-              const bindings = await executeQuery([db], queryStr);console.log('bindings:', renderResultSet(bindings).join(''))
+              const queryStr = SparqlQuery.selectStar(arcTree.getBgp()); log.trace('queryStr:', queryStr);
+              const bindings = await executeQuery([db], queryStr);log.trace('bindings:', renderResultSet(bindings).join(''))
               const newResult = bindings.map(r => Object.assign(r, result));
               Array.prototype.push.apply(newResults, newResult);
             }
@@ -119,7 +130,7 @@ describe('CI', () => {
         }
         results = newResults;
       }
-      console.log(renderResultSet(results).join("\n"));
+      log.info("query results:", renderResultSet(results).join("\n"));
     });
   });
 });

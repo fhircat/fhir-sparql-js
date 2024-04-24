@@ -6,14 +6,21 @@
 const Fs = require('fs');
 const Path = require('path');
 const Http = require('http');
+const Util = require('util');
+
+class EmptyLog {
+  
+}
 
 class MinimalFhirServer {
-  constructor (host, port, fhirRoot, cannedRespDir, resourceIndex) {
+  constructor (host, port, fhirRoot, cannedRespDir, resourceIndex, log) {
     this.host = host;
     this.port = port;
     this.fhirRoot = fhirRoot;
     this.cannedRespDir = cannedRespDir;
     this.resourceIndex = resourceIndex;
+    log.trace(`serving FHIR with ${Util.inspect(this)}`);
+    this.log = log;
     this._theServer = null;
   }
 
@@ -37,10 +44,14 @@ class MinimalFhirServer {
   }
 
   handleFhirApiReq (url) {
+    this.log.info(`handling request for ${url}`);
     if (!url.pathname.startsWith(this.fhirRoot))
-      throw Error(`only handling FHIR queries on ${this.fhirRoot}`);
+      throw Error(`expected FHIR query for ${url.pathname} to start with ${this.fhirRoot}`);
+
     const resourcePath = url.pathname.substring(this.fhirRoot.length);
     const [resourceType, resourceName] = resourcePath.split('/');
+    this.log.trace(`resourceType: ${resourceType}, resourceName: ${resourceName}`);
+    // resourceName will be undefined for e.g. Observation?code=1234
 
     if (resourceName) {
 

@@ -355,6 +355,10 @@ export class FhirSparql extends QueryAnalyzer {
       return new FhirPathExecution(type, resourceVersion, paths);
     })
   }
+
+  executeQuery (fhirEndpoint: string, sparqlQuery: string): SparqlSolution[] {
+    return [];
+  }
 }
 
 // module.exports = {FhirSparql, ConnectingVariables, ArcTree, FhirPathExecution, Rule_CodeWithSystem};
