@@ -11,6 +11,7 @@
 const Fs = require('fs');
 const Path = require('path');
 const JsYaml = require('js-yaml');
+const { SparqlJsonParser } = require('sparqljson-parse');
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 
@@ -60,8 +61,8 @@ if (!FhirServerAddr) {
 }
 
 const TESTS = [
-  { filename: 'obs-pat', description: "Obs-Patient ref", length: 2 },
-  { filename: 'trimmed-use-case-query', description: "trimed smoker use case", length: 2 },
+  { filename: 'obs-pat', description: "Obs-Patient ref" },
+  { filename: 'trimmed-use-case-query', description: "trimed smoker use case" },
 ]
 
 describe('CI', () => {
@@ -72,21 +73,56 @@ describe('CI', () => {
   });
 
   describe('FhirSparql/', () => {
-    for ({filename, description, length} of TESTS) {
-      it(`should handle (${filename}) ${description} `, async () => {
-        const results = await loadAndExecuteQuery(filename);
-        expect(results.length).toEqual(length);
-      });
-    }
+    TESTS.forEach(setupTest);
   });
 });
+
+function setupTest (test) {
+  const {filename, description} = test;
+  it(`should execute (${filename}) ${description} `, async () => {
+    await loadAndExecuteQuery(filename);
+  });
+}
 
 async function loadAndExecuteQuery (queryFileName) {
   const queryFilePath = Path.join(Resources, queryFileName + ".srq");
   log.trace('queryFilePath:', queryFilePath);
   const sparqlQuery = Fs.readFileSync(queryFilePath, 'utf-8');
   const rewriter = new FhirSparql(FhirShEx);
-  const results = await rewriter.executeFhirQuery(FhirServerAddr, sparqlQuery, log);
+  const results = canonicalizeResultSet(await rewriter.executeFhirQuery(FhirServerAddr, sparqlQuery, log));
   log.debug("query results:", renderResultSet(results).join("\n"));
+
+  const resultsFilePath = Path.join(Resources, queryFileName + "-results.json");
+  log.trace('resultsFilePath:', resultsFilePath);
+  const expectedResultsJson = Fs.readFileSync(resultsFilePath, 'utf-8');
+  const sparqlJsonParser = new SparqlJsonParser({});
+  const expectedResults = sparqlJsonParser.parseJsonResults(JSON.parse(expectedResultsJson));
+  expectedResults.forEach(
+    row => Object.entries(row).forEach(
+      ([variable, binding]) => {
+        if (binding.termType === 'NamedNode')
+          binding.value = new URL(binding.value, FhirServerAddr).href;
+        return [variable, binding]
+      }
+    )
+  );
+  // log.debug("expected results:", renderResultSet(expectedResults).join("\n"));
+  expect(renderResultSet(results)).toEqual(renderResultSet(expectedResults));
   return results;
+}
+
+function canonicalizeResultSet (results) {
+  const bnodeMap = new Map();
+  return results.map(row =>
+    Object.fromEntries(Object.keys(row).map(key => {
+      const val = row[key];
+      if (val.termType === 'BlankNode') {
+        if (!bnodeMap.has(val.value))
+          bnodeMap.set(val.value, {termType: 'BlankNode', value: 'b' + bnodeMap.size});
+        return [key, bnodeMap.get(val.value)];
+      } else {
+        return [key, val];
+      }
+    }))
+  );
 }

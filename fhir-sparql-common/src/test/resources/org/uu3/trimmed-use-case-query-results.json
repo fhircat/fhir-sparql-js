@@ -1,0 +1,21 @@
+{
+  "head": { "vars": [ "obs", "patient", "obsId", "smokingAssessmentDate", "packYears" ] },
+  "results": {
+    "bindings": [
+      {
+        "obs": { "type": "uri", "value": "Observation/smoker-1-smoking-2022-05-19" },
+        "patient": { "type": "uri", "value": "Patient/smoker-1" },
+        "obsId": { "type": "literal", "value": "smoker-1-smoking-2022-05-19" },
+        "smokingAssessmentDate": { "type": "literal", "value": "2022-05-19T00:00:00-07:00", "datatype": "http://www.w3.org/2001/XMLSchema#dateTime" },
+        "packYears": { "type": "literal", "value": "7", "datatype": "http://www.w3.org/2001/XMLSchema#integer" }
+      },
+      {
+        "obs": { "type": "uri", "value": "Observation/smoker-1-smoking-2023-06-20" },
+        "patient": { "type": "uri", "value": "Patient/smoker-1" },
+        "obsId": { "type": "literal", "value": "smoker-1-smoking-2023-06-20" },
+        "smokingAssessmentDate": { "type": "literal", "value": "2023-06-20T00:00:00-07:00", "datatype": "http://www.w3.org/2001/XMLSchema#dateTime" },
+        "packYears": { "type": "literal", "value": "7", "datatype": "http://www.w3.org/2001/XMLSchema#integer" }
+      }
+    ]
+  }
+}
