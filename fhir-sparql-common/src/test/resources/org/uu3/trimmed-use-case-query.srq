@@ -27,7 +27,7 @@ SELECT ?obsId ?patient ?birthDate ?smokingAssessmentDate
             a <http://loinc.org/rdf#72166-2>;
           ] ];
         ];
-        fhir:subject [ fhir:link ?patient ];
+        fhir:subject [ fhir:reference [ fhir:link ?patient ] ];
         fhir:effective [ fhir:v ?smokingAssessmentDate ].
 
       # Pack years

@@ -59,6 +59,11 @@ if (!FhirServerAddr) {
   }
 }
 
+const TESTS = [
+  { filename: 'obs-pat', description: "Obs-Patient ref", length: 2 },
+  { filename: 'trimmed-use-case-query', description: "trimed smoker use case", length: 2 },
+]
+
 describe('CI', () => {
   describe('Rule', () => {
     it('should serialize Rule_CodeWithSystem', () => {
@@ -67,14 +72,21 @@ describe('CI', () => {
   });
 
   describe('FhirSparql/', () => {
-    it('should handle Obs-Patient ref', async () => {
-      const queryFilePath = Path.join(Resources, 'obs-pat.srq');
-      log.trace('queryFilePath:', queryFilePath);
-      const sparqlQuery = Fs.readFileSync(queryFilePath, 'utf-8');
-      const rewriter = new FhirSparql(FhirShEx);
-      const results = await rewriter.executeFhirQuery(FhirServerAddr, sparqlQuery, log);
-      log.debug("query results:", renderResultSet(results).join("\n"));
-      expect(results.length).toEqual(2);
-    });
+    for ({filename, description, length} of TESTS) {
+      it(`should handle (${filename}) ${description} `, async () => {
+        const results = await loadAndExecuteQuery(filename);
+        expect(results.length).toEqual(length);
+      });
+    }
   });
 });
+
+async function loadAndExecuteQuery (queryFileName) {
+  const queryFilePath = Path.join(Resources, queryFileName + ".srq");
+  log.trace('queryFilePath:', queryFilePath);
+  const sparqlQuery = Fs.readFileSync(queryFilePath, 'utf-8');
+  const rewriter = new FhirSparql(FhirShEx);
+  const results = await rewriter.executeFhirQuery(FhirServerAddr, sparqlQuery, log);
+  log.debug("query results:", renderResultSet(results).join("\n"));
+  return results;
+}

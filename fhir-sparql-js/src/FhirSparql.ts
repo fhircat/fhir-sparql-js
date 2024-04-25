@@ -243,7 +243,7 @@ class RuleChoice {
     }).flat();
     const vals = matched!.filter(x => !!x);
     if (vals.length && needed.length === 0) {
-      // console.log(`matched ${JSON.stringify(vals)}`);
+      // log.trace('matched', JSON.stringify(vals));
       return vals;
     } else {
       return null;
@@ -365,7 +365,8 @@ export class FhirSparql extends QueryAnalyzer {
   }
 
   async executeFhirQuery (fhirEndpoint: string, sparqlQuery: string, log: any): Promise<Array<SparqlSolution>> {
-    const parserOpts = { // TODO: where were these actually used
+    log.trace('executing', sparqlQuery, 'on', fhirEndpoint);
+    const parserOpts = {
       prefixes: undefined,
       baseIRI: 'http://localhost/some/path/and/file.txt',
       factory: N3.DataFactory,
@@ -374,7 +375,6 @@ export class FhirSparql extends QueryAnalyzer {
       pathOnly: false,
     }
 
-    // const sparqlQuery = Fs.readFileSync(Path.join(Resources, 'trimmed-use-case-query.srq'), 'utf-8');
     const iQuery = SparqlQuery.parse(sparqlQuery, parserOpts);
     const {arcTrees, connectingVariables, referents} = this.getArcTrees(iQuery);
     log.trace({arcTrees: arcTrees.map((t, i) => `\n[${i}]: ` + t).join("\n--"), connectingVariables, referents});
@@ -407,12 +407,12 @@ export class FhirSparql extends QueryAnalyzer {
             // const xlator = new FhirJsonToTurtle();
             // const ttl = xlator.prettyPrint(resource);
             const url = new URL(fullUrl);
-            const ttl = new FhirJsonToTurtle().prettyPrint(resource);// console.log(ttl);
+            const ttl = new FhirJsonToTurtle().prettyPrint(resource);
             const db = parseTurtle(fullUrl, ttl, 'Turtle');
             const src = { url, body: ttl, db };
             sources.push(src);
-            const queryStr = SparqlQuery.selectStar(arcTree.getBgp()); log.trace('queryStr:', queryStr);
-            const bindings = await executeQuery([db], queryStr);log.trace('bindings:', renderResultSet(bindings).join(''))
+            const queryStr = SparqlQuery.selectStar(arcTree.getBgp());
+            const bindings = await executeQuery([db], queryStr);
             const newResult = bindings.map(r => Object.assign(r, result));
             Array.prototype.push.apply(newResults, newResult);
           }
@@ -428,22 +428,23 @@ export class FhirSparql extends QueryAnalyzer {
 
       const db = new N3.Store();
       const parser = new N3.Parser({baseIRI})
+      log.trace({baseIRI, text, dataFormat});
       db.addQuads(parser.parse(text));
+      log.trace('=> ', db.size, 'triples');
       return db;
     }
 
-    async function executeQuery (sources: [IDataSource, ...Array<IDataSource>], query: string) {
+    async function executeQuery (sources: [IDataSource, ...Array<IDataSource>], queryStr: string) {
+      log.trace('sparql query:', queryStr);
       const myEngine = new QueryEngine();
-      const typedStream = await myEngine.queryBindings(query, {sources});
+      const typedStream = await myEngine.queryBindings(queryStr, {sources});
       const asArray = await typedStream.toArray();
       const rows = asArray.map(
         // @ts-ignore
         b => Object.fromEntries(b.entries)
       );
-      // console.log('Query result rows:', rows);
+      log.trace('=> ', renderResultSet(rows).join(''));
       return rows;
     }
   }
 }
-
-// module.exports = {FhirSparql, ConnectingVariables, ArcTree, FhirPathExecution, Rule_CodeWithSystem};
