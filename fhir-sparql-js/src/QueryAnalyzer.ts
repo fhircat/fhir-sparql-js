@@ -4,6 +4,11 @@ import {RdfUtils, SparqlQuery, Triple, TTerm} from './RdfUtils';
 import {ArcTree, PosArcTree} from './ArcTree'
 import * as ShExJ from 'shexj';
 
+/**
+ * Extend a ShExVisitor to extract the following from a ShEx schema
+ * 1. mapping from predicate to set of shape declarations in which it appears
+ * 2. mapping from FHIR Reource names to their corresponding shape declarations.
+ */
 export class PredicateToShapeDecls extends ShExVisitor {
   predicateToShapeDecls: Map<string, ShExJ.ShapeDecl[]>;
   resourceTypeToShapeDeclIds: Map<string, string[]>;
@@ -56,9 +61,16 @@ export class PredicateToShapeDecls extends ShExVisitor {
   }
 }
 
+/**
+ * Derive structure of input query and correlate to input schema.
+ */
 export class QueryAnalyzer {
   predicateToShapeDecls: Map<string, ShExJ.ShapeDecl[]>;
   resourceTypeToShapeDeclIds: Map<string, string[]>;
+
+  /**
+   * @param shex ShExJ object that allows the QueryAnalyzer to find corresponding locations in schema that could satisfy a given SPARQL query,
+   */
   constructor (
       public shex: ShExJ.Schema
   ) {
@@ -73,6 +85,10 @@ export class QueryAnalyzer {
     }
   }
 
+  /**
+   * Derive structure of input query and correlate to input schema
+   * @param query Sparql.js compile tree
+   */
   getArcTrees (query: SparqlQuery) {
     const triples = query.getWhere()[0].triples as Triple[];
 

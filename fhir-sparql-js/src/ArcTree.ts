@@ -1,25 +1,64 @@
 import {RdfUtils, Bgp, Triple, Term, POS, TTerm} from './RdfUtils';
-import {Rdf, Fhir} from './Namespaces';
+import {Rdf} from './Namespaces';
 import * as SparqlJs from "sparqljs";
 
+/**
+ * Pairing of ArcTree with a location in a SPARQL triple pattern.
+ */
 export class PosArcTree {
+  /**
+   * @param pos 'subject', 'predicate' or 'object'
+   * @param arcTree nested ArcTreed
+   */
   constructor(
       public pos: POS,
       public arcTree: ArcTree,
-
   ) {}
 }
+
+/**
+ * mapping from variable name to ocurances in PosArcTrees
+ */
+export class ConnectingVariables {
+  static toString (cvs: Map<string, PosArcTree[]>) {
+    const lines = [];
+    for (const [variable, trees] of cvs) {
+      lines.push(variable);
+      trees.forEach((tree, i) =>
+          lines.push(` ${i}: ${tree.pos} of { ${tree.arcTree.toString()} }`)
+      );
+    }
+    return lines.join('\n');
+  }
+}
+
+/**
+ * Tree representation of a hierarchy captured in a SPARQL query, e.g.
+ *   ?p :p1 ?b .
+ *   ?b :p2 c.
+ */
 export class ArcTree {
+  /**
+   * @param tp SPARQL triple pattern
+   * @param out nested ArcTrees
+   */
   constructor (
       public tp: Triple,
       public out: ArcTree[]) {
     if (!out) throw Error(`${this.tp} has no out rule array`);
   }
 
-  /** Construct an ArcTree for an arc and all arcs it reaches
+  /**
+   * Construct an ArcTree for an arc and all arcs it reaches
    * Index variables in the same pass for efficiency.
+   *
+   * @param triplePatterns list of SPARQL triple patterns
+   * @param forArc starting triple pattern
+   * @param node subject node - TODO: redundant against `forArc`?
+   * @param treeVars mapping of variable names to lists of ArcTrees that include that variable
+   * @param referents objects of fhir:links
    */
-  static constructArcTree (triplePatterns: Triple[], forArc: Triple | null, node: TTerm, treeVars: Map<string, PosArcTree[]>, referents: Set<string>): ArcTree {
+  static constructArcTree (triplePatterns: Array<Triple>, forArc: Triple | null, node: TTerm, treeVars: Map<string, Array<PosArcTree>>, referents: Set<string>): ArcTree {
     // Canonical order to match order in FhirQuery rule bodies
     const arcsOut = ArcTree.sortArcs(RdfUtils.stealMatching(triplePatterns, node as SparqlJs.IriTerm | SparqlJs.BlankTerm | SparqlJs.VariableTerm, null, null));
 
@@ -38,7 +77,7 @@ export class ArcTree {
         if (v.termType === 'Variable') {
           if (!treeVars.has(v.value)) {
             treeVars.set(v.value, []);
-          };
+          }
           treeVars.get(v.value)!.push(new PosArcTree(pos as POS, arcTree));
         }
       });
@@ -56,6 +95,9 @@ export class ArcTree {
     return new ArcTree(forArc!, out);
   }
 
+  /**
+   * construct a SPARQL BGP for this ArcTree
+   */
   getBgp () {
     const ret: SparqlJs.Triple[] = [];
     if (this.tp !== null)
@@ -71,6 +113,10 @@ export class ArcTree {
     return (this.tp ? [this.tp] : []).concat((this.out).flatMap(child => child.toSparqlTriplePatterns()));
   }
 
+  /**
+   * serialize this ArcTRee
+   * @param indent (indentation) prefix for each line
+   */
   toString (indent = ''): string {
     const tpStr = this.tp === null ? '<root>' : this.tp.toString();
     return this.out.length === 0
@@ -82,7 +128,7 @@ export class ArcTree {
    * Bubble rdf:type to the top
    * Sort remaining by predicate name.
    *   Since all have same subject and there are no repeated properties in
-   *   FHIR/RDF, we can assume that that localeCompare will never return 0
+   *   FHIR/RDF, we can assume that localeCompare will never return 0
    */
   static sortArcs (triplePatterns: SparqlJs.Triple[]): SparqlJs.Triple[] {
     const ret: SparqlJs.Triple[] = [];

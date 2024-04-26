@@ -11,7 +11,7 @@
 const Fs = require('fs');
 const Path = require('path');
 const JsYaml = require('js-yaml');
-const { SparqlJsonParser } = require('sparqljson-parse');
+const { RelativeSparqlJsonParser } = require('../util/RelativeSparqlJsonParser');
 const Tests = __dirname;
 const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
 
@@ -59,6 +59,7 @@ if (!FhirServerAddr) {
     });
   }
 }
+const MySparqlJsonParser = new RelativeSparqlJsonParser({baseIRI: FhirServerAddr});
 
 const TESTS = [
   { filename: 'obs-pat', description: "Obs-Patient ref" },
@@ -80,11 +81,11 @@ describe('CI', () => {
 function setupTest (test) {
   const {filename, description} = test;
   it(`should execute (${filename}) ${description} `, async () => {
-    await loadAndExecuteQuery(filename);
+    await executeTest(filename);
   });
 }
 
-async function loadAndExecuteQuery (queryFileName) {
+async function executeTest (queryFileName) {
   const queryFilePath = Path.join(Resources, queryFileName + ".srq");
   log.trace('queryFilePath:', queryFilePath);
   const sparqlQuery = Fs.readFileSync(queryFilePath, 'utf-8');
@@ -92,29 +93,30 @@ async function loadAndExecuteQuery (queryFileName) {
   const results = canonicalizeResultSet(await rewriter.executeFhirQuery(FhirServerAddr, sparqlQuery, log));
   log.debug("query results:", renderResultSet(results).join("\n"));
 
-  const resultsFilePath = Path.join(Resources, queryFileName + "-results.json");
-  log.trace('resultsFilePath:', resultsFilePath);
-  const expectedResultsJson = Fs.readFileSync(resultsFilePath, 'utf-8');
-  const sparqlJsonParser = new SparqlJsonParser({});
-  const expectedResults = sparqlJsonParser.parseJsonResults(JSON.parse(expectedResultsJson));
-  expectedResults.forEach(
-    row => Object.entries(row).forEach(
-      ([variable, binding]) => {
-        if (binding.termType === 'NamedNode')
-          binding.value = new URL(binding.value, FhirServerAddr).href;
-        return [variable, binding]
-      }
-    )
-  );
+  const expectedResultsFilePath = Path.join(Resources, queryFileName + "-results.json");
+  log.trace('expectedResultsFilePath:', expectedResultsFilePath);
+  const expectedResultsJson = Fs.readFileSync(expectedResultsFilePath, 'utf-8');
+  const expectedResults = MySparqlJsonParser.parseJsonResults(JSON.parse(expectedResultsJson));
   // log.debug("expected results:", renderResultSet(expectedResults).join("\n"));
   expect(renderResultSet(results)).toEqual(renderResultSet(expectedResults));
   return results;
 }
 
+/**
+ * renumber bnodes to make it easy to compare two result sets.
+ * This assumes that the keys in the hash tables are in the order of the selects,
+ * which makes it easier for humans to read but risks being fragile WRT the JSON
+ * parser behavior. If this becomes a problem, uncomment the sort() on the
+ * Object.keys below and either canonicalize the expected results or tweak their
+ * order in the tests.
+ *
+ * @param results ResultSet to be canonicalized
+ * @returns ResultSet
+ */
 function canonicalizeResultSet (results) {
   const bnodeMap = new Map();
   return results.map(row =>
-    Object.fromEntries(Object.keys(row).map(key => {
+    Object.fromEntries(Object.keys(row)/*.sort()*/.map(key => {
       const val = row[key];
       if (val.termType === 'BlankNode') {
         if (!bnodeMap.has(val.value))

@@ -1,3 +1,10 @@
+/**
+ * classes:
+ *   FhirSparql: execute SPARQL queries over FHIR Resources
+ *   FhirPathExecution: Info needed to construct call with FHIR REST API parameter
+ *   RestParameterTree: map a REST API parameter to tree paths that it queries
+ *   RestParameterChoice: mutually-exclusive voice between REST parameters
+ */
 import {QueryAnalyzer, PredicateToShapeDecls} from './QueryAnalyzer';
 import {Ns, Rdf} from './Namespaces';
 import {RdfUtils, SparqlQuery, TTerm, SparqlSolution, Meta, renderResultSet} from './RdfUtils';
@@ -18,29 +25,35 @@ const SystemBases = {
   'http://snomed.info/sct': 'http://snomed.info/id/',
 }
 
-export class ConnectingVariables {
-  static toString (cvs: Map<string, PosArcTree[]>) {
-    const lines = [];
-    for (const [variable, trees] of cvs) {
-      lines.push(variable);
-      trees.forEach((tree, i) =>
-        lines.push(` ${i}: ${tree.pos} of { ${tree.arcTree.toString()} }`)
-      );
-    }
-    return lines.join('\n');
-  }
-}
-
-class Rule {
+/**
+ * Map a REST API parameter to tree paths that it queries.
+ * A library of rules is constructed before query processing.
+ */
+class RestParameterTree {
   arcTree: ArcTree;
+
+  /**
+   *
+   * @param restParameterName e.g. `code` as in http…Observation/code=http…loinc.org|72166-2
+   * @param correspondingSparql a SPARQL BGP with variables corresponding to the (components of) the REST parameter, e.g.
+   *   [] fhir:code [
+   *     fhir:coding [
+   *       rdf:rest* /rdf:first [
+   *         fhir:code [ fhir:v ?v1 ] ;
+   *         fhir:system [ fhir:v ?v2 ]
+   *       ]
+   *     ]
+   *   ]
+   * @param lexicalTransformer map variable(s) to lexical form, e.g. (values) => values[1] + '|' + values[0]
+   */
   constructor (
-      public fhirQuery: string,
-      sparql: string,
-      public arg = (values: string[]) => values[0]
+      public restParameterName: string,
+      correspondingSparql: string,
+      public lexicalTransformer = (values: string[]) => values[0]
   ) {
-    const query = SparqlQuery.parse('PREFIX fhir: <http://hl7.org/fhir/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT ?v1 { ' + sparql + ' }');
+    const query = SparqlQuery.parse('PREFIX fhir: <http://hl7.org/fhir/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT ?v1 { ' + correspondingSparql + ' }');
     this.arcTree = new QueryAnalyzer(null as unknown as ShExJ.Schema).getArcTrees(query).arcTrees[0].out[0];
-    this.arg = arg;
+    this.lexicalTransformer = lexicalTransformer;
   }
 
   toString () {
@@ -48,21 +61,166 @@ class Rule {
   }
 }
 
-  function parseCodingType (t: string): string | null {
+  /**
+   * convenience function for converting known FHIR Coding type
+   * @param typeIriString IRI for Coding type, e.g. http…loinc.org/72166-2
+   */
+  function parseCodingType (typeIriString: string): string | null {
     for (const [system, namespace] of Object.entries(SystemBases)) {
-      if (t.startsWith(namespace)) {
-        const code = t.substring(namespace.length);
+      if (typeIriString.startsWith(namespace)) {
+        const code = typeIriString.substring(namespace.length);
         return system + '|' + code;
       }
     }
     return null;
   }
 
-const Rule_Id = new Rule('id', '[] fhir:id [ fhir:v ?v1 ]')
+/**
+ * Simple CGI parameter name.value pair
+ */
+class QueryParam {
+  /**
+   * Construct parms like `http://…foo?p1=v1&p2=v2`
+   * @param name parameter name
+   * @param value (un-encoded) parameter value
+   */
+  constructor (
+      public name: string,
+      public value: string
+  ) {
+  }
+}
 
-const Rule_Subject = new Rule('subject', '[] fhir:subject [ fhir:reference [ fhir:link ?v1 ] ]')
+/**
+ * Info needed to construct call with FHIR REST API parameter
+ */
+export class FhirPathExecution {
+  /**
+   * Construct a FhirPathExecution like
+   *   new FhirPathExecution('Patient', null, [ new QueryParam('code', 'http…loinc.org/72166-2') ])
+   * @param type Resource type, e.g. Observation
+   * @param version document version to be hard-coded into request
+   * @param paths n QueryParams (attr/value pairs)
+   */
+  constructor (
+      public type: string,
+      public version: string | null,
+      public paths: QueryParam[],
+      ) {}
+}
 
-const Rule_CodeFromType = new Rule( // exported for tests/FhirSparq-test
+/**
+ * mutually-exclusive voice between REST parameters
+ * Two reasons for constructing choices:
+ *    Multiple ways to calculate the same REST parameter, e.g. a code from:
+ *      a Coding type like http…loinc.org/72166-2
+ *      a pair of coding system and code
+ *      a single code with no system
+ *    Mutually-exclusive parameters like `name` and `family name`
+ */
+class RestParameterChoice {
+  /**
+   * Construct a list of parameter choices like
+   *   new RestParameterChoice([Rule_CodeFromType, Rule_CodeWithSystem, Rule_CodeWithOutSystem])
+   * @param choices
+   */
+  constructor (
+      public choices: RestParameterTree[]
+  ) {}
+
+  /**
+   * Test to see if the supplied ArcTrees match any of this's choices.
+   * @param arcTrees list of ArcTrees that this could match.
+   * @param sparqlSolution possible bindings for variables.
+   * TODO: this is called with all of the ArcTrees coming off the root resource. What if it were just called with the root resource?
+   */
+  accept (arcTrees: ArcTree[], sparqlSolution: SparqlSolution) {
+    for (let choiceNo = 0; choiceNo < this.choices.length; ++choiceNo) {
+      const choice = this.choices[choiceNo];
+      const values = this._parallelWalk(arcTrees, choice.arcTree, choiceNo, sparqlSolution);
+      if (values !== null) {
+        const mappedValue = choice.lexicalTransformer(values.map(v => (v as SparqlJs.IriTerm).value));
+        if (mappedValue) {
+          return new QueryParam (choice.restParameterName, mappedValue);
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Called iteratively while analyzing each component in a query tree for matching rules.
+   * @param testArcTrees
+   * @param myArcTree
+   * @param choiceNo
+   * @param sparqlSolution
+   */
+  protected _parallelWalk (testArcTrees: ArcTree[], myArcTree: ArcTree, choiceNo: number, sparqlSolution: SparqlSolution): (TTerm | null)[] | null {
+    const needed = myArcTree.out.slice(); // copy because needed gets spliced if members are matched
+    const matched: (TTerm | null)[]  = testArcTrees.map(testArcTree => {
+      if (RdfUtils.pmatch(testArcTree.tp.predicate, myArcTree.tp.predicate)) {
+        if (myArcTree.out.length === 0) {
+          // match!
+          let matchedTerm: TTerm = testArcTree.tp.object;
+          if (['Variable', 'BlankNode'].indexOf(matchedTerm.termType) !== -1) {
+            if (!sparqlSolution[matchedTerm.value])
+              return null;
+            matchedTerm = sparqlSolution[matchedTerm.value]
+          }
+          // istanbul ignore next line -- otherwise flags next line as uncovered though tests show it isn't.
+          if (RdfUtils.isPath(matchedTerm)) {
+            throw Error(`unexpected RDF Property Path in ${JSON.stringify(matchedTerm)}`)
+          } else {
+            switch (matchedTerm.termType) {
+                // case 'BlankNode':
+                //   return null; // this indicates we don't have a value so we can't bind it
+              case 'NamedNode':
+              case 'Literal':
+                return [matchedTerm]; // guessing lanuage and datatype are unimportant in FHIRPath
+                // case 'Variable':
+                //   const boundValue = sparqlSolution[matchedTerm.value];
+                //   return boundValue ? [boundValue] : null;
+                // istanbul ignore next line
+              default: // istanbul ignore next line
+                throw Error(`unexpected RDF term type in ${JSON.stringify(matchedTerm)}`)
+            }
+          }
+        } else {
+          // this.choices[choiceNo] // advance me
+          const nestedRet = [];
+          for (let myOutIdx = 0; myOutIdx < needed.length; ++myOutIdx) {
+            const ret = this._parallelWalk(testArcTree.out, needed[myOutIdx], choiceNo, sparqlSolution);
+            if (ret !== null) {
+              needed.splice(myOutIdx, 1); // we matched a needed arcTree
+              --myOutIdx;
+              nestedRet.push(ret);
+            }
+          }
+          return nestedRet.length === 0 ? null : nestedRet.flat();
+        }
+      } else {
+        // not this testArcTree; try again
+        return null;
+      }
+    }).flat();
+    const vals = matched!.filter(x => !!x);
+    if (vals.length && needed.length === 0) {
+      // log.trace('matched', JSON.stringify(vals));
+      return vals;
+    } else {
+      return null;
+    }
+  }
+}
+
+/* some hard-coded REST parameters.
+ * TODO: read from spec somewhere; maybe Claude has ideas.
+ */
+const Rule_Id = new RestParameterTree('id', '[] fhir:id [ fhir:v ?v1 ]')
+
+const Rule_Subject = new RestParameterTree('subject', '[] fhir:subject [ fhir:reference [ fhir:link ?v1 ] ]')
+
+const Rule_CodeFromType = new RestParameterTree( // exported for tests/FhirSparq-test
   'code',
   `
 [] fhir:code [
@@ -75,7 +233,7 @@ const Rule_CodeFromType = new Rule( // exported for tests/FhirSparq-test
   (values) => parseCodingType(values[0])!
 );
 
-export const Rule_CodeWithSystem = new Rule( // exported for tests/FhirSparq-test
+export const Rule_CodeWithSystem = new RestParameterTree( // exported for tests/FhirSparq-test
   'code',
   `
 [] fhir:code [
@@ -89,7 +247,7 @@ export const Rule_CodeWithSystem = new Rule( // exported for tests/FhirSparq-tes
   (values) => values[1] + '|' + values[0]
 );
 
-const Rule_CodeWithOutSystem = new Rule(
+const Rule_CodeWithOutSystem = new RestParameterTree(
   'code',
   `
 [] fhir:code [
@@ -135,7 +293,7 @@ const Rule_NameGiven = new Rule(
 }
 */
 
-const Rule_Family = new Rule(
+const Rule_Family = new RestParameterTree(
   'family',
   `
 [] fhir:name [
@@ -145,7 +303,7 @@ const Rule_Family = new Rule(
 ]`
 );
 
-const Rule_Given = new Rule(
+const Rule_Given = new RestParameterTree(
   'given',
   `
 [] fhir:name [
@@ -155,109 +313,16 @@ const Rule_Given = new Rule(
 ]`
 );
 
-class QueryParam {
-  constructor (
-      public name: string,
-      public value: string
-  ) {
-  }
-}
+const RuleChoice_Id = new RestParameterChoice([Rule_Id]); // gets removed if id supplied by root URL
 
-export class FhirPathExecution {
-  constructor (
-      public type: string,
-      public version: string | null,
-      public paths: QueryParam[],
-      ) {}
-}
-
-/** list of 1 or more candidate rules.
- * last one standing wins
+/* some hard-coded FHIR Resource descriptions.
+ * TODO: read from spec somewhere; maybe Claude has ideas.
  */
-class RuleChoice {
-  constructor (
-      public choices: Rule[]
-  ) {}
-
-  accept (arcTrees: ArcTree[], sparqlSolution: SparqlSolution) {
-    for (let choiceNo = 0; choiceNo < this.choices.length; ++choiceNo) {
-      const choice = this.choices[choiceNo];
-      const values = this.parallelWalk(arcTrees, choice.arcTree, choiceNo, sparqlSolution);
-      if (values !== null) {
-        const mappedValue = choice.arg(values.map(v => (v as SparqlJs.IriTerm).value));
-        if (mappedValue) {
-          return new QueryParam (choice.fhirQuery, mappedValue);
-        }
-      }
-    }
-    return null;
-  }
-
-  parallelWalk (testArcTrees: ArcTree[], myArcTree: ArcTree, choiceNo: number, sparqlSolution: SparqlSolution): (TTerm | null)[] | null {
-    const needed = myArcTree.out.slice(); // copy because needed gets spliced if members are matched
-    const matched: (TTerm | null)[]  = testArcTrees.map(testArcTree => {
-      if (RdfUtils.pmatch(testArcTree.tp.predicate, myArcTree.tp.predicate)) {
-        if (myArcTree.out.length === 0) {
-          // match!
-          let matchedTerm: TTerm = testArcTree.tp.object;
-          if (['Variable', 'BlankNode'].indexOf(matchedTerm.termType) !== -1) {
-            if (!sparqlSolution[matchedTerm.value])
-              return null;
-            matchedTerm = sparqlSolution[matchedTerm.value]
-          }
-          // istanbul ignore next line -- otherwise flags next line as uncovered though tests show it isn't.
-          if (RdfUtils.isPath(matchedTerm)) {
-            throw Error(`unexpected RDF Property Path in ${JSON.stringify(matchedTerm)}`)
-          } else {
-            switch (matchedTerm.termType) {
-                // case 'BlankNode':
-                //   return null; // this indicates we don't have a value so we can't bind it
-              case 'NamedNode':
-              case 'Literal':
-                return [matchedTerm]; // guessing lanuage and datatype are unimportant in FHIRPath
-                // case 'Variable':
-                //   const boundValue = sparqlSolution[matchedTerm.value];
-                //   return boundValue ? [boundValue] : null;
-                // istanbul ignore next line
-              default: // istanbul ignore next line
-                throw Error(`unexpected RDF term type in ${JSON.stringify(matchedTerm)}`)
-            }
-          }
-        } else {
-          // this.choices[choiceNo] // advance me
-          const nestedRet = [];
-          for (let myOutIdx = 0; myOutIdx < needed.length; ++myOutIdx) {
-            const ret = this.parallelWalk(testArcTree.out, needed[myOutIdx], choiceNo, sparqlSolution);
-            if (ret !== null) {
-              needed.splice(myOutIdx, 1); // we matched a needed arcTree
-              --myOutIdx;
-              nestedRet.push(ret);
-            }
-          }
-          return nestedRet.length === 0 ? null : nestedRet.flat();
-        }
-      } else {
-        // not this testArcTree; try again
-        return null;
-      }
-    }).flat();
-    const vals = matched!.filter(x => !!x);
-    if (vals.length && needed.length === 0) {
-      // log.trace('matched', JSON.stringify(vals));
-      return vals;
-    } else {
-      return null;
-    }
-  }
-}
-
-const RuleChoice_Id = new RuleChoice([Rule_Id]); // gets removed if id supplied by root URL
-
 const ResourceToPaths = {
   "EveryResource": [RuleChoice_Id],
-  "Observation": [new RuleChoice([Rule_Subject]), new RuleChoice([Rule_CodeFromType, Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
-  "Patient": [new RuleChoice([Rule_Given]), new RuleChoice([Rule_Family])], // new RuleChoice([Rule_NameFamily]), new RuleChoice([Rule_NameGiven])
-  "Procedure": [new RuleChoice([Rule_Subject]), new RuleChoice([Rule_CodeFromType, Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
+  "Observation": [new RestParameterChoice([Rule_Subject]), new RestParameterChoice([Rule_CodeFromType, Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
+  "Patient": [new RestParameterChoice([Rule_Given]), new RestParameterChoice([Rule_Family])], // new RestParameterChoice([Rule_NameFamily]), new RestParameterChoice([Rule_NameGiven])
+  "Procedure": [new RestParameterChoice([Rule_Subject]), new RestParameterChoice([Rule_CodeFromType, Rule_CodeWithSystem, Rule_CodeWithOutSystem])],
   "Questionnaire": [],
 }
 
@@ -274,14 +339,30 @@ const ResourceTypeRegexp = new RegExp(
 
 declare type DataFormats = 'Turtle' | 'JSON';
 
+/**
+ * Execute SPARQL queries over FHIR Resources.
+ */
 export class FhirSparql extends QueryAnalyzer {
   tester: ArcTreeFitsInShapeExpr;
+
+  /**
+   * Construct an object to execute SPARQL queries.
+   * @param shex ShEx schema which provides the structures of known FHIR Resources.
+   */
   constructor (shex: ShExJ.Schema) {
     super(shex);
     this.tester = new ArcTreeFitsInShapeExpr(shex);
   }
 
-  opBgpToFhirPathExecutions (arcTree: ArcTree, referents: Set<string>, sparqlSolution: SparqlSolution, meta: Meta = {base: '', prefixes: {}}) {
+  /**
+   * Find all FHIR REST API parameters that can be fulfilled by the arcTree with
+   * the bindings in the sparqlSolution.
+   *
+   * @param arcTree query pattern to match (expressed as an ArcTree).
+   * @param referents variables referenced from outside `arcTree`.
+   * @param sparqlSolution mapping of variables name to RdfJs terms.
+   */
+  extractRestParameters(arcTree: ArcTree, referents: Set<string>, sparqlSolution: SparqlSolution): Array<FhirPathExecution> {
     let resourceType = null;
     let resourceId = null;
     let resourceUrl = null;
@@ -323,7 +404,7 @@ export class FhirSparql extends QueryAnalyzer {
       candidateTypes = [resourceType];
 
       // Add id QueryParam
-      prefilledRules.push(new QueryParam(Rule_Id.fhirQuery, resourceId));
+      prefilledRules.push(new QueryParam(Rule_Id.restParameterName, resourceId));
 
       // Remove Rule_Id from candidateRules
       const idRuleIdx = allResourceRules.indexOf(RuleChoice_Id);
@@ -344,7 +425,6 @@ export class FhirSparql extends QueryAnalyzer {
 
     // Build list of candidate rules.
     return candidateTypes.filter(type => {
-      // const tpz = arcTree.toSparqlTriplePatterns(sparqlSolution, meta);
       const candidateShapeLabels = this.resourceTypeToShapeDeclIds.get(type);
       return candidateShapeLabels!.find(label => { // stop on first match in canidate shape even if it fits in multiple places
         // istanbul ignore next line
@@ -364,6 +444,24 @@ export class FhirSparql extends QueryAnalyzer {
     })
   }
 
+  /**
+   * Analyze `sparqlQuery`, execute corresponding FHIR REST API queries against
+   * `fhirEndpoint`, and (re-)execute `sparqlQuery` components as FHIR Resources
+   * are returned.
+   *
+   * The following unification strategy executes queries which span multiple
+   * types of FHIR Resources:
+   *   for each arcTree extracted from `sparqlQuery`
+   *     for each solution in the current results (initialized to one solution with no bindings)
+   *       for each set of extracted REST parameters (`extractRestParameters` returns a disjunct of possible fulfillments)
+   *         construct and execute a FHIR REST API query
+   *         for each response, re-execute the portion of the SPARQL query related to that Resource type
+   *           push each query solution into the results for the next iteration
+   *
+   * @param fhirEndpoint URL of a FHIR REST API endpoint with queryable FHIR Resources.
+   * @param sparqlQuery SPARQL query expected to match Resources at `fhirEnpoint`
+   * @param log implementation of Bunyan logger interface (`log.info()`, `log.debug()`...)
+   */
   async executeFhirQuery (fhirEndpoint: string, sparqlQuery: string, log: any): Promise<Array<SparqlSolution>> {
     log.trace('executing', sparqlQuery, 'on', fhirEndpoint);
     const parserOpts = {
@@ -380,22 +478,26 @@ export class FhirSparql extends QueryAnalyzer {
     log.trace({arcTrees: arcTrees.map((t, i) => `\n[${i}]: ` + t).join("\n--"), connectingVariables, referents});
 
     const sources = [];
-    let results = [{}];
+    let resultSet = [{}];
+
+    // For each arcTree
     for (const arcTree of arcTrees) {
       log.trace('procesing arcTrees[' + arcTrees.indexOf(arcTree) + ']');
       const newResults: Array<SparqlSolution> = [];
-      for (const result of results) {
-        // opBgpToFhirPathExecutions returns disjuncts
-        const fhirPathExecutions = this.opBgpToFhirPathExecutions(arcTree, referents, result);
+
+      // For each solution in the current resultSet
+      for (const solution of resultSet) {
+
+        // for possible way to fulfill the extracted arcTree by executing REST calls
+        const fhirPathExecutions = this.extractRestParameters(arcTree, referents, solution);
         for (const fhirPathExecution of fhirPathExecutions) {
-          // {name: 'code', value: 'http://loinc.org|72166-2'} -> code=http%3A%2F%2Floinc.org%7C72166-2
-          // const paths = fhirPathExecution.paths.map(qp => encodeURIComponent(qp.name) + '=' + encodeURIComponent(qp.value)).join('&') || '';
+          // a fhirPathExecution will have n bindings like:
+          //   {name: 'code', value: 'http://loinc.org|72166-2'} -> code=http%3A%2F%2Floinc.org%7C72166-2
+
+          // construct and execute query URL
           const searchUrl = new URL(fhirPathExecution.type, fhirEndpoint);
           for (const {name, value} of fhirPathExecution.paths)
             searchUrl.searchParams.set(name, value);
-
-          // const urlStr = fhirEndpoint + fhirPathExecution.type + paths;
-
           const resp = await fetch(searchUrl, { headers: { Accept: 'application/json+fhir' } });
           const body = await resp.text();
           if (!resp.ok)
@@ -403,25 +505,30 @@ export class FhirSparql extends QueryAnalyzer {
           const bundle = JSON.parse(body);
           log.trace(`<${decodeURIComponent(searchUrl.href)}> => ${bundle.entry.map((e: {[key: string]: any}, i: number) => `\n  ${i}: <${e.fullUrl}>`).join('')}`);
 
+          // for each response
           for (const {fullUrl, resource} of bundle.entry) {
-            // const xlator = new FhirJsonToTurtle();
-            // const ttl = xlator.prettyPrint(resource);
             const url = new URL(fullUrl);
             const ttl = new FhirJsonToTurtle().prettyPrint(resource);
             const db = parseTurtle(fullUrl, ttl, 'Turtle');
             const src = { url, body: ttl, db };
             sources.push(src);
+
+            // execute the part of the SPARQL query related to this resource type
             const queryStr = SparqlQuery.selectStar(arcTree.getBgp());
             const bindings = await executeQuery([db], queryStr);
-            const newResult = bindings.map(r => Object.assign(r, result));
+            const newResult = bindings.map(r => Object.assign(r, solution));
+
+            // push all solutions into the resultSet for the next iteration
             Array.prototype.push.apply(newResults, newResult);
           }
         }
       }
-      results = newResults;
+      resultSet = newResults;
     }
-    return results;
+    return resultSet;
 
+    /* helper functions
+     */
     function parseTurtle (baseIRI: string, text: string, dataFormat: DataFormats = 'Turtle') {
       if (dataFormat === 'JSON')
         text = new FhirJsonToTurtle().prettyPrint(JSON.parse(text));

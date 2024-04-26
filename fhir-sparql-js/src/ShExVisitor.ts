@@ -1,4 +1,9 @@
 /* istanbul ignore file */
+/**
+ * TODO:
+ *   align this ts-ified visitor with the one in the shex.js package.
+ *   maybe split into three: for shapeExprs, nodeExprs, and NodeConstriants
+ */
 import * as ShExJ from 'shexj';
 
 export class ShExVisitor {
