@@ -419,7 +419,7 @@ describe('FhirSparql', () => {
           'Procedure', // type
           null, // version
           [ // paths
-            { name: 'code', value: 'http://loinc.org|72166-2' }
+            { name: 'code', value: 'http://snomed.info/sct|724167008' }
           ]
         )]);
 
@@ -434,7 +434,7 @@ describe('FhirSparql', () => {
       });
       expect(patPaths2).toEqual([new FhirPathExecution('Procedure', null, [
         { name: 'subject', value: 'http://localhost:8080/hapi/fhir/Patient/2' },
-        { name: 'code', value: 'http://loinc.org|72166-2' },
+        { name: 'code', value: 'http://snomed.info/sct|724167008' },
       ])]);
     });
 

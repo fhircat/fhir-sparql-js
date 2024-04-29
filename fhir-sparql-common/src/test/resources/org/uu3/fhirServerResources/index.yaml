@@ -16,3 +16,12 @@ Patient:
   gender:
     female:
     - smoker-1
+Procedure:
+  id:
+    smoker-1-lung-screening-2022-12-20:
+    - smoker-1-lung-screening-2022-12-20
+  code:
+    http://loinc.org|72166-2:
+    - smoker-1-lung-screening-2022-12-20
+    http://snomed.info/sct|724167008:
+    - smoker-1-lung-screening-2022-12-20

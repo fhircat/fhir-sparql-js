@@ -5,8 +5,8 @@
       {
         "patId": { "type": "literal", "value": "smoker-1" },
         "patIdElt": { "type": "bnode", "value": "b0"},
-        "patRsrc": { "type": "uri", "value": "http://localhost:8080/hapi/fhir/Patient/smoker-1"},
-        "obs": { "type": "uri", "value": "http://localhost:8080/hapi/fhir/Observation/smoker-1-smoking-2022-05-19"},
+        "patRsrc": { "type": "uri", "value": "Patient/smoker-1"},
+        "obs": { "type": "uri", "value": "Observation/smoker-1-smoking-2022-05-19"},
         "codeElt": { "type": "bnode", "value": "b1"},
         "subjectRef": { "type": "bnode", "value": "b2"},
         "codeList": { "type": "bnode", "value": "b3"},
@@ -18,8 +18,8 @@
       {
         "patId": { "type": "literal", "value": "smoker-1"},
         "patIdElt": { "type": "bnode", "value": "b8"},
-        "patRsrc": { "type": "uri", "value": "http://localhost:8080/hapi/fhir/Patient/smoker-1"},
-        "obs": { "type": "uri", "value": "http://localhost:8080/hapi/fhir/Observation/smoker-1-smoking-2023-06-20"},
+        "patRsrc": { "type": "uri", "value": "Patient/smoker-1"},
+        "obs": { "type": "uri", "value": "Observation/smoker-1-smoking-2023-06-20"},
         "codeElt": { "type": "bnode", "value": "b9"},
         "subjectRef": { "type": "bnode", "value": "b10"},
         "codeList": { "type": "bnode", "value": "b11"},

@@ -30,8 +30,8 @@ SELECT ?obs ?proc WHERE {
     fhir:code [							#  1
       fhir:coding [						#  2
         rdf:rest*/rdf:first [					#  3
-          fhir:code [ fhir:v "72166-2" ] ;			#  4/5
-          fhir:system [ fhir:v "http://loinc.org"^^xsd:anyURI ]	#  6/7
+          fhir:code [ fhir:v "724167008" ] ;			#  4/5
+          fhir:system [ fhir:v "http://snomed.info/sct"^^xsd:anyURI ]	#  6/7
         ]
       ]
     ] ;

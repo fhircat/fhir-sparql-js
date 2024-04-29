@@ -64,6 +64,7 @@ const MySparqlJsonParser = new RelativeSparqlJsonParser({baseIRI: FhirServerAddr
 const TESTS = [
   { filename: 'obs-pat', description: "Obs-Patient ref" },
   { filename: 'trimmed-use-case-query', description: "trimed smoker use case" },
+  { filename: 'obs-proc', description: "Obs-Procedure ref" },
 ]
 
 describe('CI', () => {
