@@ -53,7 +53,7 @@ async function main () {
     level: cmds.debug || 'warn',
     streams: [
       // log INFO and above to stdout
-      { level: mcds.debug || 'warn', stream: process.stdout },
+      { level: cmds.debug || 'warn', stream: process.stdout },
       // log ERROR and above to a file
       { level: 'error', path: './error.log' }
     ],

@@ -19,5 +19,5 @@ SELECT ?obs ?patId WHERE {
   #   subject                                   	
   ?obs fhir:subject ?subjectRef .				#  8
     ?subjectRef fhir:reference ?subjectBNode .			#  9
-      ?subjectBNode fhir:link <http://localhost:8080/hapi/fhir/Patient/1> . #  10
+      ?subjectBNode fhir:link <Patient/1> . #  10
 }
