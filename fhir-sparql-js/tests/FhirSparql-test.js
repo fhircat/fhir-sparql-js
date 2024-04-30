@@ -325,7 +325,8 @@ describe('FhirSparql', () => {
 
     it('should inject multiple literal values', () => {
       const rewriter = new FhirSparql(FhirShEx);
-      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-fixed-pat.srq'), 'utf-8'));
+      const sparqlQueryString = File.readFileSync(Path.join(Resources, 'obs-fixed-pat.srq'), 'utf-8');
+      const iQuery = SparqlQuery.parse(sparqlQueryString, { baseIRI: HapiServerAddr, });
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
       expect(arcTrees[0].getBgp().triples.length).toEqual(11);
       expect(connectingVariables).toEqual(new Map([]))
