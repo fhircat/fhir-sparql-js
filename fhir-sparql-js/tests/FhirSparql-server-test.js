@@ -1,19 +1,20 @@
 /**
-
-   logging:
-     fhir-sparql-js uses bunyan for logging so you can pipe stdout through the bunyan CLI:
-       LOGLEVEL=trace ./node_modules/.bin/jest tests/CI-test.js | ./node_modules/.bin/bunyan
-
-   environment variables:
-     LOGLEVEL: (trace|debug|info|warn|error|fatal) [info]
-     FHIR_SERVER_ADDR: address of already-running FHIR server, e.g. http://localhost:8080/hapi/fhir/
+ * FhirSparql tests that require a server
+ *
+ * logging:
+ *   fhir-sparql-js uses bunyan for logging so you can pipe stdout through the bunyan CLI:
+ *     LOGLEVEL=trace ./node_modules/.bin/jest tests/CI-test.js | ./node_modules/.bin/bunyan
+ *
+ * environment variables:
+ *   LOGLEVEL: (trace|debug|info|warn|error|fatal) [info]
+ *   FHIR_SERVER_ADDR: address of already-running FHIR server, e.g. http://localhost:8080/hapi/fhir/
  */
 const Fs = require('fs');
 const Path = require('path');
 const JsYaml = require('js-yaml');
 const { RelativeSparqlJsonParser } = require('../util/RelativeSparqlJsonParser');
 const Tests = __dirname;
-const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/');
+const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3');
 
 const {FhirSparql, Rule_CodeWithSystem} = require('../dist/FhirSparql');
 const {renderResultSet} = require('../dist/RdfUtils');
@@ -67,7 +68,7 @@ const TESTS = [
   { filename: 'obs-proc', description: "Obs-Procedure ref" },
 ]
 
-describe('CI', () => {
+describe('FhirSparql-server-test', () => {
   describe('Rule', () => {
     it('should serialize Rule_CodeWithSystem', () => {
       expect(Rule_CodeWithSystem.toString()).toEqual("TODO");
@@ -100,7 +101,6 @@ async function executeTest (queryFileName) {
   const expectedResults = MySparqlJsonParser.parseJsonResults(JSON.parse(expectedResultsJson));
   // log.debug("expected results:", renderResultSet(expectedResults).join("\n"));
   expect(renderResultSet(results)).toEqual(renderResultSet(expectedResults));
-  return results;
 }
 
 /**

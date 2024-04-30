@@ -1,3 +1,8 @@
+/**
+ * FhirSparql tests that don't require a server
+ * (server tests are in FhirSparql-server-test.)
+ */
+
 const File = require('fs');
 const Path = require('path');
 const Tests = __dirname;
