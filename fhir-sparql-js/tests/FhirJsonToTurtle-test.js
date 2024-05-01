@@ -21,7 +21,60 @@ const TESTS = [
 ]
 
 describe('FhirJsonToTurtle-test', () => {
-  describe('FhirSparql/', () => {
+  describe('', () => {
+    it('should throw with bad arguments', () => {
+      expect(() => new FhirJsonToTurtle().prettyPrint(null)).toThrow(/got null/);
+
+      expect(() => new FhirJsonToTurtle().prettyPrint(undefined)).toThrow(/got undefined/);
+
+      expect(() => new FhirJsonToTurtle().prettyPrint({
+        resourceType: 'Observation',
+        status: null,
+      })).toThrow(/got null/);
+
+      expect(() => new FhirJsonToTurtle().prettyPrint({
+        resourceType: 'Observation',
+        status: undefined,
+      })).toThrow(/not expecting undefined/);
+
+      const badDateTimes = [
+        ' 2018', '2018 ', '2018-05:0', '2018+05:00.', '2018X',
+      ];
+      badDateTimes.forEach(lexicalForm => {
+        expect(() => new FhirJsonToTurtle().prettyPrint({
+          resourceType: 'Observation',
+          effectiveDateTime: lexicalForm,
+        })).toThrow(`Couldn't parse date from "${lexicalForm}"`);
+      });
+
+      /* TODO: validate while Turtle-izing
+      const schema = ...
+      expect(() => new FhirJsonToTurtle(schema).prettyPrint({
+        resourceType: 'Observation',
+        component: { notRecognized: {bar: "foo"} },
+      })).toThrow(/not expecting foo/);
+      */
+    });
+
+    it('should parse FHIR dateTime formats', () => {
+      const fhirDateTimes = {
+        gYear: ['2018', '2018-05:00', '2018+05:00', '2018Z'],
+        gYearMonth: ['1973-06', '1973-06-05:00', '1973-06+05:00', '1973-06Z'],
+        date: ['1905-08-23', '1905-08-23-05:00', '1905-08-23+05:00', '1905-08-23Z'],
+        dateTime: ['2015-02-07T13:28:17-05:00', '2017-01-01T00:00:00.000Z'],
+      };
+      Object.entries(fhirDateTimes).forEach(([xsdType, lexicalForms]) => {
+        lexicalForms.forEach(lexicalForm => {
+          expect(new FhirJsonToTurtle().prettyPrint({
+            resourceType: 'Observation',
+            effectiveDateTime: lexicalForm,
+          })).toMatch(`"${lexicalForm}"^^xsd:${xsdType}\n`);
+        });
+      });
+    });
+  });
+
+  describe('string tests', () => {
     TESTS.forEach(setupTest);
   });
 });

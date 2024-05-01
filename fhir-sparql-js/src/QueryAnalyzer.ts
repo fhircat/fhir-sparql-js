@@ -148,7 +148,7 @@ export class QueryAnalyzer {
             // barf if there's a cycle
             arcsIn.forEach(p => {
               if (p.subject.equals(start.subject))
-                throw Error(`can't handle cycle involving ${p}`);
+                throw Error(`can\'t handle cycle involving ${p}`);
             });
 
             // find parents of these arcs on next iteration

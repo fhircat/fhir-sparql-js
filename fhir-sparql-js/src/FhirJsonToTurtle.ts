@@ -15,8 +15,25 @@ declare type TypeReprMap = {[key: string]: TypeRepresentation};
 export class FhirJsonToTurtle {
 
   // Parse the polymorphic fhir:data datatypes.
-  static parseDateType (x: string): string {
-    const m = x.match(/([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1])(T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\.[0-9]{1,9})?)?)?(Z|(\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00)?)?)?/);
+  static parseDateTime (x: string): string {
+    const m = x.match(new RegExp(
+        /^/.source // match whole string
+        +   /([0-9](?:[0-9](?:[0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)/.source // year
+        +   "(?:"
+        +     /-(0[1-9]|1[0-2])/.source                         // month
+        +     "(?:"
+        +       /-(0[1-9]|[1-2][0-9]|3[0-1])/.source // date
+        +       "(?:T("
+        +         /(?:[01][0-9]|2[0-3])/.source // hour
+        +         /:[0-5][0-9]:/.source         // minute
+        +         /(?:[0-5][0-9]|60)/.source    // second
+        +         /(?:\.[0-9]{1,9})?/.source    // decimal second
+        +       "))?"
+        +     ")?"
+        +   ")?"
+        +   /(Z|(?:\+|-)(?:(?:0[0-9]|1[0-3]):[0-5][0-9]|14:00)?)?/.source // timezone
+        + /$/.source // end match whole string
+    ));
     if (!m) throw new Error(`Couldn\'t parse date from "${x}"`);
     return m[4]
       ? 'dateTime'
@@ -35,8 +52,8 @@ export class FhirJsonToTurtle {
     Boolean: { label: 'boolean' },
     Canonical: { label: 'canonical' },
     Code: { label: 'code' },
-    Date: { label: 'date', microparse: FhirJsonToTurtle.parseDateType },
-    DateTime: { label: 'dateTime', microparse: FhirJsonToTurtle.parseDateType },
+    Date: { label: 'date', microparse: FhirJsonToTurtle.parseDateTime },
+    DateTime: { label: 'dateTime', microparse: FhirJsonToTurtle.parseDateTime },
     Decimal: { label: 'decimal' },
     Id: { label: 'id' },
     Instant: { label: 'instant' },
@@ -122,11 +139,37 @@ export class FhirJsonToTurtle {
     'http://snomed.info/sct': 'http://snomed.info/id/',
   }
 
+
+  /*
+    TODO: validate while printing so that
+      .prettyPrint({
+        resourceType: 'Observation',
+        component: { notRecognized: {bar: "foo"} },
+      })
+    will throw (/not expecting "foo" in "component"/);
+
+  constructor (
+    public: shex?: ShExJ.Schema
+  ) {
+    if (shex) { // allow for shex-less invocation for rule compilation
+      const visitor = new PredicateToShapeDecls();
+      visitor.visitSchema(shex);
+      this.predicateToShapeDecls = visitor.predicateToShapeDecls;
+    } else {
+      this.predicateToShapeDecls = new Map();
+    }
+  }
+  */
+
+
   /**
    * Serialize `resource` as an RDF 1.1 Turtle string
    * @param resource FHIR Resource as JSON object
    */
   prettyPrint (resource: {[key: string]: any}): string { // TODO: type FHIR Resources
+    if (typeof resource !== 'object' || !resource)
+      throw Error(`prettyPrint expected a FHIR Resource object (e.g. {resourceType: "Observation"…}, got ${resource}`);
+
     const root = resource.id
           ? `<${resource.id}>`
           : '[]';
@@ -252,6 +295,8 @@ export class FhirJsonToTurtle {
           }
         }
       } else if (typeof value === 'object') {
+        if (!value)
+          throw Error(`prettyPrint expected a FHIR Resource compont object, got ${value}`);
 
         // Nested components are handled with recursive call to this._visit
         ret.push(`${leader}fhir:${property} [`)
@@ -262,8 +307,8 @@ export class FhirJsonToTurtle {
         ret.push(`${leader}]${punct}`)
       } else {
 
-        // Anything else is an error (is it even JSON?)
-        throw Error(`visit not expecting ${JSON.stringify(value)}`);
+        // could only be undefined, as far as I can tell -- ericP
+        throw Error(`FhirJsonToTurtle.prettyPrint() recursion not expecting ${JSON.stringify(value)}`);
       }
     }
     return ret;

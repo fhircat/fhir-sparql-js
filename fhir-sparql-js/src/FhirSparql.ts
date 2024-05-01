@@ -500,8 +500,8 @@ export class FhirSparql extends QueryAnalyzer {
             searchUrl.searchParams.set(name, value);
           const resp = await fetch(searchUrl, { headers: { Accept: 'application/json+fhir' } });
           const body = await resp.text();
-          if (!resp.ok)
-            throw Error(`Got ${resp.status} response to query for a ${fhirPathExecution.type} with [${fhirPathExecution.paths.map(p => p.name + ':' + p.value).join(', ')}] at FHIR endpoint <${fhirEndpoint}>:\n${body}`);
+          // istanbul ignore next line
+          if (!resp.ok) throw Error(`Got ${resp.status} response to query for a ${fhirPathExecution.type} with [${fhirPathExecution.paths.map(p => p.name + ':' + p.value).join(', ')}] at FHIR endpoint <${fhirEndpoint}>:\n${body}`);
           const bundle = JSON.parse(body);
           log.trace(`<${decodeURIComponent(searchUrl.href)}> => ${bundle.entry.map((e: {[key: string]: any}, i: number) => `\n  ${i}: <${e.fullUrl}>`).join('')}`);
 
@@ -509,7 +509,7 @@ export class FhirSparql extends QueryAnalyzer {
           for (const {fullUrl, resource} of bundle.entry) {
             const url = new URL(fullUrl);
             const ttl = new FhirJsonToTurtle().prettyPrint(resource);
-            const db = parseTurtle(fullUrl, ttl, 'Turtle');
+            const db = parseTurtle(fullUrl, ttl/*, 'Turtle'*/);
             const src = { url, body: ttl, db };
             sources.push(src);
 
@@ -529,13 +529,15 @@ export class FhirSparql extends QueryAnalyzer {
 
     /* helper functions
      */
-    function parseTurtle (baseIRI: string, text: string, dataFormat: DataFormats = 'Turtle') {
-      if (dataFormat === 'JSON')
-        text = new FhirJsonToTurtle().prettyPrint(JSON.parse(text));
+
+    // make this be a generic parser?
+    function parseTurtle (baseIRI: string, text: string /*, dataFormat: DataFormats = 'Turtle' */) {
+      // if (dataFormat === 'JSON')
+      //   text = new FhirJsonToTurtle().prettyPrint(JSON.parse(text));
 
       const db = new N3.Store();
       const parser = new N3.Parser({baseIRI})
-      log.trace({baseIRI, text, dataFormat});
+      log.trace({baseIRI, text});
       db.addQuads(parser.parse(text));
       log.trace('=> ', db.size, 'triples');
       return db;
