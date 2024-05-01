@@ -1,0 +1,50 @@
+PREFIX fhir: <http://hl7.org/fhir/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+<smoker-1-lung-screening-2022-12-20> a fhir:Procedure;
+  fhir:nodeRole fhir:treeRoot;
+  fhir:id [ fhir:v "smoker-1-lung-screening-2022-12-20" ];
+  fhir:meta [
+    fhir:versionId [ fhir:v "1" ];
+    fhir:lastUpdated [ fhir:v "2022-12-24T01:34:22.263+00:00"^^xsd:dateTime ];
+    fhir:source [ fhir:v "#X0eMx9xuYJaE0N9j"^^xsd:anyURI ]
+  ];
+  fhir:status [ fhir:v "completed" ];
+  fhir:category ( [
+    fhir:coding ( [
+      a <http://snomed.info/id/103693007>;
+      fhir:system [ fhir:v "http://snomed.info/sct"^^xsd:anyURI ];
+      fhir:code [ fhir:v "103693007" ];
+      fhir:display [ fhir:v "diagnostic procedure" ]
+    ] )
+  ] );
+  fhir:code [
+    fhir:coding ( [
+      a <http://loinc.org/rdf#37439-7>;
+      fhir:system [ fhir:v "http://loinc.org"^^xsd:anyURI ];
+      fhir:code [ fhir:v "37439-7" ];
+      fhir:display [ fhir:v "CT Lung parenchyma" ]
+    ]
+    [
+      a <http://snomed.info/id/724167008>;
+      fhir:system [ fhir:v "http://snomed.info/sct"^^xsd:anyURI ];
+      fhir:code [ fhir:v "724167008" ];
+      fhir:display [ fhir:v "Lung cancer screening (procedure)" ]
+    ] )
+  ];
+  fhir:subject [
+    fhir:OBSOLETE_link <../Patient/smoker-1>;
+    fhir:reference [
+      fhir:link <../Patient/smoker-1>;
+      fhir:v "Patient/smoker-1"
+    ];
+    fhir:display [ fhir:v "Ms. Kirby843 Colleen54 Boehm581" ]
+  ];
+  fhir:effective [
+    a fhir:DateTime;
+    fhir:v "2022-12-20T00:00:00-07:00"^^xsd:dateTime
+  ];
+  fhir:issued [ fhir:v "2022-12-20T00:00:00.000-07:00"^^xsd:dateTime ].
+
+# Triples not in FHIR Resource:
+<../Patient/smoker-1> a fhir:Patient.

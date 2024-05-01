@@ -10,16 +10,6 @@
       {
         "patRsrc": { "type": "uri", "value": "Patient/smoker-1" },
         "proc": { "type": "uri", "value": "Procedure/smoker-1-lung-screening-2022-12-20" },
-        "obs": { "type": "uri", "value": "Observation/smoker-1-smoking-2022-05-19" }
-      },
-      {
-        "patRsrc": { "type": "uri", "value": "Patient/smoker-1" },
-        "proc": { "type": "uri", "value": "Procedure/smoker-1-lung-screening-2022-12-20" },
-        "obs": { "type": "uri", "value": "Observation/smoker-1-smoking-2023-06-20" }
-      },
-      {
-        "patRsrc": { "type": "uri", "value": "Patient/smoker-1" },
-        "proc": { "type": "uri", "value": "Procedure/smoker-1-lung-screening-2022-12-20" },
         "obs": { "type": "uri", "value": "Observation/smoker-1-smoking-2023-06-20" }
       }
     ]

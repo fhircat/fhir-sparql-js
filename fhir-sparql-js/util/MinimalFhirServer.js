@@ -8,10 +8,6 @@ const Path = require('path');
 const Http = require('http');
 const Util = require('util');
 
-class EmptyLog {
-  
-}
-
 class MinimalFhirServer {
   constructor (host, port, fhirRoot, cannedRespDir, resourceIndex, log) {
     this.host = host;
@@ -70,7 +66,7 @@ class MinimalFhirServer {
       // this.fhirRoot '/Observation' ?search...
       const resourceBase = new URL(resourceType + '/', url);
       const resourceDir = Path.join(this.cannedRespDir, resourceType);
-      let candidates = Fs.readdirSync(resourceDir).map(fn => fn.substring(0, fn.lastIndexOf('.')) || fn);
+      let candidates = [...new Set(Fs.readdirSync(resourceDir).map(fn => fn.substring(0, fn.lastIndexOf('.')) || fn))];
       const index = this.resourceIndex[resourceType];
       for (const [attr, value] of Array.from(url.searchParams.entries())) {
         const hits = ((this.resourceIndex[resourceType] || [])[attr] || [])[value];
@@ -93,6 +89,16 @@ class MinimalFhirServer {
   };
 
 }
+
+/* Currently hard-codes JSON.
+   Could add conneg with a structure like:
+
+const MimeTypes = { // mockup of /etc/mime.types
+  'text/turtle': 'ttl',
+  'application/json': 'json',
+}
+
+ */
 
 function createEntry (resourceBase, resourceDir, filename) {
   const fullUrl = new URL(filename, resourceBase).href;
