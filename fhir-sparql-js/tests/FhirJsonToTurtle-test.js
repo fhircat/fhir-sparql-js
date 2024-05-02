@@ -44,7 +44,19 @@ describe('FhirJsonToTurtle-test', () => {
         expect(() => new FhirJsonToTurtle().prettyPrint({
           resourceType: 'Observation',
           effectiveDateTime: lexicalForm,
-        })).toThrow(`Couldn't parse date from "${lexicalForm}"`);
+        })).toThrow(`Couldn't parse FHIR dateTime from "${lexicalForm}"`);
+      });
+
+      const badDecimals = [
+        ' 2018', '2018 ', '+2018', '2018+05.', '2018X',
+      ];
+      badDecimals.forEach(lexicalForm => {
+        expect(() => new FhirJsonToTurtle().prettyPrint({
+          resourceType: 'Observation',
+          valueQuantity: {
+            value: lexicalForm,
+          }
+        })).toThrow(`Couldn't parse FHIR decimal from "${lexicalForm}"`);
       });
 
       /* TODO: validate while Turtle-izing
@@ -69,6 +81,23 @@ describe('FhirJsonToTurtle-test', () => {
             resourceType: 'Observation',
             effectiveDateTime: lexicalForm,
           })).toMatch(`"${lexicalForm}"^^xsd:${xsdType}\n`);
+        });
+      });
+    });
+
+    it('should parse FHIR decimal formats', () => {
+      const fhirDecimals = {
+        double: ['2018E0', '2018E-2'],
+        decimal: ['1973', '1973.06', '1973.060'],
+      };
+      Object.entries(fhirDecimals).forEach(([xsdType, lexicalForms]) => {
+        lexicalForms.forEach(lexicalForm => {
+          expect(new FhirJsonToTurtle().prettyPrint({
+            resourceType: 'Observation',
+            valueQuantity: {
+              value: lexicalForm
+            },
+          })).toMatch(`"${lexicalForm}"^^xsd:${xsdType} `);
         });
       });
     });

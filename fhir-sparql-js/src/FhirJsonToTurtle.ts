@@ -15,9 +15,9 @@ declare type TypeReprMap = {[key: string]: TypeRepresentation};
 export class FhirJsonToTurtle {
 
   // Parse the polymorphic fhir:data datatypes.
-  static parseDateTime (x: string): string {
-    const m = x.match(new RegExp(
-        /^/.source // match whole string
+  static parseDateTime (jsonValueString: string): string {
+    const m = jsonValueString.match(new RegExp(
+          "^" // match whole string
         +   /([0-9](?:[0-9](?:[0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)/.source // year
         +   "(?:"
         +     /-(0[1-9]|1[0-2])/.source                         // month
@@ -32,9 +32,9 @@ export class FhirJsonToTurtle {
         +     ")?"
         +   ")?"
         +   /(Z|(?:\+|-)(?:(?:0[0-9]|1[0-3]):[0-5][0-9]|14:00)?)?/.source // timezone
-        + /$/.source // end match whole string
+        + "$" // end match whole string
     ));
-    if (!m) throw new Error(`Couldn\'t parse date from "${x}"`);
+    if (!m) throw new Error(`Couldn\'t parse FHIR dateTime from "${jsonValueString}"`);
     return m[4]
       ? 'dateTime'
       : m[3]
@@ -42,6 +42,22 @@ export class FhirJsonToTurtle {
       : m[2]
       ? 'gYearMonth'
       : 'gYear'
+  }
+
+  // Parse the polymorphic fhir:data datatypes.
+  static parseDecimal (jsonValueString: string): string {
+    const m = jsonValueString.match(new RegExp(
+          "^" // match whole string
+        +   /-?/.source // leading minus sign
+        +   /(0|[1-9][0-9]{0,17})/.source // real
+        +   /(\.[0-9]{1,17})?/.source // decimal
+        +   /([eE][+-]?[0-9]{1,9})?/.source // exponent
+        + "$" // end match whole string
+    ));
+    if (!m) throw new Error(`Couldn\'t parse FHIR decimal from "${jsonValueString}"`);
+    return m[3]
+      ? 'double'
+      : 'decimal'
   }
 
   // FHIR primitive datatypes
@@ -54,7 +70,7 @@ export class FhirJsonToTurtle {
     Code: { label: 'code' },
     Date: { label: 'date', microparse: FhirJsonToTurtle.parseDateTime },
     DateTime: { label: 'dateTime', microparse: FhirJsonToTurtle.parseDateTime },
-    Decimal: { label: 'decimal' },
+    Decimal: { label: 'decimal', microparse: FhirJsonToTurtle.parseDecimal },
     Id: { label: 'id' },
     Instant: { label: 'instant' },
     Integer: { label: 'integer' },
@@ -87,7 +103,7 @@ export class FhirJsonToTurtle {
     Identifier: { label: 'Identifier' },
     Money: { label: 'Money' },
     Period: { label: 'Period' },
-    Quantity: { label: 'Quantity' },
+    Quantity: { label: 'Quantity', microparse: FhirJsonToTurtle.parseDecimal },
     Range: { label: 'Range' },
     Ratio: { label: 'Ratio' },
     RatioRange: { label: 'RatioRange' },
@@ -168,7 +184,7 @@ export class FhirJsonToTurtle {
    */
   prettyPrint (resource: {[key: string]: any}): string { // TODO: type FHIR Resources
     if (typeof resource !== 'object' || !resource)
-      throw Error(`prettyPrint expected a FHIR Resource object (e.g. {resourceType: "Observation"…}, got ${resource}`);
+      throw Error(`prettyPrint expected a FHIR Resource object (e.g. {resourceType: "Observation"…}), got ${resource}`);
 
     const root = resource.id
           ? `<${resource.id}>`
@@ -213,7 +229,7 @@ export class FhirJsonToTurtle {
    * @param outer whether `resourceComponent` is an outermost resource
    * @param typedRdfNodes RDF resources which need a type arc
    */
-  _visit (leader: string, resourceComponent: {[key: string]: any}, skips: Set<string>, outer: boolean, typedRdfNodes: {[key: string]: string}) {
+  _visit (leader: string, resourceComponent: {[key: string]: any}, skips: Set<string>, outer: boolean, typedRdfNodes: {[key: string]: string}, contextType: TypeRepresentation | null = null) {
     const ret: Array<string> = [];
 
     // Walk the current FHIR Resource component
@@ -223,7 +239,9 @@ export class FhirJsonToTurtle {
 
       // Calculate predicate and type
       const polymorphicAttr = Object.keys(FhirJsonToTurtle.PolymorphicAttributes).find(attr => fhirElementName.startsWith(attr));
-      const [property, overloadedType] = polymorphicAttr ? [polymorphicAttr, fhirElementName.substring(polymorphicAttr.length)] : [fhirElementName, null];
+      const [property, overloadedType] = polymorphicAttr
+        ? [polymorphicAttr, fhirElementName.substring(polymorphicAttr.length)]
+        : [fhirElementName, null];
 
       // Calculate punctuation for nth element in resourceComponent
       const punct = entryNo < entries.length - 1
@@ -254,10 +272,11 @@ export class FhirJsonToTurtle {
 
         let valueStr = null;
         const typed = FhirJsonToTurtle.TypedAttributes[property] || (overloadedType === null ? undefined : FhirJsonToTurtle.AllDatatypes[overloadedType]);
-        if (typed) {
-          const dt = typed.microparse
-                ? typed.microparse(value)
-                : typed.label
+        const parseType = fhirElementName === "value" ? contextType : typed;
+        if (parseType) {
+          const dt = parseType.microparse
+                ? parseType.microparse(value)
+                : parseType.label
           valueStr = this.quote(value) + '^^xsd:' + dt;
         } else {
           valueStr = this.quote(value);
@@ -303,7 +322,8 @@ export class FhirJsonToTurtle {
         if (overloadedType) {
           ret.push(`${leader}  a fhir:${overloadedType};`);
         }
-        Array.prototype.push.apply(ret, this._visit(leader + '  ', value, skips, false, typedRdfNodes));
+        const typed = FhirJsonToTurtle.TypedAttributes[property] || (overloadedType === null ? undefined : FhirJsonToTurtle.AllDatatypes[overloadedType]);
+        Array.prototype.push.apply(ret, this._visit(leader + '  ', value, skips, false, typedRdfNodes, typed));
         ret.push(`${leader}]${punct}`)
       } else {
 
