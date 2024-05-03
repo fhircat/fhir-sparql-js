@@ -13,28 +13,32 @@ declare type TypeRepresentation = { label: string; microparse?: (x: string) => s
 declare type TypeReprMap = {[key: string]: TypeRepresentation};
 
 export class FhirJsonToTurtle {
+  static fhirDateTimeRegexp = new RegExp(
+        "^" // match whole string
+      +   /([0-9](?:[0-9](?:[0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)/.source // year
+      +   "(?:"
+      +     /-(0[1-9]|1[0-2])/.source                         // month
+      +     "(?:"
+      +       /-(0[1-9]|[1-2][0-9]|3[0-1])/.source // date
+      +       "(?:T("
+      +         /(?:[01][0-9]|2[0-3])/.source // hour
+      +         /:[0-5][0-9]/.source          // minute
+      +         /:(?:[0-5][0-9]|60)/.source   // second
+      +         /(?:\.[0-9]{1,9})?/.source    // decimal second
+      +       "))?"
+      +     ")?"
+      +   ")?"
+      +   /(Z|(?:\+|-)(?:(?:0[0-9]|1[0-3]):[0-5][0-9]|14:00)?)?/.source // timezone
+      + "$" // end match whole string
+  );
+  // TODO: Determine if timezones are/should be allowed in gYear and gYearMonth.
 
   // Parse the polymorphic fhir:data datatypes.
   static parseDateTime (jsonValueString: string): string {
-    const m = jsonValueString.match(new RegExp(
-          "^" // match whole string
-        +   /([0-9](?:[0-9](?:[0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)/.source // year
-        +   "(?:"
-        +     /-(0[1-9]|1[0-2])/.source                         // month
-        +     "(?:"
-        +       /-(0[1-9]|[1-2][0-9]|3[0-1])/.source // date
-        +       "(?:T("
-        +         /(?:[01][0-9]|2[0-3])/.source // hour
-        +         /:[0-5][0-9]:/.source         // minute
-        +         /(?:[0-5][0-9]|60)/.source    // second
-        +         /(?:\.[0-9]{1,9})?/.source    // decimal second
-        +       "))?"
-        +     ")?"
-        +   ")?"
-        +   /(Z|(?:\+|-)(?:(?:0[0-9]|1[0-3]):[0-5][0-9]|14:00)?)?/.source // timezone
-        + "$" // end match whole string
-    ));
-    if (!m) throw new Error(`Couldn\'t parse FHIR dateTime from "${jsonValueString}"`);
+    const m = jsonValueString.match(FhirJsonToTurtle.fhirDateTimeRegexp);
+    if (!m)
+      throw new Error(`Couldn\'t parse FHIR dateTime from "${jsonValueString}"`);
+
     return m[4]
       ? 'dateTime'
       : m[3]
