@@ -2,8 +2,8 @@
 Translate SPARQL queries over a FHIR data to FHIR REST API invocations, execute, and integrate response into query orchestration.
 
 This overview page covers the algorithm but the specific links to functions in the implementation(s) are found in their respecive READMEs:
-* [fhir-sparql-js] typescript implementation
-* [fhir-sparql-java] (not done) Java implementation
+* [fhir-sparql-js](fhir-sparql-js#fhir-sparql-js) typescript implementation
+* [fhir-sparql-java](fhir-sparql-java#fhir-sparql-java) (not done) Java implementation
 
 The algorithm converts a [query](./fhir-sparql-common/src/test/resources/org/uu3/obs-proc.srq) that spans FHIR Resources, e.g. Observation and Procedure:
 ``` SPARQL
