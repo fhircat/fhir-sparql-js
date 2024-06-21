@@ -63,14 +63,14 @@ Tou can play with this in the [debugger](#debugger) or with [CLI tools](#cli-too
 
 ### debugger
 
-You can run the [CI tests](tests/CI-tests.js) to see that it works:
+You can run the [CI tests](tests/FhirSparql-server-test.js) to see that it works:
 ``` sh
-set -eo pipefail; LOGLEVEL=trace FHIR_SERVER_ADDR999=http://localhost:8080/hapi/fhir/ ./node_modules/.bin/jest tests/CI-test.js | ./node_modules/.bin/bunyan 
+set -eo pipefail; LOGLEVEL=trace FHIR_SERVER_ADDR999=http://localhost:8080/hapi/fhir/ ./node_modules/.bin/jest tests/FhirSparql-server-test.js | ./node_modules/.bin/bunyan 
 ```
 
 For more excitement, run it with a loglevel of debug (a bit of noise), or trace (lots of noise) and pipe the output through [bunyan]():
 ```
-set -eo pipefail; LOGLEVEL=trace FHIR_SERVER_ADDR999=http://localhost:8080/hapi/fhir/ ./node_modules/.bin/jest tests/CI-test.js | ./node_modules/.bin/bunyan
+set -eo pipefail; LOGLEVEL=trace FHIR_SERVER_ADDR999=http://localhost:8080/hapi/fhir/ ./node_modules/.bin/jest tests/FhirSparql-server-test.js | ./node_modules/.bin/bunyan
 ```
 
 Do to an unfortunate default behavior in unix shell scripts, it's always a good idea to `set -eo pipefail` so that failed tests tell the calling program that they failed.
