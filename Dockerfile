@@ -9,23 +9,24 @@ FROM node:20 as node_base
 
 RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
 
-WORKDIR /home/node/app
+COPY fhir-sparql-common /home/node/app/fhir-sparql-common
 
-COPY fhir-sparql-js/package.json package-lock.json* tsconfig.json ./
-COPY fhir-sparql-common /home/node
+WORKDIR /home/node/app/fhir-sparql-js/
 
-USER node
+COPY fhir-sparql-js/package.json fhir-sparql-js/package-lock.json* fhir-sparql-js/tsconfig.json ./fhir-sparql-js/
+
+USER root
 
 COPY --chown=node:node fhir-sparql-js .
-# RUN mkdir -p /home/node/fhir-sparql-common/src/test/ && chown -R node:node /home/node/fhir-sparql-common/*
-# COPY --chown=node:node ../fhir-sparql-common/src/test/resources ../fhir-sparql-common/src/test/resources
 
 RUN npm ci
 RUN npm run build
 RUN npm run test
 
-RUN ./bin/canned-server -u http://localhost:8080/hapi/fhir/ \
-  -r ../fhir-sparql-common/src/test/resources/org/uu3/fhirServerResources/ \
-  -d trace | ./node_modules/.bin/bunyan
+#RUN ./bin/canned-server -u http://localhost:8080/hapi/fhir/ \
+#  -r ../fhir-sparql-common/src/test/resources/org/uu3/fhirServerResources/ \
+#  -d trace | ./node_modules/.bin/bunyan
 
 EXPOSE 8080
+
+ENTRYPOINT ["./bin/canned-server", "-u", "http://0.0.0.0:8080/hapi/fhir/", "-r", "../fhir-sparql-common/src/test/resources/org/uu3/fhirServerResources/", "-d", "trace"]
