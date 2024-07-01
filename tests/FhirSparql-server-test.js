@@ -14,7 +14,7 @@ const Path = require('path');
 const JsYaml = require('js-yaml');
 const { RelativeSparqlJsonParser } = require('../util/RelativeSparqlJsonParser');
 const Tests = __dirname;
-const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3');
+const Resources = Path.join(__dirname, '../fhir-sparql-test/src/test/resources/org/uu3');
 
 const {FhirSparql, Rule_CodeWithSystem} = require('../dist/FhirSparql');
 const {renderResultSet} = require('../dist/RdfUtils');

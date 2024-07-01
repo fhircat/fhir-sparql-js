@@ -7,7 +7,7 @@
 
 const Fs = require('fs');
 const Path = require('path');
-const Resources = Path.join(__dirname, '../../fhir-sparql-common/src/test/resources/org/uu3/fhirServerResources');
+const Resources = Path.join(__dirname, '../fhir-sparql-test/src/test/resources/org/uu3/fhirServerResources');
 const Bunyan = require('bunyan');
 const log = Bunyan.createLogger({name: 'CD-test', level: process.env.LOGLEVEL || 'info'});
 

@@ -1,7 +1,7 @@
 # fhir-sparql-js
 Translate SPARQL queries over a FHIR data to FHIR REST API invocations, execute, and integrate response into query orchestration.
 
-[FhirSparql](src/FhirSparql.ts) converts a [query](../fhir-sparql-common/src/test/resources/org/uu3/obs-proc.srq) that spans FHIR Resources, e.g. Observation and Procedure:
+[FhirSparql](src/FhirSparql.ts) converts a [query](../fhir-sparql-test/src/test/resources/org/uu3/obs-proc.srq) that spans FHIR Resources, e.g. Observation and Procedure:
 ``` SPARQL
 SELECT ?obs ?proc ?patRsrc WHERE {
   # Observation
@@ -87,14 +87,14 @@ You can run a hard-coded FHIR server and a sparql request client.
 arg | type | desc | example
 -|-|-|-
 u | URL string | port and path (host is ignored) for the canned server to bind. | -u http://localhost:8080/hapi/fhir/
-r | file path | where to find an index and hard-coded FHIR responses | -r ../fhir-sparql-common/src/test/resources/org/uu3/fhirServerResources/
+r | file path | where to find an index and hard-coded FHIR responses | -r ../fhir-sparql-test/src/test/resources/org/uu3/fhirServerResources/
 d | info\|debug\|trace | how much logging noise to show | -d trace
 
 If you set a debugging level above info, you probably want to pipe it through buyan:
 ``` sh
 ./bin/canned-server \
   -u http://localhost:8080/hapi/fhir/ \
-  -r ../fhir-sparql-common/src/test/resources/org/uu3/fhirServerResources/ \
+  -r ../fhir-sparql-test/src/test/resources/org/uu3/fhirServerResources/ \
   -d trace | ./node_modules/.bin/bunyan
 ```
 
@@ -111,17 +111,17 @@ If you're running the [canned server](#canned-server) or some other FHIR server,
 
 arg | type | desc | example
 -|-|-|-
-fhirSchema | file path | ShEx schema for the FHIR Resources | --fhirSchema ../fhir-sparql-common/src/test/resources/org/uu3/ShEx-mini-terse.shex
+fhirSchema | file path | ShEx schema for the FHIR Resources | --fhirSchema ../fhir-sparql-test/src/test/resources/org/uu3/ShEx-mini-terse.shex
 fhirEndpoint | URL string | port and path (host is ignored) for the canned server to bind. | --fhirEndpoint http://localhost:8080/hapi/fhir/
-queryFilePath | file path | file containing SPARQL query | -r ../fhir-sparql-common/src/test/resources/org/uu3/obs-pat.srq
+queryFilePath | file path | file containing SPARQL query | -r ../fhir-sparql-test/src/test/resources/org/uu3/obs-pat.srq
 debug | info\|debug\|trace | how much logging noise to show | --debug trace
 
 If you set a debugging level above info, you probably want to pipe it through buyan:
 ``` sh
 ./bin/query-fhir \
-  --fhirSchema ../fhir-sparql-common/src/test/resources/org/uu3/ShEx-mini-terse.shex \
+  --fhirSchema ../fhir-sparql-test/src/test/resources/org/uu3/ShEx-mini-terse.shex \
   --fhirEndpoint http://localhost:8080/hapi/fhir/ \
-  --queryFilePath ../fhir-sparql-common/src/test/resources/org/uu3/obs-pat.srq \
+  --queryFilePath ../fhir-sparql-test/src/test/resources/org/uu3/obs-pat.srq \
   --debug trace | ./node_modules/.bin/bunyan
 ```
 

@@ -89,7 +89,7 @@ function abort (msg, exitCode) {
     { header: 'Example',
       content: `./bin/canned-server \\
  -u http://localhost:8080/hapi/fhir/ \\
- -r ../fhir-sparql-common/src/test/resources/org/uu3/fhirServerResources/ \\
+ -r fhir-sparql-test/src/test/resources/org/uu3/fhirServerResources/ \\
  -d info | ./node_modules/.bin/bunyan` },
     { header: 'Options',
       optionList: CommandLineOptions },
