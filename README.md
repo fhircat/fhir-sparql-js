@@ -49,12 +49,16 @@ GET <FHIR endpoint>Procedure?subject=http://localhost:8080/hapi/fhir/Patient/2&c
 
 Do the usual, with the small twist that `fhir-sparql-js is one level down in the repo:
 ``` shell
-git clone git@github.com:fhircat/fhir-sparql # or use http(s)
+git clone --recurse-submodules git@github.com:fhircat/fhir-sparql # or use http(s)
 cd fhir-sparql/fhir-sparql-js # 'cause the repo also houses fhir-sparql-java and common tests.
 npm ci
 npm run build
 npm run test # not strictly needed, but a good idea
 ```
+
+Note that `--recurse-submodules` is important if you want to run any tests or examples below as it includes the `fhir-sparql-test` repo as a submodule.
+In addition, you should run `git submodule update` if you are simultaneously updaring `fhir-sparql-test`.
+
 
 ## Execution
 
