@@ -1,0 +1,12 @@
+    SELECT * WHERE {
+      ?obs <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Observation>;
+        <http://hl7.org/fhir/code> ?code.
+      ?code <http://hl7.org/fhir/coding> ?codeList.
+      ?codeList ((<http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>*)/<http://www.w3.org/1999/02/22-rdf-syntax-ns#first>) ?codeElt.
+      ?codeElt <http://hl7.org/fhir/code> ?codeCode.
+      ?codeCode <http://hl7.org/fhir/v> "72166-2".
+      ?codeElt <http://hl7.org/fhir/system> ?codingSystem.
+      ?codingSystem <http://hl7.org/fhir/v> "http://loinc.org"^^<http://www.w3.org/2001/XMLSchema#anyURI>.
+      ?obs <http://hl7.org/fhir/subject> ?subjectRef.
+      ?subjectRef <http://hl7.org/fhir/reference> ?subject.
+    }
