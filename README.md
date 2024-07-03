@@ -44,13 +44,46 @@ GET <FHIR endpoint>Procedure?subject=http://localhost:8080/hapi/fhir/Patient/2&c
 ```
 (assuming `Patient/2` was the only patient in the results that came back from the 1st GET).
 
-
 ## Installation
+For installation purposes we have 3 options:
+- docker
+  - docker compose
+  - docker build/run
+- server installation (builds, for run see CLI tools section)
 
-Do the usual, with the small twist that `fhir-sparql-js is one level down in the repo:
+We have created a docker and docker compose implementation to make it as easy as possible to implement the fhir-sparql server.
+All the implementations work with the same `curl` command you can find in the CLI tools section.
+
+### Docker
+Docker compose and build/run both run the fhir-sparql server, both run the [canned-server](#canned-server).
+To test run the [test canned-server](#test-canned-server)
+
+#### Docker compose
+With docker compose fhir-sparql can easily be implemented locally
 ``` shell
 git clone --recurse-submodules git@github.com:fhircat/fhir-sparql # or use http(s)
-cd fhir-sparql/fhir-sparql-js # 'cause the repo also houses fhir-sparql-java and common tests.
+cd fhir-sparql
+docker compose up -d
+```
+
+To stop docker compose:
+``` shell
+docker compose down
+```
+
+#### Docker build/run
+For ease of use we have created a docker for the fhir-sparql installation
+``` shell
+git clone --recurse-submodules git@github.com:fhircat/fhir-sparql # or use http(s)
+cd fhir-sparql
+docker build -t fhir-sparql ./
+docker run -p 8080:8080 fhir-sparql
+```
+
+### Server installation
+``` shell
+git clone --recurse-submodules git@github.com:fhircat/fhir-sparql # or use http(s)
+cd fhir-sparql
 npm ci
 npm run build
 npm run test # not strictly needed, but a good idea
@@ -102,6 +135,7 @@ If you set a debugging level above info, you probably want to pipe it through bu
   -d trace | ./node_modules/.bin/bunyan
 ```
 
+#### Test canned-server
 Verify that its working by running curl from another shell:
 ``` sh
 curl -s http://localhost:8080/hapi/fhir/Observation?code=http%3A%2F%2Floinc.org%7C72166-2
