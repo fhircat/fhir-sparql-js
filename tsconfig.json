@@ -58,7 +58,10 @@
 
     // "noImplicitThis": true,
     // "preserveConstEnums": true,
-    "lib": [ "ES2021.String", "DOM" ],
+    "lib": [
+      "ES2021.String",
+      "DOM" // for fetch
+    ],
     // "target": "es2020",
     // "module": "commonjs",
     // "moduleResolution": "node",
