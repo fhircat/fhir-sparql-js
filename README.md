@@ -51,18 +51,18 @@ For installation purposes we have 3 options:
   - docker build/run
 - server installation (builds, for run see CLI tools section)
 
-We have created a docker and docker compose implementation to make it as easy as possible to implement the fhir-sparql server.
+We have created a docker and docker compose implementation to make it as easy as possible to implement the FHIR SPARQL server.
 All the implementations work with the same `curl` command you can find in the CLI tools section.
 
 ### Docker
-Docker compose and build/run both run the fhir-sparql server, both run the [canned-server](#canned-server).
+Docker compose and build/run both run the FHIR SPARQL server, both run the [canned-server](#canned-server).
 To test run the [test canned-server](#test-canned-server)
 
 #### Docker compose
-With docker compose fhir-sparql can easily be implemented locally
+With docker compose, FHIR SPARQL can easily be implemented locally
 ``` shell
-git clone --recurse-submodules git@github.com:fhircat/fhir-sparql # or use http(s)
-cd fhir-sparql
+git clone --recurse-submodules git@github.com:fhircat/fhir-sparql-js # or use http(s)
+cd fhir-sparql-js
 docker compose up -d
 ```
 
@@ -74,16 +74,16 @@ docker compose down
 #### Docker build/run
 For ease of use we have created a docker for the fhir-sparql installation
 ``` shell
-git clone --recurse-submodules git@github.com:fhircat/fhir-sparql # or use http(s)
-cd fhir-sparql
+git clone --recurse-submodules git@github.com:fhircat/fhir-sparql-js # or use http(s)
+cd fhir-sparql-js
 docker build -t fhir-sparql ./
 docker run -p 8080:8080 fhir-sparql
 ```
 
 ### Server installation
 ``` shell
-git clone --recurse-submodules git@github.com:fhircat/fhir-sparql # or use http(s)
-cd fhir-sparql
+git clone --recurse-submodules git@github.com:fhircat/fhir-sparql-js # or use http(s)
+cd fhir-sparql-js
 npm ci
 npm run build
 npm run test # not strictly needed, but a good idea
