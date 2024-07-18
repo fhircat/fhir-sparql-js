@@ -45,22 +45,36 @@ GET <FHIR endpoint>Procedure?subject=http://localhost:8080/hapi/fhir/Patient/2&c
 (assuming `Patient/2` was the only patient in the results that came back from the 1st GET).
 
 ## Installation
-For installation purposes we have 3 options:
-- docker
-  - docker compose
-  - docker build/run
-- server installation (builds, for run see CLI tools section)
+For installation purposes we propose using the docker compose version, which will start the FHIR SPARQL implementation in a docker container.
+For other types of installation please see [other installations](#other-installations)
 
-We have created a docker and docker compose implementation to make it as easy as possible to implement the FHIR SPARQL server.
-All the implementations work with the same `curl` command you can find in the CLI tools section.
+We have created a docker compose implementation to make it as easy as possible to implement the FHIR SPARQL server.
+All the implementations work with the same `curl` command you can find in the [test canned-server](#test-canned-server).
+
+Have git installed on your server to be able to clone the github repo. The version this was tested on was:
+``` shell
+git version 2.43.0
+```
 
 ### Docker
-Docker compose and build/run both run the FHIR SPARQL server, both run the [canned-server](#canned-server).
-To test run the [test canned-server](#test-canned-server)
+To make sure that docker is able to run, install docker using the standard installation found on their [website](https://docs.docker.com/engine/install).
+The version this implementation was tested on was: 
+``` shell
+Docker version 27.0.1, build 7fafd33
+``` 
+
+Most (Linux) systems only let you run docker under sudo, this installation assumes that docker can be started without using sudo.
+To find out how to use docker without sudo, you can find it on their [website](https://docs.docker.com/engine/install/linux-postinstall).
+
+Docker compose runs a FHIR SPARQL server.
+To test, run the [test canned-server](#test-canned-server). 
+
+When wanting to connect to a certain database, you need to edit the Dockerfile and open the right ports and firewalls to the server.
 
 #### Docker compose
 With docker compose, FHIR SPARQL can easily be implemented locally
 ``` shell
+cd /opt
 git clone --recurse-submodules git@github.com:fhircat/fhir-sparql-js # or use http(s)
 cd fhir-sparql-js
 docker compose up -d
@@ -69,24 +83,6 @@ docker compose up -d
 To stop docker compose:
 ``` shell
 docker compose down
-```
-
-#### Docker build/run
-For ease of use we have created a docker for the fhir-sparql installation
-``` shell
-git clone --recurse-submodules git@github.com:fhircat/fhir-sparql-js # or use http(s)
-cd fhir-sparql-js
-docker build -t fhir-sparql ./
-docker run -p 8080:8080 fhir-sparql
-```
-
-### Server installation
-``` shell
-git clone --recurse-submodules git@github.com:fhircat/fhir-sparql-js # or use http(s)
-cd fhir-sparql-js
-npm ci
-npm run build
-npm run test # not strictly needed, but a good idea
 ```
 
 Note that `--recurse-submodules` is important if you want to run any tests or examples below as it includes the `fhir-sparql-test` repo as a submodule.
@@ -179,6 +175,25 @@ You should a SPARQL result set in a human-readable format like:
 }
 ```
 
+## Other installations
+
+### Docker build/run
+For ease of use we have created a docker for the fhir-sparql installation
+``` shell
+git clone --recurse-submodules git@github.com:fhircat/fhir-sparql-js # or use http(s)
+cd fhir-sparql-js
+docker build -t fhir-sparql ./
+docker run -p 8080:8080 fhir-sparql
+```
+
+### Server installation
+``` shell
+git clone --recurse-submodules git@github.com:fhircat/fhir-sparql-js # or use http(s)
+cd fhir-sparql-js
+npm ci
+npm run build
+npm run test # not strictly needed, but a good idea
+```
 
 ## The FhirSparql class
 
