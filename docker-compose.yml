@@ -1,6 +1,6 @@
 services:
-  fhir-sparql:
-    container_name: fhir-sparql
+  fhir-sparql-js:
+    container_name: fhir-sparql-js
     build:
       context: .
       dockerfile: Dockerfile

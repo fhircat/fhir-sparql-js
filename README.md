@@ -58,9 +58,10 @@ git version 2.43.0
 
 ### Docker
 To make sure that docker is able to run, install docker using the standard installation found on their [website](https://docs.docker.com/engine/install).
+
 The version this implementation was tested on was: 
 ``` shell
-Docker version 27.0.1, build 7fafd33
+Docker version 27.0.1
 ``` 
 
 Most (Linux) systems only let you run docker under sudo, this installation assumes that docker can be started without using sudo.
@@ -75,7 +76,7 @@ When wanting to connect to a certain database, you need to edit the Dockerfile a
 With docker compose, FHIR SPARQL can easily be implemented locally
 ``` shell
 cd /opt
-git clone --recurse-submodules git@github.com:fhircat/fhir-sparql-js # or use http(s)
+sudo git clone --recurse-submodules https://github.com/fhircat/fhir-sparql-js.git # or use ssh git@github.com:fhircat/fhir-sparql-js
 cd fhir-sparql-js
 docker compose up -d
 ```
@@ -86,7 +87,7 @@ docker compose down
 ```
 
 Note that `--recurse-submodules` is important if you want to run any tests or examples below as it includes the `fhir-sparql-test` repo as a submodule.
-In addition, you should run `git submodule update` if you are simultaneously updaring `fhir-sparql-test`.
+In addition, you should run `git submodule update` if you are simultaneously updating `fhir-sparql-test`.
 
 
 ## Execution

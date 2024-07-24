@@ -1,5 +1,5 @@
 {
-  "name": "fhir-sparql",
+  "name": "fhir-sparql-js",
   "version": "0.0.2",
   "description": "",
   "main": "index.js",
