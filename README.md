@@ -51,21 +51,23 @@ For other types of installation please see [other installations](#other-installa
 We have created a docker compose implementation to make it as easy as possible to implement the FHIR SPARQL server.
 All the implementations work with the same `curl` command you can find in the [test canned-server](#test-canned-server).
 
-Have git installed on your server to be able to clone the github repo. The version this was tested on was:
+Have git installed to be able to clone the Github repo. Git should atleast be the following version:
 ``` shell
 git version 2.43.0
+```
+
+Have npm installed locally, it should atleast be the following version:
+``` shell
+9.2.0
 ```
 
 ### Docker
 To make sure that docker is able to run, install docker using the standard installation found on their [website](https://docs.docker.com/engine/install).
 
-The version this implementation was tested on was: 
+Docker should be atleast the following version: 
 ``` shell
 Docker version 27.0.1
-``` 
-
-Most (Linux) systems only let you run docker under sudo, this installation assumes that docker can be started without using sudo.
-To find out how to use docker without sudo, you can find it on their [website](https://docs.docker.com/engine/install/linux-postinstall).
+```
 
 Docker compose runs a FHIR SPARQL server.
 To test, run the [test canned-server](#test-canned-server). 
@@ -75,15 +77,16 @@ When wanting to connect to a certain database, you need to edit the Dockerfile a
 #### Docker compose
 With docker compose, FHIR SPARQL can easily be implemented locally
 ``` shell
+sudo apt install npm
 cd /opt
 sudo git clone --recurse-submodules https://github.com/fhircat/fhir-sparql-js.git # or use ssh git@github.com:fhircat/fhir-sparql-js
 cd fhir-sparql-js
-docker compose up -d
+sudo docker compose up -d
 ```
 
 To stop docker compose:
 ``` shell
-docker compose down
+sudo docker compose down
 ```
 
 Note that `--recurse-submodules` is important if you want to run any tests or examples below as it includes the `fhir-sparql-test` repo as a submodule.
@@ -181,19 +184,21 @@ You should a SPARQL result set in a human-readable format like:
 ### Docker build/run
 For ease of use we have created a docker for the fhir-sparql installation
 ``` shell
-git clone --recurse-submodules git@github.com:fhircat/fhir-sparql-js # or use http(s)
+cd /opt/
+sudo git clone --recurse-submodules https://github.com/fhircat/fhir-sparql-js.git # or use ssh git@github.com:fhircat/fhir-sparql-js
 cd fhir-sparql-js
-docker build -t fhir-sparql ./
-docker run -p 8080:8080 fhir-sparql
+sudo docker build -t fhir-sparql ./
+sudo docker run -p 8080:8080 fhir-sparql
 ```
 
 ### Server installation
 ``` shell
-git clone --recurse-submodules git@github.com:fhircat/fhir-sparql-js # or use http(s)
+cd /opt/
+sudo git clone --recurse-submodules https://github.com/fhircat/fhir-sparql-js.git # or use ssh git@github.com:fhircat/fhir-sparql-js
 cd fhir-sparql-js
-npm ci
-npm run build
-npm run test # not strictly needed, but a good idea
+sudo npm ci
+sudo npm run build
+sudo npm run test # not strictly needed, but a good idea
 ```
 
 ## The FhirSparql class
