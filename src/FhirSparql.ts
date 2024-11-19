@@ -514,7 +514,7 @@ export class FhirSparql extends QueryAnalyzer {
             sources.push(src);
 
             // execute the part of the SPARQL query related to this resource type
-            const queryStr = SparqlQuery.selectStar(arcTree.getBgp());
+            const queryStr = SparqlQuery.selectStar(arcTree.makeBgp());
             const bindings = await executeQuery([db], queryStr);
             const newResult = bindings.map(r => Object.assign(r, solution));
 

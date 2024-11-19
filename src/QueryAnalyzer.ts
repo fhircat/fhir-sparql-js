@@ -126,7 +126,7 @@ export class QueryAnalyzer {
       // Index from variable name to ArcTree
       const treeVars: Map<string, PosArcTree[]> = new Map();
 
-      // Terminal ancesters of start.subject
+      // Terminal ancestors of start.subject
       const roots: TTerm[] = [];
 
       // Working list of triples in start's tree.

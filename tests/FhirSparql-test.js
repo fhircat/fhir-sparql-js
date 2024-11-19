@@ -58,10 +58,10 @@ describe('FhirSparql', () => {
   ]
 ]`);
       // test arcTrees
-      expect(arcTrees[0].getBgp().toString()).toEqual(BGP_obs.toString());
-      expect(arcTrees[0].getBgp()).toEqual(BGP_obs);
-      expect(arcTrees[1].getBgp().toString()).toEqual(BGP_patRsrc.toString());
-      expect(arcTrees[1].getBgp()).toEqual(BGP_patRsrc);
+      expect(arcTrees[0].makeBgp().toString()).toEqual(BGP_obs.toString());
+      expect(arcTrees[0].makeBgp()).toEqual(BGP_obs);
+      expect(arcTrees[1].makeBgp().toString()).toEqual(BGP_patRsrc.toString());
+      expect(arcTrees[1].makeBgp()).toEqual(BGP_patRsrc);
       expect(arcTrees).toEqual([ArcTree_obs, ArcTree_patRsrc]);
 
       // connectingVariables
@@ -111,10 +111,10 @@ describe('FhirSparql', () => {
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
 
       // test arcTrees
-      expect(arcTrees[0].getBgp().toString()).toEqual(BGP_obs.toString());
-      expect(arcTrees[0].getBgp()).toEqual(BGP_obs);
-      expect(arcTrees[1].getBgp().toString()).toEqual(BGP_patRsrc.toString());
-      expect(arcTrees[1].getBgp()).toEqual(BGP_patRsrc);
+      expect(arcTrees[0].makeBgp().toString()).toEqual(BGP_obs.toString());
+      expect(arcTrees[0].makeBgp()).toEqual(BGP_obs);
+      expect(arcTrees[1].makeBgp().toString()).toEqual(BGP_patRsrc.toString());
+      expect(arcTrees[1].makeBgp()).toEqual(BGP_patRsrc);
       expect(arcTrees).toEqual([ArcTree_obs, ArcTree_patRsrc]);
 
       // connectingVariables
@@ -153,10 +153,10 @@ describe('FhirSparql', () => {
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
 
       // test arcTrees
-      expect(arcTrees[0].getBgp().toString()).toEqual(BGP_obs.toString());
-      expect(arcTrees[0].getBgp()).toEqual(BGP_obs);
-      expect(arcTrees[1].getBgp().toString()).toEqual(BGP_patRsrc.toString());
-      expect(arcTrees[1].getBgp()).toEqual(BGP_patRsrc);
+      expect(arcTrees[0].makeBgp().toString()).toEqual(BGP_obs.toString());
+      expect(arcTrees[0].makeBgp()).toEqual(BGP_obs);
+      expect(arcTrees[1].makeBgp().toString()).toEqual(BGP_patRsrc.toString());
+      expect(arcTrees[1].makeBgp()).toEqual(BGP_patRsrc);
       expect(arcTrees).toEqual([ArcTree_obs, ArcTree_patRsrc]);
 
       // connectingVariables
@@ -195,10 +195,10 @@ describe('FhirSparql', () => {
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
 
       // test arcTrees
-      expect(arcTrees[0].getBgp().toString()).toEqual(BGP_obs.toString());
-      expect(arcTrees[0].getBgp()).toEqual(BGP_obs);
-      expect(arcTrees[1].getBgp().toString()).toEqual(BGP_patRsrc.toString());
-      expect(arcTrees[1].getBgp()).toEqual(BGP_patRsrc);
+      expect(arcTrees[0].makeBgp().toString()).toEqual(BGP_obs.toString());
+      expect(arcTrees[0].makeBgp()).toEqual(BGP_obs);
+      expect(arcTrees[1].makeBgp().toString()).toEqual(BGP_patRsrc.toString());
+      expect(arcTrees[1].makeBgp()).toEqual(BGP_patRsrc);
       expect(arcTrees).toEqual([ArcTree_obs, ArcTree_patRsrc]);
 
       // connectingVariables
@@ -298,7 +298,7 @@ describe('FhirSparql', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-anons-id.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
-      expect(arcTrees[0].getBgp().triples.length).toEqual(8);
+      expect(arcTrees[0].makeBgp().triples.length).toEqual(8);
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
       const obsPaths = rewriter.extractRestParameters(arcTrees[0], referents, {});
@@ -333,7 +333,7 @@ describe('FhirSparql', () => {
       const sparqlQueryString = File.readFileSync(Path.join(Resources, 'obs-fixed-pat.srq'), 'utf-8');
       const iQuery = SparqlQuery.parse(sparqlQueryString, { baseIRI: HapiServerAddr, });
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
-      expect(arcTrees[0].getBgp().triples.length).toEqual(11);
+      expect(arcTrees[0].makeBgp().triples.length).toEqual(11);
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
       const obsPaths = rewriter.extractRestParameters(arcTrees[0], referents, {});
@@ -355,10 +355,10 @@ describe('FhirSparql', () => {
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
 
       // test arcTrees
-      expect(arcTrees[0].getBgp().toString()).toEqual(BGP_obs_noType.toString());
-      expect(arcTrees[0].getBgp()).toEqual(BGP_obs_noType);
-      expect(arcTrees[1].getBgp().toString()).toEqual(BGP_patRsrc.toString());
-      expect(arcTrees[1].getBgp()).toEqual(BGP_patRsrc);
+      expect(arcTrees[0].makeBgp().toString()).toEqual(BGP_obs_noType.toString());
+      expect(arcTrees[0].makeBgp()).toEqual(BGP_obs_noType);
+      expect(arcTrees[1].makeBgp().toString()).toEqual(BGP_patRsrc.toString());
+      expect(arcTrees[1].makeBgp()).toEqual(BGP_patRsrc);
       expect(arcTrees).toEqual([ArcTree_obs_noType, ArcTree_patRsrc]);
 
       // connectingVariables
@@ -448,7 +448,7 @@ describe('FhirSparql', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
-      expect(arcTrees[0].getBgp().triples.length).toEqual(2);
+      expect(arcTrees[0].makeBgp().triples.length).toEqual(2);
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
       const obsPaths = rewriter.extractRestParameters(arcTrees[0], referents, {});
@@ -464,7 +464,7 @@ describe('FhirSparql', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text-var.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
-      expect(arcTrees[0].getBgp().triples.length).toEqual(8);
+      expect(arcTrees[0].makeBgp().triples.length).toEqual(8);
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
       const obsPaths = rewriter.extractRestParameters(arcTrees[0], referents, {});
@@ -475,7 +475,7 @@ describe('FhirSparql', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text-valid.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
-      expect(arcTrees[0].getBgp().triples.length).toEqual(8);
+      expect(arcTrees[0].makeBgp().triples.length).toEqual(8);
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
       const obsPaths = rewriter.extractRestParameters(arcTrees[0], referents, {});
@@ -488,7 +488,7 @@ describe('FhirSparql', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text-invalid.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
-      expect(arcTrees[0].getBgp().triples.length).toEqual(8);
+      expect(arcTrees[0].makeBgp().triples.length).toEqual(8);
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
       const obsPaths = rewriter.extractRestParameters(arcTrees[0], referents, {});
