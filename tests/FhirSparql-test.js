@@ -30,7 +30,7 @@ describe('FhirSparql', () => {
     it('should handle Obs-Patient ref', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
       expect(arcTrees.map(at => at.toString()).join('\n')).toBe(`<root> [
   ?obs <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://hl7.org/fhir/Observation> .
   ?obs <http://hl7.org/fhir/code> ?code . [
@@ -108,7 +108,7 @@ describe('FhirSparql', () => {
     it('should execute last test again (i.e. no side effects from previous run)', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
 
       // test arcTrees
       expect(arcTrees[0].makeBgp().toString()).toEqual(BGP_obs.toString());
@@ -150,7 +150,7 @@ describe('FhirSparql', () => {
     it('should handle reference from Patient to Observation', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
 
       // test arcTrees
       expect(arcTrees[0].makeBgp().toString()).toEqual(BGP_obs.toString());
@@ -192,7 +192,7 @@ describe('FhirSparql', () => {
     it('should handle reference from Patient to Observation with pesimized query triples order', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-disordered.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
 
       // test arcTrees
       expect(arcTrees[0].makeBgp().toString()).toEqual(BGP_obs.toString());
@@ -234,7 +234,7 @@ describe('FhirSparql', () => {
     it('should handle Obs-Patient ref with blank nodes where possible', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-anons.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
 
       // connectingVariables
       expect([...connectingVariables.keys()]).toEqual(["patRsrc"]);
@@ -275,7 +275,7 @@ describe('FhirSparql', () => {
     it('should recognize fall-back (simple) path rule', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-code.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
 
       // referents
       expect(referents).toEqual(new Set([]));
@@ -297,7 +297,7 @@ describe('FhirSparql', () => {
     it('should translate a structure of nested (anonymous) BNodes', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-anons-id.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
       expect(arcTrees[0].makeBgp().triples.length).toEqual(8);
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
@@ -308,7 +308,7 @@ describe('FhirSparql', () => {
     it('should deconstruct type arc', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-code-type.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
       const obsPaths = rewriter.extractRestParameters(arcTrees[0], referents, {});
@@ -321,7 +321,7 @@ describe('FhirSparql', () => {
     it('should ignore unknown type arc', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-code-unknown-type.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
       const obsPaths = rewriter.extractRestParameters(arcTrees[0], referents, {});
@@ -332,7 +332,7 @@ describe('FhirSparql', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const sparqlQueryString = File.readFileSync(Path.join(Resources, 'obs-fixed-pat.srq'), 'utf-8');
       const iQuery = SparqlQuery.parse(sparqlQueryString, { baseIRI: HapiServerAddr, });
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
       expect(arcTrees[0].makeBgp().triples.length).toEqual(11);
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
@@ -352,7 +352,7 @@ describe('FhirSparql', () => {
     it('should handle lack of Resource type', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-pat-noType.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
 
       // test arcTrees
       expect(arcTrees[0].makeBgp().toString()).toEqual(BGP_obs_noType.toString());
@@ -403,7 +403,7 @@ describe('FhirSparql', () => {
     it('should unify coincident variables', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-proc.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
       // console.log(arcTrees.map(arcTree => arcTree.toString()));
 
       // referents
@@ -447,7 +447,7 @@ describe('FhirSparql', () => {
     it('should dive into extended and datatypes', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
       expect(arcTrees[0].makeBgp().triples.length).toEqual(2);
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
@@ -463,7 +463,7 @@ describe('FhirSparql', () => {
     it('should restrict types with each successive ArcTree', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text-var.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
       expect(arcTrees[0].makeBgp().triples.length).toEqual(8);
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
@@ -474,7 +474,7 @@ describe('FhirSparql', () => {
     it('should accept valid value set values', () => {
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text-valid.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
       expect(arcTrees[0].makeBgp().triples.length).toEqual(8);
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
@@ -487,7 +487,7 @@ describe('FhirSparql', () => {
       // Weakness: currently accepts if any {con,dis}junct accepts. Should accept only if all conjuncts that mention X accept X.
       const rewriter = new FhirSparql(FhirShEx);
       const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'resource-anons-text-invalid.srq'), 'utf-8'));
-      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery);
+      const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
       expect(arcTrees[0].makeBgp().triples.length).toEqual(8);
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());

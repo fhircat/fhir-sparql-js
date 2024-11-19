@@ -1,7 +1,8 @@
 import {ShExVisitor} from './ShExVisitor';
 import {Ns} from './Namespaces';
 import {RdfUtils, SparqlQuery, Triple, TTerm} from './RdfUtils';
-import {ArcTree, PosArcTree} from './ArcTree'
+import {ArcTree, PosArcTree} from './ArcTree';
+import * as SparqlJs from 'sparqljs';
 import * as ShExJ from 'shexj';
 
 /**
@@ -90,7 +91,12 @@ export class QueryAnalyzer {
    * @param query Sparql.js compile tree
    */
   getArcTrees (query: SparqlQuery) {
-    const triples = query.getWhere()[0].triples as Triple[];
+    const bgps:SparqlJs.BgpPattern[] = query.findBgps(query.getWhere());
+    return bgps.map(bgp => this.getBgpArcTrees(bgp));
+  }
+
+  getBgpArcTrees(bgp: SparqlJs.BgpPattern) {
+    const triples = bgp.triples as Triple[];
 
     const todo: Triple[] = triples.slice().sort((l, r) => RdfUtils.pStr(l.predicate).localeCompare(RdfUtils.pStr(r.predicate)));
     /*
@@ -180,6 +186,6 @@ export class QueryAnalyzer {
       }
     }
 
-    return {arcTrees, connectingVariables, referents};
+    return {arcTrees, connectingVariables, referents, bgp};
   }
 }

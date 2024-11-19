@@ -52,7 +52,7 @@ class RestParameterTree {
       public lexicalTransformer = (values: string[]) => values[0]
   ) {
     const query = SparqlQuery.parse('PREFIX fhir: <http://hl7.org/fhir/> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT ?v1 { ' + correspondingSparql + ' }');
-    this.arcTree = new QueryAnalyzer(null as unknown as ShExJ.Schema).getArcTrees(query).arcTrees[0].out[0];
+    this.arcTree = new QueryAnalyzer(null as unknown as ShExJ.Schema).getArcTrees(query)[0].arcTrees[0].out[0]; // known to have a single BGP
     this.lexicalTransformer = lexicalTransformer;
   }
 
@@ -474,7 +474,7 @@ export class FhirSparql extends QueryAnalyzer {
     }
 
     const iQuery = SparqlQuery.parse(sparqlQuery, parserOpts);
-    const {arcTrees, connectingVariables, referents} = this.getArcTrees(iQuery);
+    const {arcTrees, connectingVariables, referents} = this.getArcTrees(iQuery)[0]; // !! generalize to n-BGP queries
     log.trace({arcTrees: arcTrees.map((t, i) => `\n[${i}]: ` + t).join("\n--"), connectingVariables, referents});
 
     const sources = [];

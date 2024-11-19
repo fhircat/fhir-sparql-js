@@ -211,20 +211,51 @@ export class SparqlQuery implements SparqlJs.SelectQuery {
        }
        This will require restructuring to remain compatible with Jena.
      */
-    this.where = this.findBgps(query).map(bgp => Bgp.blessSparqlJs(bgp as BgpPattern));
+    this.where = this.findBgps(query.where || []).map(bgp => Bgp.blessSparqlJs(bgp as BgpPattern)); // TODO: optional WHERE
   }
 
-  findBgps (q: SparqlJs.Query): Array<SparqlJs.BgpPattern> {
-    if (q.type !== 'query')
-      throw Error(`Expected type: "query"; got ${JSON.stringify(q)}`);
-    return q.where!.reduce<SparqlJs.BgpPattern[]>((acc, elt) => {
-      if (elt.type === 'group')
-        return acc.concat(this.findBgps(elt.patterns[0] as SparqlJs.Query));
-      if (elt.type === 'bgp')
-        return acc.concat([elt]);
-      // console.log(`skipping ${elt.type}`);
-      return acc;
-    }, []);
+  findBgps (bgps: SparqlJs.Pattern[]): Array<SparqlJs.BgpPattern> {
+    return bgps.reduce<SparqlJs.BgpPattern[]>((acc, elt) => {
+      switch (elt.type) {
+          // | BgpPattern
+        case 'bgp':
+          return acc.concat([elt]);
+          // | BlockPattern
+          //   | OptionalPattern
+        case 'optional':
+          return acc.concat(this.findBgps(elt.patterns));
+          //   | UnionPattern
+        case 'union':
+          return acc.concat(this.findBgps(elt.patterns));
+          //   | GroupPattern
+        case 'group':
+          return acc.concat(this.findBgps(elt.patterns));
+          //   | GraphPattern
+        case 'graph':
+          return acc.concat(this.findBgps(elt.patterns));
+          //   | MinusPattern
+        case 'minus':
+          return acc.concat(this.findBgps(elt.patterns));
+          //   | ServicePattern;
+        case 'service':
+          return acc.concat(this.findBgps(elt.patterns));
+          // | FilterPattern
+        case 'filter':
+          return acc; // !! TODO: look for that alternative to MINUS
+          // | BindPattern
+        case 'bind':
+          return acc;
+          // | ValuesPattern
+        case 'values':
+          return acc;
+          // | SelectQuery
+        case 'query':
+          return acc.concat(this.findBgps(elt.where || []));
+        default:
+          // @ts-ignore -- js code in case elt doesn't match TS type
+          throw Error(`unknown SparqlJs term type ${elt!.type || 'NULL'} in ${JSON.stringify(elt)}`);
+      }
+    }, [] as SparqlJs.BgpPattern[]);
   }
 
   getQuery () { return this; }
