@@ -52,7 +52,7 @@ async function main () {
   if (cmds.debug && DebugLevels.indexOf(cmds.debug) === -1)
     abort(`debug level ${cmds.debug} must be one of ${DebugLevels.join(', ')}`, ExitCode.bad_argument);
   const log = Bunyan.createLogger({
-    name: 'canned-server',
+    name: 'query-fhir',
     level: cmds.debug || 'warn',
     streams: [
       // log INFO and above to stdout
