@@ -133,6 +133,7 @@ export class FhirJsonToTurtle {
   // TODO: Revisit if needed after adding FHIR example tests.
   static TypedAttributes: TypeReprMap = {
     lastUpdated: FhirJsonToTurtle.PrimitiveTypes.DateTime,
+    birthDate: FhirJsonToTurtle.PrimitiveTypes.DateTime,
     // effectiveDateTime: FhirJsonToTurtle.PrimitiveTypes.DateTime,
     issued: FhirJsonToTurtle.PrimitiveTypes.DateTime,
     source: { label: 'anyURI'},

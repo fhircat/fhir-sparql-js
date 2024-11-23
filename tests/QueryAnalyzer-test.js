@@ -67,54 +67,8 @@ ASK {
     });
 
     it('should handle nested BGPs', () => {
-      const iQuery = SparqlQuery.parse(
-          `
-PREFIX fhir: <http://hl7.org/fhir/>
-PREFIX sct: <http://snomed.info/id/>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-SELECT ?obs ?patId WHERE {
-  {
-    # Observation
-    ?obs a fhir:Observation .
-
-    # Observation.code
-    ?obs fhir:code ?code .
-      ?code fhir:coding ?codeList .
-        ?codeList rdf:rest*/rdf:first ?codeElt .
-          ?codeElt fhir:code ?codeCode .
-            ?codeCode fhir:v "72166-2" .
-          ?codeElt fhir:system ?codingSystem .
-            ?codingSystem fhir:v "http://loinc.org"^^xsd:anyURI .
-  }
-
-  {
-  # Observation.subject
-  ?obs fhir:subject ?subjectRef .
-    ?subjectRef fhir:reference ?subjectBNode .
-      ?subjectBNode fhir:link ?patRsrc .
-  }
-
-  OPTIONAL {
-    {
-      # Patient
-      ?patRsrc a fhir:Patient .
-    }
-
-    {
-      # Patient.id
-      ?patRsrc fhir:id ?patIdElt .
-        ?patIdElt fhir:v ?patId .
-    } UNION {
-      # Patient.id
-      ?patRsrc fhir:language ?langElt .
-        ?langElt fhir:v "ES" .
-    }
-  }
-}
-          `
-      );
+      const sQuery = File.readFileSync(Path.join(Resources, 'trimmed-deep-use-case-query.srq'), 'utf-8');
+      const iQuery = SparqlQuery.parse(sQuery);
       let arcTrees = new QueryAnalyzer(FhirShEx).getArcTrees(iQuery);
       expect(arcTrees[0].bgp).toBe(iQuery.getWhere()[0]);
       expect(arcTrees[0].arcTrees[0].out.length).toBe(2);

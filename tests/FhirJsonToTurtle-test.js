@@ -118,14 +118,14 @@ function setupTest (test) {
 
 async function executeTest (fhirResourceName) {
   const jsonFilePath = Path.join(Resources, fhirResourceName + ".json");
-  log.trace('jsonFilePath:', jsonFilePath);
+  log.debug('jsonFilePath:', jsonFilePath);
   const resource = JSON.parse(Fs.readFileSync(jsonFilePath, 'utf-8'));
   const ttl = new FhirJsonToTurtle().prettyPrint(resource);
-  log.debug("as Turtle results:", ttl);
+  log.trace("as Turtle results:", ttl);
 
   const expectedResultsFilePath = Path.join(Resources, fhirResourceName + ".ttl");
-  log.trace('expectedResultsFilePath:', expectedResultsFilePath);
+  log.debug('expectedResultsFilePath:', expectedResultsFilePath);
   const expectedResults = Fs.readFileSync(expectedResultsFilePath, 'utf-8');
-  // log.debug("expected results:", expectedResults);
+  log.trace("expected results:", expectedResults);
   expect(ttl).toEqual(expectedResults);
 }
