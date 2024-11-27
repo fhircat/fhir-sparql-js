@@ -1,6 +1,6 @@
 import {ShExVisitor} from './ShExVisitor';
 import {Ns} from './Namespaces';
-import {RdfUtils, SparqlQuery, Triple, TTerm} from './RdfUtils';
+import {RdfUtils, SparqlQuery, Bgp, Triple, TTerm} from './RdfUtils';
 import {ArcTree, PosArcTree} from './ArcTree';
 import * as SparqlJs from 'sparqljs';
 import * as ShExJ from 'shexj';
@@ -91,14 +91,16 @@ export class QueryAnalyzer {
    * @param query Sparql.js compile tree
    */
   getArcTrees (query: SparqlQuery) {
-    const bgps:SparqlJs.BgpPattern[] = query.findBgps(query.getWhere());
+    const where = query.getWhere();
+    /* istanbul ignore next */ // should be else but...
+    const bgps: Bgp[] = where ? query.findBgps(where) : [];
     return bgps.map(bgp => this.getBgpArcTrees(bgp));
   }
 
   getBgpArcTrees(bgp: SparqlJs.BgpPattern) {
     const triples = bgp.triples as Triple[];
 
-    const todo: Triple[] = triples.slice().sort((l, r) => RdfUtils.pStr(l.predicate).localeCompare(RdfUtils.pStr(r.predicate)));
+    const todo: Triple[] = triples.slice().sort((l, r) => RdfUtils.pStr(l.predicate).localeCompare(RdfUtils.pStr(r.predicate))); // is this sort needed?
     /*
       console.log(todo.map(t => t.subject.value + ' ' + FhirSparql.pStr(t.predicate) + ' ' + t.object.value).join("\n"));
        1 ?obs fhir:code ?codeList

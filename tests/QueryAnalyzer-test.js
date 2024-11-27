@@ -39,6 +39,12 @@ ASK {?obs fhir:subject ?subjectRef . ?subjectRef fhir:reference ?obs}`
       ))).toThrow("can't handle cycle involving ?subjectRef <http://hl7.org/fhir/reference> ?obs .");
     });
 
+    it('should handle empty WHERE', () => {
+      expect(new QueryAnalyzer(FhirShEx).getArcTrees(SparqlQuery.parse(
+          `ASK {}`
+      ))[0]).toBe(undefined);
+    });
+
     it('should handle internal graph connections', () => {
       expect(new QueryAnalyzer(FhirShEx).getArcTrees(SparqlQuery.parse(
         `PREFIX fhir: <http://hl7.org/fhir/>
@@ -70,7 +76,7 @@ ASK {
       const sQuery = File.readFileSync(Path.join(Resources, 'trimmed-deep-use-case-query.srq'), 'utf-8');
       const iQuery = SparqlQuery.parse(sQuery);
       let arcTrees = new QueryAnalyzer(FhirShEx).getArcTrees(iQuery);
-      expect(arcTrees[0].bgp).toBe(iQuery.getWhere()[0]);
+      expect(arcTrees[0].bgp).toBe(iQuery.getWhere()[0].patterns[0]);
       expect(arcTrees[0].arcTrees[0].out.length).toBe(2);
     });
   });

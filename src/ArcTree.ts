@@ -99,7 +99,7 @@ export class ArcTree {
    * construct a SPARQL BGP for this ArcTree
    */
   makeBgp () {
-    const ret: SparqlJs.Triple[] = [];
+    const ret: Triple[] = [];
     if (this.tp !== null)
       ret.push(this.tp);
     this.out.forEach(tree =>
