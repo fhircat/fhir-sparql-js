@@ -92,12 +92,11 @@ export class QueryAnalyzer {
    */
   getArcTrees (query: SparqlQuery) {
     const where = query.getWhere();
-    /* istanbul ignore next */ // should be else but...
-    const bgps: Bgp[] = where ? SparqlPattern.findBgps(where) : [];
+    const bgps: Bgp[] = SparqlPattern.findBgps(where);
     return bgps.map(bgp => this.getBgpArcTrees(bgp));
   }
 
-  getBgpArcTrees(bgp: Bgp) {
+  getBgpArcTrees (bgp: Bgp) {
     const triples = bgp.triples as Triple[];
 
     const todo: Triple[] = triples.slice().sort((l, r) => RdfUtils.pStr(l.predicate).localeCompare(RdfUtils.pStr(r.predicate))); // is this sort needed?

@@ -45,6 +45,92 @@ ASK {?obs fhir:subject ?subjectRef . ?subjectRef fhir:reference ?obs}`
       ))[0]).toBe(undefined);
     });
 
+    it('should handle missing WHERE', () => {
+      expect(new QueryAnalyzer(FhirShEx).getArcTrees(SparqlQuery.parse(
+        { "queryType": "ASK",
+          "type": "query",
+          "prefixes": {}
+        }
+      ))[0]).toBe(undefined);
+    });
+
+    it('should handle object arguments', () => {
+      expect(new QueryAnalyzer(FhirShEx).getArcTrees(SparqlQuery.parse(
+        { "type": "query",
+          "queryType": "ASK",
+          "prefixes": { "fhir": "http://hl7.org/fhir/" },
+          "where": [
+            { "type": "bgp",
+              "triples": [
+                { "subject": { "termType": "Variable", "value": "obs" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/triggeredBy" },
+                  "object": { "termType": "BlankNode", "value": "g_2" } },
+                { "subject": { "termType": "Variable", "value": "obs" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/triggeredBy" },
+                  "object": { "termType": "BlankNode", "value": "g_5" }
+                },
+                { "subject": { "termType": "Variable", "value": "obs" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/triggeredBy" },
+                  "object": { "termType": "BlankNode", "value": "g_8" }
+                },
+                { "subject": { "termType": "BlankNode", "value": "g_2" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/reference" },
+                  "object": { "termType": "BlankNode", "value": "g_0" }
+                },
+                { "subject": { "termType": "BlankNode", "value": "g_2" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/type" },
+                  "object": { "termType": "BlankNode", "value": "g_1" }
+                },
+                { "subject": { "termType": "BlankNode", "value": "g_1" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/v" },
+                  "object": { "termType": "Literal", "value": "reflex", "language": "",
+                              "datatype": { "termType": "NamedNode", "value": "http://www.w3.org/2001/XMLSchema#string" } }
+                },
+                { "subject": { "termType": "BlankNode", "value": "g_0" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/link" },
+                  "object": { "termType": "Variable", "value": "trigger" }
+                },
+                { "subject": { "termType": "BlankNode", "value": "g_5" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/reference" },
+                  "object": { "termType": "BlankNode", "value": "g_3" }
+                },
+                { "subject": { "termType": "BlankNode", "value": "g_5" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/type" },
+                  "object": { "termType": "BlankNode", "value": "g_4" }
+                },
+                { "subject": { "termType": "BlankNode", "value": "g_4" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/v" },
+                  "object": { "termType": "Literal", "value": "repeat", "language": "",
+                              "datatype": { "termType": "NamedNode", "value": "http://www.w3.org/2001/XMLSchema#string" } }
+                },
+                { "subject": { "termType": "BlankNode", "value": "g_3" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/link" },
+                  "object": { "termType": "Variable", "value": "trigger" }
+                },
+                { "subject": { "termType": "BlankNode", "value": "g_8" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/reference" },
+                  "object": { "termType": "BlankNode", "value": "g_6" }
+                },
+                { "subject": { "termType": "BlankNode", "value": "g_8" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/type" },
+                  "object": { "termType": "BlankNode", "value": "g_7" }
+                },
+                { "subject": { "termType": "BlankNode", "value": "g_7" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/v" },
+                  "object": { "termType": "Literal", "value": "re-run", "language": "",
+                              "datatype": { "termType": "NamedNode", "value": "http://www.w3.org/2001/XMLSchema#string" } }
+                },
+                { "subject": { "termType": "BlankNode", "value": "g_6" },
+                  "predicate": { "termType": "NamedNode", "value": "http://hl7.org/fhir/link" },
+                  "object": { "termType": "Variable", "value": "trigger" }
+                }
+              ]
+            }
+          ]
+        }
+      ))[0].arcTrees[0].out.length).toBe(3);
+    });
+
     it('should handle internal graph connections', () => {
       expect(new QueryAnalyzer(FhirShEx).getArcTrees(SparqlQuery.parse(
         `PREFIX fhir: <http://hl7.org/fhir/>
@@ -79,5 +165,15 @@ ASK {
       expect(arcTrees[0].bgp).toBe(iQuery.getWhere()[0].patterns[0]);
       expect(arcTrees[0].arcTrees[0].out.length).toBe(2);
     });
+
+    /* TODO:
+       SELECT ?obs ?patient ?birthdate {
+         { SELECT (?subject AS ?patient) ?name  {
+           ?obs fhir:subject [ fhir:link ?subject ] }
+         ?patient fhir:status [ fhir:v ?isActive ] ;
+           fhir:birthDate [ fhir:v ?bdate ] .
+         BIND (?bdate AS ?birthdate)
+       }
+     */
   });
 });

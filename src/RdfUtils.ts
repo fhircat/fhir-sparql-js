@@ -83,7 +83,7 @@ export class Term {
   }
   static blessSparqlJs (sparqlJsTerm: TTerm): Term | Path {
     if (RdfUtils.isPath(sparqlJsTerm))
-      { // @ts-ignore
+      { // @ts-ignore - '(Term | Path)[]' is not assignable to parameter of type '(IriTerm | Path)[]'
         return new Path(sparqlJsTerm.pathType, sparqlJsTerm.items.map(item => Term.blessSparqlJs(item)));
       }
 
@@ -185,7 +185,7 @@ export class SparqlPattern /* implements SparqlJs.Pattern */ {
       switch (elt.type) {
           // | BgpPattern
         case 'bgp':
-          return acc.concat([Bgp.blessSparqlJs(elt)]); // acc.concat([elt]);
+          return acc.concat([Bgp.blessSparqlJs(elt)]);
           // | BlockPattern
           //   | OptionalPattern
         case 'optional':
@@ -232,7 +232,7 @@ export class SparqlPattern /* implements SparqlJs.Pattern */ {
       switch (elt.type) {
           // | BgpPattern
         case 'bgp':
-          return acc.concat([<Bgp>(elt)]); // acc.concat([Bgp.blessSparqlJs(elt)]);
+          return acc.concat([<Bgp>(elt)]);
           // | BlockPattern
           //   | OptionalPattern
         case 'optional':
@@ -273,7 +273,6 @@ export class SparqlPattern /* implements SparqlJs.Pattern */ {
 }
 
 export class Bgp extends SparqlPattern /* implements SparqlJs.BgpPattern */ {
-  // type: 'bgp' = 'bgp';
   constructor (
     public triples: Triple[]
   ) {
@@ -394,35 +393,13 @@ export class Service extends PatternPattern /* implements SparqlJs.ServicePatter
 }
 
 export class SparqlQuery extends SparqlPattern /* implements SparqlJs.SelectQuery */ {
-  // type: 'query' = 'query';
-  // base: string | undefined;
-  // prefixes: { [prefix: string]: string; } = {};
   queryType: 'SELECT' = 'SELECT';
-  // variables: [SparqlJs.Wildcard] = [new SparqlJs.Wildcard()];
-  // where: SparqlPattern[] | undefined;
   constructor (
-    // query: SparqlJs.Query
     public where: SparqlPattern[],
     public prefixes: { [prefix: string]: string; },
     public variables: [SparqlJs.Wildcard] | SparqlJs.Variable[]
   ) {
     super('query');
-    // // query.where[0].triples = query.where[0].triples.map(t => Triple.blessSparqlJs(t));
-    // this.prefixes = query.prefixes;
-    // //@ts-ignore
-    // this.variables = query.variables;
-    /* This isn't *really* the BGPs; it's flattened (without checking for
-       reassignment in the projection or in BINDs, e.g.
-       SELECT ?obs ?patient ?birthdate {
-         { SELECT (?subject AS ?patient) ?name  {
-           ?obs fhir:subject [ fhir:link ?subject ] }
-         ?patient fhir:status [ fhir:v ?isActive ] ;
-           fhir:birthDate [ fhir:v ?bdate ] .
-         BIND (?bdate AS ?birthdate)
-       }
-       This will require restructuring to remain compatible with Jena.
-     */
-    // this.where = query.where ? SparqlPattern.bless(query.where) : undefined; //SparqlPattern.findBgps(query.where || []).map(bgp => Bgp.blessSparqlJs(bgp as BgpPattern)); // TODO: optional WHERE
   }
 
   static blessSparqlJs (sparqlJsQuery: SparqlJs.SelectQuery) {
@@ -433,9 +410,10 @@ export class SparqlQuery extends SparqlPattern /* implements SparqlJs.SelectQuer
   getQuery () { return this; }
   getWhere () { return this.where; };
 
-  static parse (text: string, opts?: any) {
+  static parse (parseMe: string | SparqlJs.SelectQuery, opts?: any) {
     const SparqlParser = new SparqlJs.Parser(opts);
-    return SparqlQuery.blessSparqlJs(SparqlParser.parse(text) as SparqlJs.SelectQuery); // !! Construct
+    const sparqlJsObj = typeof parseMe === 'string' ? SparqlParser.parse(parseMe) as SparqlJs.SelectQuery : parseMe
+    return SparqlQuery.blessSparqlJs(sparqlJsObj); // !! Construct
   }
 
   static selectStar (bgp: Bgp) {
