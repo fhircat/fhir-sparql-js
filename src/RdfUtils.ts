@@ -174,166 +174,10 @@ export class Triple implements SparqlJs.Triple {
   }
 }
 
-export class Bgp implements SparqlJs.BgpPattern {
-  type: 'bgp' = 'bgp';
-  constructor (
-      public triples: Triple[]) {
-  }
-  toString (indent = '') {
-    return indent + '{\n' + this.triples.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
-  }
-  static blessSparqlJs (sparqlJsBgp: SparqlJs.BgpPattern) {
-    if (sparqlJsBgp.type !== 'bgp') throw Error(`expected to bless something with .type=bgp in ${JSON.stringify(sparqlJsBgp)}`);
-    return new Bgp(sparqlJsBgp.triples.map(t => Triple.blessSparqlJs(t)));
-  }
-}
-
 export class SparqlPattern /* implements SparqlJs.Pattern */ {
   constructor (
     public type: string
   ) {
-  }
-}
-
-class PatternPattern extends SparqlPattern /* implements SparqlJs.Pattern */ {
-  constructor (
-    type: string,
-    public patterns: SparqlPattern[]
-  ) {
-    super(type)
-  }
-}
-
-export class Optional extends PatternPattern /* implements SparqlJs.OptionalPattern */ {
-  type: 'optional' = 'optional';
-  constructor (
-    patterns: SparqlPattern[]
-  ) {
-    super('optional', patterns);
-  }
-  toString (indent = '') {
-    return indent + 'OPTIONAL {\n' + this.patterns.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
-  }
-  static blessSparqlJs (sparqlJsOptional: SparqlJs.OptionalPattern) {
-    if (sparqlJsOptional.type !== 'optional') throw Error(`expected to bless something with .type=optional in ${JSON.stringify(sparqlJsOptional)}`);
-    return new Optional(SparqlQuery.bless(sparqlJsOptional.patterns));
-  }
-}
-
-export class Group extends PatternPattern /* implements SparqlJs.OptionalPattern */ {
-  type: 'group' = 'group';
-  constructor (
-    patterns: SparqlPattern[]
-  ) {
-    super('group', patterns);
-  }
-  toString (indent = '') {
-    return indent + ' {\n' + this.patterns.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
-  }
-  static blessSparqlJs (sparqlJsGroup: SparqlJs.GroupPattern) {
-    if (sparqlJsGroup.type !== 'group') throw Error(`expected to bless something with .type=group in ${JSON.stringify(sparqlJsGroup)}`);
-    return new Group(SparqlQuery.bless(sparqlJsGroup.patterns));
-  }
-}
-
-export class Union extends PatternPattern /* implements SparqlJs.UnionPattern */ {
-  type: 'union' = 'union';
-  constructor (
-    patterns: SparqlPattern[]
-  ) {
-    super('union', patterns);
-  }
-  toString (indent = '') {
-    return indent + 'UNION {\n' + this.patterns.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
-  }
-  static blessSparqlJs (sparqlJsUnion: SparqlJs.UnionPattern) {
-    if (sparqlJsUnion.type !== 'union') throw Error(`expected to bless something with .type=union in ${JSON.stringify(sparqlJsUnion)}`);
-    return new Union(SparqlQuery.bless(sparqlJsUnion.patterns));
-  }
-}
-
-export class Graph extends PatternPattern /* implements SparqlJs.GraphPattern */ {
-  type: 'graph' = 'graph';
-  constructor (
-    patterns: SparqlPattern[]
-  ) {
-    super('graph', patterns);
-  }
-  toString (indent = '') {
-    return indent + 'GRAPH {\n' + this.patterns.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
-  }
-  static blessSparqlJs (sparqlJsGraph: SparqlJs.GraphPattern) {
-    if (sparqlJsGraph.type !== 'graph') throw Error(`expected to bless something with .type=graph in ${JSON.stringify(sparqlJsGraph)}`);
-    return new Graph(SparqlQuery.bless(sparqlJsGraph.patterns));
-  }
-}
-
-export class Minus extends PatternPattern /* implements SparqlJs.MinusPattern */ {
-  type: 'minus' = 'minus';
-  constructor (
-    patterns: SparqlPattern[]
-  ) {
-    super('minus', patterns);
-  }
-  toString (indent = '') {
-    return indent + 'MINUS {\n' + this.patterns.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
-  }
-  static blessSparqlJs (sparqlJsMinus: SparqlJs.MinusPattern) {
-    if (sparqlJsMinus.type !== 'minus') throw Error(`expected to bless something with .type=minus in ${JSON.stringify(sparqlJsMinus)}`);
-    return new Minus(SparqlQuery.bless(sparqlJsMinus.patterns));
-  }
-}
-
-export class Service extends PatternPattern /* implements SparqlJs.ServicePattern */ {
-  type: 'service' = 'service';
-  constructor (
-    patterns: SparqlPattern[]
-  ) {
-    super('service', patterns);
-  }
-  toString (indent = '') {
-    return indent + 'SERVICE {\n' + this.patterns.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
-  }
-  static blessSparqlJs (sparqlJsService: SparqlJs.ServicePattern) {
-    if (sparqlJsService.type !== 'service') throw Error(`expected to bless something with .type=service in ${JSON.stringify(sparqlJsService)}`);
-    return new Service(SparqlQuery.bless(sparqlJsService.patterns));
-  }
-}
-
-export class SparqlQuery /* implements SparqlJs.SelectQuery */ {
-  type: 'query' = 'query';
-  // base: string | undefined;
-  // prefixes: { [prefix: string]: string; } = {};
-  queryType: 'SELECT' = 'SELECT';
-  // variables: [SparqlJs.Wildcard] = [new SparqlJs.Wildcard()];
-  // where: SparqlPattern[] | undefined;
-  constructor (
-    // query: SparqlJs.Query
-    public where: SparqlPattern[],
-    public prefixes: { [prefix: string]: string; },
-    public variables: [SparqlJs.Wildcard] | SparqlJs.Variable[]
-  ) {
-    // // query.where[0].triples = query.where[0].triples.map(t => Triple.blessSparqlJs(t));
-    // this.prefixes = query.prefixes;
-    // //@ts-ignore
-    // this.variables = query.variables;
-    /* This isn't *really* the BGPs; it's flattened (without checking for
-       reassignment in the projection or in BINDs, e.g.
-       SELECT ?obs ?patient ?birthdate {
-         { SELECT (?subject AS ?patient) ?name  {
-           ?obs fhir:subject [ fhir:link ?subject ] }
-         ?patient fhir:status [ fhir:v ?isActive ] ;
-           fhir:birthDate [ fhir:v ?bdate ] .
-         BIND (?bdate AS ?birthdate)
-       }
-       This will require restructuring to remain compatible with Jena.
-     */
-    // this.where = query.where ? SparqlQuery.bless(query.where) : undefined; //this.findBgps(query.where || []).map(bgp => Bgp.blessSparqlJs(bgp as BgpPattern)); // TODO: optional WHERE
-  }
-
-  static blessSparqlJs (sparqlJsQuery: SparqlJs.SelectQuery) {
-    if (sparqlJsQuery.type !== 'query') throw Error(`expected to bless something with .type=sparql in ${JSON.stringify(sparqlJsQuery)}`);
-    return new SparqlQuery(sparqlJsQuery.where ? SparqlQuery.bless(sparqlJsQuery.where) : [], sparqlJsQuery.prefixes, sparqlJsQuery.variables);
   }
 
   static bless (bgps: SparqlJs.Pattern[]): Array<SparqlPattern> {
@@ -363,15 +207,18 @@ export class SparqlQuery /* implements SparqlJs.SelectQuery */ {
           return acc.concat([Service.blessSparqlJs(elt)]);
           // | SelectQuery
         case 'query':
-          return acc.concat(SparqlQuery.bless(elt.where || []));
+          return acc.concat(SparqlPattern.bless(elt.where || []));
           // | FilterPattern
         case 'filter':
+          // @ts-ignore !!
           return acc.concat(elt);
           // | BindPattern
         case 'bind':
+          // @ts-ignore !!
           return acc.concat(elt);
           // | ValuesPattern
         case 'values':
+          // @ts-ignore !!
           return acc.concat(elt);
         default:
           // @ts-ignore -- js code in case elt doesn't match TS type
@@ -380,7 +227,7 @@ export class SparqlQuery /* implements SparqlJs.SelectQuery */ {
     }, [] as SparqlPattern[]);
   }
 
-  findBgps (bgps: Array<SparqlPattern>): Array<Bgp> {
+  static findBgps (bgps: Array<SparqlPattern>): Array<Bgp> {
     return bgps.reduce<Bgp[]>((acc, elt) => {
       switch (elt.type) {
           // | BgpPattern
@@ -389,22 +236,22 @@ export class SparqlQuery /* implements SparqlJs.SelectQuery */ {
           // | BlockPattern
           //   | OptionalPattern
         case 'optional':
-          return acc.concat(this.findBgps((elt as Optional).patterns));
+          return acc.concat(SparqlPattern.findBgps((elt as Optional).patterns));
           //   | UnionPattern
         case 'union':
-          return acc.concat(this.findBgps((elt as Union).patterns));
+          return acc.concat(SparqlPattern.findBgps((elt as Union).patterns));
           //   | GroupPattern
         case 'group':
-          return acc.concat(this.findBgps((elt as Group).patterns));
+          return acc.concat(SparqlPattern.findBgps((elt as Group).patterns));
           //   | GraphPattern
         case 'graph':
-          return acc.concat(this.findBgps((elt as Graph).patterns));
+          return acc.concat(SparqlPattern.findBgps((elt as Graph).patterns));
           //   | MinusPattern
         case 'minus':
-          return acc.concat(this.findBgps((elt as Minus).patterns));
+          return acc.concat(SparqlPattern.findBgps((elt as Minus).patterns));
           //   | ServicePattern;
         case 'service':
-          return acc.concat(this.findBgps((elt as Service).patterns));
+          return acc.concat(SparqlPattern.findBgps((elt as Service).patterns));
           // | FilterPattern
         case 'filter':
           return acc; // !! TODO: look for that alternative to MINUS
@@ -416,12 +263,171 @@ export class SparqlQuery /* implements SparqlJs.SelectQuery */ {
           return acc;
           // | SelectQuery
         case 'query':
-          return acc.concat(this.findBgps((elt as SparqlQuery).where || []));
+          return acc.concat(SparqlPattern.findBgps((elt as SparqlQuery).where || []));
         default:
           // @ts-ignore -- js code in case elt doesn't match TS type
           throw Error(`unknown SparqlJs term type ${elt!.type || 'NULL'} in ${JSON.stringify(elt)}`);
       }
     }, [] as Bgp[]);
+  }
+}
+
+export class Bgp extends SparqlPattern /* implements SparqlJs.BgpPattern */ {
+  // type: 'bgp' = 'bgp';
+  constructor (
+    public triples: Triple[]
+  ) {
+    super('bgp');
+  }
+  toString (indent = '') {
+    return indent + '{\n' + this.triples.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
+  }
+  static blessSparqlJs (sparqlJsBgp: SparqlJs.BgpPattern) {
+    if (sparqlJsBgp.type !== 'bgp') throw Error(`expected to bless something with .type=bgp in ${JSON.stringify(sparqlJsBgp)}`);
+    return new Bgp(sparqlJsBgp.triples.map(t => Triple.blessSparqlJs(t)));
+  }
+}
+
+class PatternPattern extends SparqlPattern /* implements SparqlJs.Pattern */ {
+  constructor (
+    type: string,
+    public patterns: SparqlPattern[]
+  ) {
+    super(type)
+  }
+}
+
+export class Optional extends PatternPattern /* implements SparqlJs.OptionalPattern */ {
+  type: 'optional' = 'optional';
+  constructor (
+    patterns: SparqlPattern[]
+  ) {
+    super('optional', patterns);
+  }
+  toString (indent = '') {
+    return indent + 'OPTIONAL {\n' + this.patterns.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
+  }
+  static blessSparqlJs (sparqlJsOptional: SparqlJs.OptionalPattern) {
+    if (sparqlJsOptional.type !== 'optional') throw Error(`expected to bless something with .type=optional in ${JSON.stringify(sparqlJsOptional)}`);
+    return new Optional(SparqlPattern.bless(sparqlJsOptional.patterns));
+  }
+}
+
+export class Group extends PatternPattern /* implements SparqlJs.OptionalPattern */ {
+  type: 'group' = 'group';
+  constructor (
+    patterns: SparqlPattern[]
+  ) {
+    super('group', patterns);
+  }
+  toString (indent = '') {
+    return indent + ' {\n' + this.patterns.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
+  }
+  static blessSparqlJs (sparqlJsGroup: SparqlJs.GroupPattern) {
+    if (sparqlJsGroup.type !== 'group') throw Error(`expected to bless something with .type=group in ${JSON.stringify(sparqlJsGroup)}`);
+    return new Group(SparqlPattern.bless(sparqlJsGroup.patterns));
+  }
+}
+
+export class Union extends PatternPattern /* implements SparqlJs.UnionPattern */ {
+  type: 'union' = 'union';
+  constructor (
+    patterns: SparqlPattern[]
+  ) {
+    super('union', patterns);
+  }
+  toString (indent = '') {
+    return indent + 'UNION {\n' + this.patterns.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
+  }
+  static blessSparqlJs (sparqlJsUnion: SparqlJs.UnionPattern) {
+    if (sparqlJsUnion.type !== 'union') throw Error(`expected to bless something with .type=union in ${JSON.stringify(sparqlJsUnion)}`);
+    return new Union(SparqlPattern.bless(sparqlJsUnion.patterns));
+  }
+}
+
+export class Graph extends PatternPattern /* implements SparqlJs.GraphPattern */ {
+  type: 'graph' = 'graph';
+  constructor (
+    patterns: SparqlPattern[]
+  ) {
+    super('graph', patterns);
+  }
+  toString (indent = '') {
+    return indent + 'GRAPH {\n' + this.patterns.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
+  }
+  static blessSparqlJs (sparqlJsGraph: SparqlJs.GraphPattern) {
+    if (sparqlJsGraph.type !== 'graph') throw Error(`expected to bless something with .type=graph in ${JSON.stringify(sparqlJsGraph)}`);
+    return new Graph(SparqlPattern.bless(sparqlJsGraph.patterns));
+  }
+}
+
+export class Minus extends PatternPattern /* implements SparqlJs.MinusPattern */ {
+  type: 'minus' = 'minus';
+  constructor (
+    patterns: SparqlPattern[]
+  ) {
+    super('minus', patterns);
+  }
+  toString (indent = '') {
+    return indent + 'MINUS {\n' + this.patterns.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
+  }
+  static blessSparqlJs (sparqlJsMinus: SparqlJs.MinusPattern) {
+    if (sparqlJsMinus.type !== 'minus') throw Error(`expected to bless something with .type=minus in ${JSON.stringify(sparqlJsMinus)}`);
+    return new Minus(SparqlPattern.bless(sparqlJsMinus.patterns));
+  }
+}
+
+export class Service extends PatternPattern /* implements SparqlJs.ServicePattern */ {
+  type: 'service' = 'service';
+  constructor (
+    patterns: SparqlPattern[]
+  ) {
+    super('service', patterns);
+  }
+  toString (indent = '') {
+    return indent + 'SERVICE {\n' + this.patterns.map(t => indent + '  ' + t.toString() + '\n').join('') + '}';
+  }
+  static blessSparqlJs (sparqlJsService: SparqlJs.ServicePattern) {
+    if (sparqlJsService.type !== 'service') throw Error(`expected to bless something with .type=service in ${JSON.stringify(sparqlJsService)}`);
+    return new Service(SparqlPattern.bless(sparqlJsService.patterns));
+  }
+}
+
+export class SparqlQuery extends SparqlPattern /* implements SparqlJs.SelectQuery */ {
+  // type: 'query' = 'query';
+  // base: string | undefined;
+  // prefixes: { [prefix: string]: string; } = {};
+  queryType: 'SELECT' = 'SELECT';
+  // variables: [SparqlJs.Wildcard] = [new SparqlJs.Wildcard()];
+  // where: SparqlPattern[] | undefined;
+  constructor (
+    // query: SparqlJs.Query
+    public where: SparqlPattern[],
+    public prefixes: { [prefix: string]: string; },
+    public variables: [SparqlJs.Wildcard] | SparqlJs.Variable[]
+  ) {
+    super('query');
+    // // query.where[0].triples = query.where[0].triples.map(t => Triple.blessSparqlJs(t));
+    // this.prefixes = query.prefixes;
+    // //@ts-ignore
+    // this.variables = query.variables;
+    /* This isn't *really* the BGPs; it's flattened (without checking for
+       reassignment in the projection or in BINDs, e.g.
+       SELECT ?obs ?patient ?birthdate {
+         { SELECT (?subject AS ?patient) ?name  {
+           ?obs fhir:subject [ fhir:link ?subject ] }
+         ?patient fhir:status [ fhir:v ?isActive ] ;
+           fhir:birthDate [ fhir:v ?bdate ] .
+         BIND (?bdate AS ?birthdate)
+       }
+       This will require restructuring to remain compatible with Jena.
+     */
+    // this.where = query.where ? SparqlPattern.bless(query.where) : undefined; //SparqlPattern.findBgps(query.where || []).map(bgp => Bgp.blessSparqlJs(bgp as BgpPattern)); // TODO: optional WHERE
+  }
+
+  static blessSparqlJs (sparqlJsQuery: SparqlJs.SelectQuery) {
+    if (sparqlJsQuery.type !== 'query') throw Error(`expected to bless something with .type=sparql in ${JSON.stringify(sparqlJsQuery)}`);
+    return new SparqlQuery(sparqlJsQuery.where ? SparqlPattern.bless(sparqlJsQuery.where) : [], sparqlJsQuery.prefixes, sparqlJsQuery.variables);
   }
 
   getQuery () { return this; }
@@ -432,8 +438,8 @@ export class SparqlQuery /* implements SparqlJs.SelectQuery */ {
     return SparqlQuery.blessSparqlJs(SparqlParser.parse(text) as SparqlJs.SelectQuery); // !! Construct
   }
 
-  static selectStar (bgp: BgpPattern) {
-    const where: Pattern[] = [bgp];
+  static selectStar (bgp: Bgp) {
+    const where: /*SparqlPattern*/SparqlJs.Pattern[] = [bgp as SparqlJs.BgpPattern]; // couldn't convince tsc that Bgp implements BgpPattern
     return SparqlGenerator.stringify({
       "type": 'query',
       "prefixes": {},

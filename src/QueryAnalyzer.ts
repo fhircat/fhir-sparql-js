@@ -1,6 +1,6 @@
 import {ShExVisitor} from './ShExVisitor';
 import {Ns} from './Namespaces';
-import {RdfUtils, SparqlQuery, Bgp, Triple, TTerm} from './RdfUtils';
+import {RdfUtils, SparqlQuery, SparqlPattern, Bgp, Triple, TTerm} from './RdfUtils';
 import {ArcTree, PosArcTree} from './ArcTree';
 import * as SparqlJs from 'sparqljs';
 import * as ShExJ from 'shexj';
@@ -93,11 +93,11 @@ export class QueryAnalyzer {
   getArcTrees (query: SparqlQuery) {
     const where = query.getWhere();
     /* istanbul ignore next */ // should be else but...
-    const bgps: Bgp[] = where ? query.findBgps(where) : [];
+    const bgps: Bgp[] = where ? SparqlPattern.findBgps(where) : [];
     return bgps.map(bgp => this.getBgpArcTrees(bgp));
   }
 
-  getBgpArcTrees(bgp: SparqlJs.BgpPattern) {
+  getBgpArcTrees(bgp: Bgp) {
     const triples = bgp.triples as Triple[];
 
     const todo: Triple[] = triples.slice().sort((l, r) => RdfUtils.pStr(l.predicate).localeCompare(RdfUtils.pStr(r.predicate))); // is this sort needed?
