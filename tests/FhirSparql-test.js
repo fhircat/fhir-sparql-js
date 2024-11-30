@@ -305,9 +305,9 @@ describe('FhirSparql', () => {
       expect(obsPaths).toEqual([new FhirPathExecution('Observation', null, [{ name: 'id', value: '789' }])]);
     });
 
-    it('should deconstruct type arc', () => {
+    it('should deconstruct Coding type arc', () => {
       const rewriter = new FhirSparql(FhirShEx);
-      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-code-type.srq'), 'utf-8'));
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-Coding-type.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
@@ -318,9 +318,9 @@ describe('FhirSparql', () => {
       } ])]);
     });
 
-    it('should ignore unknown type arc', () => {
+    it('should ignore unknown Coding type arc', () => {
       const rewriter = new FhirSparql(FhirShEx);
-      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-code-unknown-type.srq'), 'utf-8'));
+      const iQuery = SparqlQuery.parse(File.readFileSync(Path.join(Resources, 'obs-code-unknown-Coding-type.srq'), 'utf-8'));
       const {arcTrees, connectingVariables, referents} = rewriter.getArcTrees(iQuery)[0];
       expect(connectingVariables).toEqual(new Map([]))
       expect(referents).toEqual(new Set());
